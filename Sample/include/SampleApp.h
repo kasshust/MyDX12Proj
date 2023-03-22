@@ -16,7 +16,7 @@
 #include <SkyBox.h>
 #include <Camera.h>
 #include <RootSignature.h>
-
+#include <ToneMap.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // SampleApp class
@@ -59,42 +59,43 @@ private:
     //=========================================================================
     ComPtr<ID3D12PipelineState>     m_pScenePSO;                    //!< シーン用パイプラインステートです.
     RootSignature                   m_SceneRootSig;                 //!< シーン用ルートシグニチャです.
-    ComPtr<ID3D12PipelineState>     m_pTonemapPSO;                  //!< トーンマップ用パイプラインステートです.
-    RootSignature                   m_TonemapRootSig;               //!< トーンマップ用ルートシグニチャです.
     ColorTarget                     m_SceneColorTarget;             //!< シーン用レンダーターゲットです.
     DepthTarget                     m_SceneDepthTarget;             //!< シーン用深度ターゲットです.
 
-
     VertexBuffer                    m_QuadVB;                       //!< 頂点バッファです.
-    ConstantBuffer                  m_TonemapCB[FrameCount];        //!< 定数バッファです.
     ConstantBuffer                  m_LightCB[FrameCount];          //!< ライトバッファです.
     ConstantBuffer                  m_CameraCB[FrameCount];         //!< カメラバッファです.
     ConstantBuffer                  m_TransformCB[FrameCount];      //!< 変換用バッファです.
     ConstantBuffer                  m_MeshCB[FrameCount];           //!< メッシュ用バッファです.
+
+    float                           m_RotateAngle;                  //!< ライトの回転角です.
+    
+
+    float                           m_Exposure;                     //!< 露光値.
+    
+    DirectX::SimpleMath::Matrix     m_View;                         //!< ビュー行列.
+    DirectX::SimpleMath::Matrix     m_Proj;                         //!< 射影行列.
+    Camera                          m_Camera;                       //!< カメラ.
+    int                             m_PrevCursorX;                  //!< 前回のカーソル位置X.
+    int                             m_PrevCursorY;                  //!< 前回のカーソル位置Y.
+
+    SkyBox                          m_SkyBox;                       //!< スカイボックスです.
+    ToneMap                         m_ToneMap;                      //!< トーンマップです.
+
+
+    //　以下未整理部分
 
     //　オブジェクト依存にしたい
     std::vector<Mesh*>              m_pMesh;                        //!< メッシュです.
     Material                        m_Material;                     //!< マテリアルです.
 
 
-    float                           m_RotateAngle;                  //!< ライトの回転角です.
-    int                             m_TonemapType;                  //!< トーンマップタイプ.
-    int                             m_ColorSpace;                   //!< 出力色空間
-    float                           m_BaseLuminance;                //!< 基準輝度値.
-    float                           m_MaxLuminance;                 //!< 最大輝度値.
-    float                           m_Exposure;                     //!< 露光値.
-
-
+    //  スフィアマップとIBLベイクがここにあることがおかしい
     Texture                         m_SphereMap;                    //!< スフィアマップです.
     SphereMapConverter              m_SphereMapConverter;           //!< スフィアマップコンバータ.
     IBLBaker                        m_IBLBaker;                     //!< IBLベイク.
-    SkyBox                          m_SkyBox;                       //!< スカイボックスです.
-    DirectX::SimpleMath::Matrix     m_View;                         //!< ビュー行列.
-    DirectX::SimpleMath::Matrix     m_Proj;                         //!< 射影行列.
 
-    Camera                          m_Camera;                       //!< カメラ.
-    int                             m_PrevCursorX;                  //!< 前回のカーソル位置X.
-    int                             m_PrevCursorY;                  //!< 前回のカーソル位置Y.
+
 
     //=========================================================================
     // private methods.
@@ -116,18 +117,13 @@ private:
     bool CreateDepthTarget();
     
     bool CreateSceneRootSig();
-    bool CreateScenePipe();
-
-    bool CreateToneMapConstantBuffer();
-    bool CreateToneMapRootSig();
-    bool CreateToneMapPipe();
+    bool CreateScenePipeLineState();
     
     bool CreateVertexBuffer();
 
     bool CreateMatrixConstantBuffer();
     bool CreateMeshBuffer();
-    bool CreateIBLBaker();
-    bool LoadTexture();
+    bool LoadSphereMapTexture();
     bool CreateSphereMapConverter();
     bool CreateSkyBox();
     bool IBLBake();
@@ -145,6 +141,10 @@ private:
     //! @brief      描画時の処理です.
     //-------------------------------------------------------------------------
     void OnRender() override;
+
+    void OpaqueProcess(ID3D12GraphicsCommandList* pCmd);
+
+    void ToneMapProcess(ID3D12GraphicsCommandList* pCmd);
 
     void UpdateCamera();
 

@@ -13,104 +13,12 @@
 #include "CommonStates.h"
 #include "DirectXHelpers.h"
 #include "SimpleMath.h"
-
+#include "SampleAppSpace.h"
 
 //-----------------------------------------------------------------------------
 // Using Statements
 //-----------------------------------------------------------------------------
 using namespace DirectX::SimpleMath;
-
-
-namespace {
-
-///////////////////////////////////////////////////////////////////////////////
-// COLOR_SPACE_TYPE enum
-///////////////////////////////////////////////////////////////////////////////
-enum COLOR_SPACE_TYPE
-{
-    COLOR_SPACE_BT709,      // ITU-R BT.709
-    COLOR_SPACE_BT2100_PQ,  // ITU-R BT.2100 PQ System.
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// TONEMAP_TYPE enum
-///////////////////////////////////////////////////////////////////////////////
-enum TONEMAP_TYPE
-{
-    TONEMAP_NONE = 0,   // トーンマップなし.
-    TONEMAP_REINHARD,   // Reinhardトーンマップ.
-    TONEMAP_GT,         // GTトーンマップ.
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// CbTonemap structure
-///////////////////////////////////////////////////////////////////////////////
-struct alignas(256) CbTonemap
-{
-    int     Type;               // トーンマップタイプ.
-    int     ColorSpace;         // 出力色空間.
-    float   BaseLuminance;      // 基準輝度値[nit].
-    float   MaxLuminance;       // 最大輝度値[nit].
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// CbMesh structure
-///////////////////////////////////////////////////////////////////////////////
-struct alignas(256) CbMesh
-{
-    Matrix   World;      //!< ワールド行列です.
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// CbTransform structure
-///////////////////////////////////////////////////////////////////////////////
-struct alignas(256) CbTransform
-{
-    Matrix   View;       //!< ビュー行列です.
-    Matrix   Proj;       //!< 射影行列です.
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// CbLight structure
-///////////////////////////////////////////////////////////////////////////////
-struct alignas(256) CbLight
-{
-    float   TextureSize;      //!< キューブマップサイズです.
-    float   MipCount;         //!< ミップ数です.
-    float   LightIntensity;   //!< ライト強度です.
-    float   Padding0;         //!< パディング.
-    Vector3 LightDirection;   //!< ディレクショナルライトの方向.
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// CbCamera structure
-///////////////////////////////////////////////////////////////////////////////
-struct alignas(256) CbCamera
-{
-    Vector3  CameraPosition;    //!< カメラ位置です.
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// CbMaterial structure
-///////////////////////////////////////////////////////////////////////////////
-struct alignas(256) CbMaterial
-{
-    Vector3 BaseColor;  //!< 基本色.
-    float   Alpha;      //!< 透過度.
-    float   Roughness;  //!< 面の粗さです(範囲は[0,1]).
-    float   Metallic;   //!< 金属度です(範囲は[0,1]).
-};
-
-//-----------------------------------------------------------------------------
-//      色度を取得する.
-//-----------------------------------------------------------------------------
-inline UINT16 GetChromaticityCoord(double value)
-{
-    return UINT16(value * 50000);
-}
-
-} // namespace
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // SampleApp class
@@ -121,10 +29,6 @@ inline UINT16 GetChromaticityCoord(double value)
 //-----------------------------------------------------------------------------
 SampleApp::SampleApp(uint32_t width, uint32_t height)
 : App(width, height, DXGI_FORMAT_R10G10B10A2_UNORM)
-, m_TonemapType     (TONEMAP_GT)
-, m_ColorSpace      (COLOR_SPACE_BT709)
-, m_BaseLuminance   (100.0f)
-, m_MaxLuminance    (100.0f)
 , m_Exposure        (1.0f)
 , m_PrevCursorX(0)
 , m_PrevCursorY(0)
@@ -143,7 +47,7 @@ bool SampleApp::OnInit()
 {
     // テクスチャ/メッシュをロード.
     if (!PrepareMesh())              return false;
-    if (!LoadTexture())              return false;
+    
 
     // ライトバッファ/カメラバッファの生成.
     if (!CreateLightBuffer())        return false;
@@ -155,13 +59,11 @@ bool SampleApp::OnInit()
 
     // シーン用ルートシグニチャ/パイプラインステートの生成.
     if (!CreateSceneRootSig())       return false;
-    if (!CreateScenePipe())          return false;
+    if (!CreateScenePipeLineState())          return false;
 
-    // トーンマップ用コンスタントバッファ/ルートシグニチャ/パイプラインステートの生成.
-    if (!CreateToneMapConstantBuffer()) return false;
-    if (!CreateToneMapRootSig())     return false;
-    if (!CreateToneMapPipe())        return false;
-
+    // スカイボックス初期化.
+    if (!CreateSkyBox())             return false;
+    
     // メッシュ/頂点バッファの生成.
     if (!CreateVertexBuffer())       return false;
     if (!CreateMeshBuffer())         return false;
@@ -169,17 +71,17 @@ bool SampleApp::OnInit()
     // 変換行列用の定数バッファの生成.
     if (!CreateMatrixConstantBuffer())return false;
 
-    // IBLBakerの作成
-    if (!CreateIBLBaker())           return false;
 
-    // スフィアマップコンバーター初期化.
+    //依存しているのに関数が分かれている
+    // スフィアマップ
+    if (!LoadSphereMapTexture())     return false;
     if (!CreateSphereMapConverter()) return false;
-
-    // スカイボックス初期化.
-    if (!CreateSkyBox())             return false;
-
     // ベイク処理を実行.
     if (!IBLBake())                   return false;
+
+
+    // トーンマップ初期化
+    if (!m_ToneMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format))               return false;
 
     return true;
 }
@@ -243,7 +145,7 @@ bool SampleApp::PrepareMesh() {
     if (!m_Material.Init(
         m_pDevice.Get(),
         m_pPool[POOL_TYPE_RES],
-        sizeof(CbMaterial),
+        sizeof(SampleAppSpace::CbMaterial),
         resMaterial.size()))
     {
         ELOG("Error : Material::Init() Failed.");
@@ -274,7 +176,7 @@ bool SampleApp::PrepareMesh() {
     return true;
 }
 
-bool SampleApp::LoadTexture() {
+bool SampleApp::LoadSphereMapTexture() {
     DirectX::ResourceUploadBatch batch(m_pDevice.Get());
 
     // バッチ開始.
@@ -308,13 +210,10 @@ bool SampleApp::LoadTexture() {
     future.wait();
 }
 
-
-
-
 bool SampleApp::CreateLightBuffer() {
     for (auto i = 0; i < FrameCount; ++i)
     {
-        if (!m_LightCB[i].Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], sizeof(CbLight)))
+        if (!m_LightCB[i].Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], sizeof(SampleAppSpace::CbLight)))
         {
             ELOG("Error : ConstantBuffer::Init() Failed.");
             return false;
@@ -326,7 +225,7 @@ bool SampleApp::CreateLightBuffer() {
 bool SampleApp::CreateCameraBuffer() {
     for (auto i = 0; i < FrameCount; ++i)
     {
-        if (!m_CameraCB[i].Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], sizeof(CbCamera)))
+        if (!m_CameraCB[i].Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], sizeof(SampleAppSpace::CbCamera)))
         {
             ELOG("Error : ConstantBuffer::Init() Failed.");
             return false;
@@ -404,7 +303,7 @@ bool SampleApp::CreateSceneRootSig() {
     return true;
 }
 
-bool SampleApp::CreateScenePipe() {
+bool SampleApp::CreateScenePipeLineState() {
     std::wstring vsPath;
     std::wstring psPath;
 
@@ -450,20 +349,20 @@ bool SampleApp::CreateScenePipe() {
 
     // グラフィックスパイプラインステートを設定.
     D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
-    desc.InputLayout = { elements, 4 };
-    desc.pRootSignature = m_SceneRootSig.GetPtr();
-    desc.VS = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
-    desc.PS = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
-    desc.RasterizerState = DirectX::CommonStates::CullNone;
-    desc.BlendState = DirectX::CommonStates::Opaque;
-    desc.DepthStencilState = DirectX::CommonStates::DepthDefault;
-    desc.SampleMask = UINT_MAX;
-    desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    desc.NumRenderTargets = 1;
-    desc.RTVFormats[0] = m_SceneColorTarget.GetRTVDesc().Format;
-    desc.DSVFormat = m_SceneDepthTarget.GetDSVDesc().Format;
-    desc.SampleDesc.Count = 1;
-    desc.SampleDesc.Quality = 0;
+    desc.InputLayout                        = { elements, 4 };
+    desc.pRootSignature                     = m_SceneRootSig.GetPtr();
+    desc.VS                                 = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
+    desc.PS                                 = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
+    desc.RasterizerState                    = DirectX::CommonStates::CullNone;
+    desc.BlendState                         = DirectX::CommonStates::Opaque;
+    desc.DepthStencilState                  = DirectX::CommonStates::DepthDefault;
+    desc.SampleMask                         = UINT_MAX;
+    desc.PrimitiveTopologyType              = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    desc.NumRenderTargets                   = 1;
+    desc.RTVFormats[0]                      = m_SceneColorTarget.GetRTVDesc().Format;
+    desc.DSVFormat                          = m_SceneDepthTarget.GetDSVDesc().Format;
+    desc.SampleDesc.Count                   = 1;
+    desc.SampleDesc.Quality                 = 0;
 
     // パイプラインステートを生成.
     hr = m_pDevice->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(m_pScenePSO.GetAddressOf()));
@@ -472,94 +371,6 @@ bool SampleApp::CreateScenePipe() {
         ELOG("Error : ID3D12Device::CreateGraphicsPipelineState() Failed. retcode = 0x%x", hr);
         return false;
     }
-}
-
-bool SampleApp::CreateToneMapRootSig() {
-    RootSignature::Desc desc;
-    desc.Begin(2)
-        .SetCBV(ShaderStage::PS, 0, 0)
-        .SetSRV(ShaderStage::PS, 1, 0)
-        .AddStaticSmp(ShaderStage::PS, 0, SamplerState::LinearWrap)
-        .AllowIL()
-        .End();
-
-    if (!m_TonemapRootSig.Init(m_pDevice.Get(), desc.GetDesc()))
-    {
-        ELOG("Error : RootSignature::Init() Failed.");
-        return false;
-    }
-
-    return true;
-}
-
-bool SampleApp::CreateToneMapPipe() {
-    std::wstring vsPath;
-    std::wstring psPath;
-
-    // 頂点シェーダを検索.
-    if (!SearchFilePath(L"QuadVS.cso", vsPath))
-    {
-        ELOG("Error : Vertex Shader Not Found.");
-        return false;
-    }
-
-    // ピクセルシェーダを検索.
-    if (!SearchFilePath(L"TonemapPS.cso", psPath))
-    {
-        ELOG("Error : Pixel Shader Node Found.");
-        return false;
-    }
-
-    ComPtr<ID3DBlob> pVSBlob;
-    ComPtr<ID3DBlob> pPSBlob;
-
-    // 頂点シェーダを読み込む.
-    auto hr = D3DReadFileToBlob(vsPath.c_str(), pVSBlob.GetAddressOf());
-    if (FAILED(hr))
-    {
-        ELOG("Error : D3DReadFiledToBlob() Failed. path = %ls", vsPath.c_str());
-        return false;
-    }
-
-    // ピクセルシェーダを読み込む.
-    hr = D3DReadFileToBlob(psPath.c_str(), pPSBlob.GetAddressOf());
-    if (FAILED(hr))
-    {
-        ELOG("Error : D3DReadFileToBlob() Failed. path = %ls", psPath.c_str());
-        return false;
-    }
-
-    D3D12_INPUT_ELEMENT_DESC elements[] = {
-        { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 8, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-    };
-
-    // グラフィックスパイプラインステートを設定.
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
-    desc.InputLayout = { elements, 2 };
-    desc.pRootSignature = m_TonemapRootSig.GetPtr();
-    desc.VS = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
-    desc.PS = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
-    desc.RasterizerState = DirectX::CommonStates::CullNone;
-    desc.BlendState = DirectX::CommonStates::Opaque;
-    desc.DepthStencilState = DirectX::CommonStates::DepthDefault;
-    desc.SampleMask = UINT_MAX;
-    desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    desc.NumRenderTargets = 1;
-    desc.RTVFormats[0] = m_ColorTarget[0].GetRTVDesc().Format;
-    desc.DSVFormat = m_DepthTarget.GetDSVDesc().Format;
-    desc.SampleDesc.Count = 1;
-    desc.SampleDesc.Quality = 0;
-
-    // パイプラインステートを生成.
-    hr = m_pDevice->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(m_pTonemapPSO.GetAddressOf()));
-    if (FAILED(hr))
-    {
-        ELOG("Error : ID3D12Device::CreateGraphicsPipelineState() Failed. retcode = 0x%x", hr);
-        return false;
-    }
-
-    return true;
 }
 
 bool SampleApp::CreateVertexBuffer() {
@@ -589,22 +400,11 @@ bool SampleApp::CreateVertexBuffer() {
     return true;
 }
 
-bool SampleApp::CreateToneMapConstantBuffer() {
-    for (auto i = 0; i < FrameCount; ++i)
-    {
-        if (!m_TonemapCB[i].Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], sizeof(CbTonemap)))
-        {
-            ELOG("Error : ConstantBuffer::Init() Failed.");
-            return false;
-        }
-    }
-}
-
 bool SampleApp::CreateMatrixConstantBuffer() {
     for (auto i = 0u; i < FrameCount; ++i)
     {
         // 定数バッファ初期化.
-        if (!m_TransformCB[i].Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], sizeof(CbTransform)))
+        if (!m_TransformCB[i].Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], sizeof(SampleAppSpace::CbTransform)))
         {
             ELOG("Error : ConstantBuffer::Init() Failed.");
             return false;
@@ -620,7 +420,7 @@ bool SampleApp::CreateMatrixConstantBuffer() {
         auto aspect = static_cast<float>(m_Width) / static_cast<float>(m_Height);
 
         // 変換行列を設定.
-        auto ptr = m_TransformCB[i].GetPtr<CbTransform>();
+        auto ptr = m_TransformCB[i].GetPtr<SampleAppSpace::CbTransform>();
         ptr->View = Matrix::CreateLookAt(eyePos, targetPos, upward);
         ptr->Proj = Matrix::CreatePerspectiveFieldOfView(fovY, aspect, 0.1f, 1000.0f);
     }
@@ -631,29 +431,18 @@ bool SampleApp::CreateMatrixConstantBuffer() {
 bool SampleApp::CreateMeshBuffer() {
     for (auto i = 0; i < FrameCount; ++i)
     {
-        if (!m_MeshCB[i].Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], sizeof(CbMesh)))
+        if (!m_MeshCB[i].Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], sizeof(SampleAppSpace::CbMesh)))
         {
             ELOG("Error : ConstantBuffer::Init() Failed.");
             return false;
         }
 
-        auto ptr = m_MeshCB[i].GetPtr<CbMesh>();
+        auto ptr = m_MeshCB[i].GetPtr<SampleAppSpace::CbMesh>();
         ptr->World = Matrix::Identity;
     }
 
     return true;
 }
-
-bool SampleApp::CreateIBLBaker() {
-    if (!m_IBLBaker.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], m_pPool[POOL_TYPE_RTV]))
-    {
-        ELOG("Error : IBLBaker::Init() Failed.");
-        return false;
-    }
-
-    return true;
-}
-
 
 
 bool SampleApp::CreateSphereMapConverter() {
@@ -681,6 +470,13 @@ bool SampleApp::CreateSkyBox() {
 }
 
 bool SampleApp::IBLBake() {
+
+    if (!m_IBLBaker.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], m_pPool[POOL_TYPE_RTV]))
+    {
+        ELOG("Error : IBLBaker::Init() Failed.");
+        return false;
+    }
+
     // コマンドリストの記録を開始.
     auto pCmd = m_CommandList.Reset();
 
@@ -715,6 +511,7 @@ bool SampleApp::IBLBake() {
     return true;
 }
 
+
 //-----------------------------------------------------------------------------
 //      終了時の処理です.
 //-----------------------------------------------------------------------------
@@ -723,11 +520,12 @@ void SampleApp::OnTerm()
     m_QuadVB.Term();
     for(auto i=0; i<FrameCount; ++i)
     {
-        m_TonemapCB  [i].Term();
         m_LightCB    [i].Term();
         m_CameraCB   [i].Term();
         m_TransformCB[i].Term();
     }
+
+    m_ToneMap.Term();
 
     // メッシュ破棄.
     for (size_t i = 0; i<m_pMesh.size(); ++i)
@@ -751,9 +549,6 @@ void SampleApp::OnTerm()
     m_pScenePSO   .Reset();
     m_SceneRootSig.Term();
 
-    m_pTonemapPSO   .Reset();
-    m_TonemapRootSig.Term();
-
     m_IBLBaker.Term();
     m_SphereMapConverter.Term();
     m_SphereMap.Term();
@@ -764,7 +559,6 @@ void SampleApp::OnRenderIMGUI() {
     ImGui::Begin("Hello, world!");
     ImGui::End();
 }
-
 
 
 //-----------------------------------------------------------------------------
@@ -785,42 +579,68 @@ void SampleApp::OnRender()
     };
     pCmd->SetDescriptorHeaps(1, pHeaps);
 
+    //　不透描画
     {
-        // 書き込み用リソースバリア設定.
-        DirectX::TransitionResource(pCmd,
-            m_SceneColorTarget.GetResource(),
-            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-            D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-        // ディスクリプタ取得.
-        auto handleRTV = m_SceneColorTarget.GetHandleRTV();
-        auto handleDSV = m_SceneDepthTarget.GetHandleDSV();
-
-        // レンダーターゲットを設定.
-        pCmd->OMSetRenderTargets(1, &handleRTV->HandleCPU, FALSE, &handleDSV->HandleCPU);
-
-        // レンダーターゲットをクリア.
-        m_SceneColorTarget.ClearView(pCmd);
-        m_SceneDepthTarget.ClearView(pCmd);
-
-        // ビューポート設定.
-        pCmd->RSSetViewports(1, &m_Viewport);
-        pCmd->RSSetScissorRects(1, &m_Scissor);
-
-        // 背景描画.
-        m_SkyBox.Draw(pCmd, m_SphereMapConverter.GetCubeMapHandleGPU(), m_View, m_Proj, 100.0f);
-
-        // シーンの描画.
-        DrawScene(pCmd);
-
-        // 読み込み用リソースバリア設定.
-        DirectX::TransitionResource(pCmd,
-            m_SceneColorTarget.GetResource(),
-            D3D12_RESOURCE_STATE_RENDER_TARGET,
-            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        OpaqueProcess(pCmd);
     }
 
-    // フレームバッファに描画.
+    // ポストエフェクト
+    {
+        ToneMapProcess(pCmd);       // ここもToneMapに組み込む
+    }
+
+    // IMGUIの描画
+    {
+        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), pCmd);
+    }
+
+    // コマンドリストの記録を終了.
+    pCmd->Close();
+
+    // コマンドリストを実行.
+    ID3D12CommandList* pLists[] = { pCmd };
+    m_pQueue->ExecuteCommandLists( 1, pLists );
+
+    // 画面に表示.
+    Present(1);
+}
+
+void SampleApp::OpaqueProcess(ID3D12GraphicsCommandList* pCmd) {
+    // 書き込み用リソースバリア設定.
+    DirectX::TransitionResource(pCmd,
+        m_SceneColorTarget.GetResource(),
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    // ディスクリプタ取得.
+    auto handleRTV = m_SceneColorTarget.GetHandleRTV();
+    auto handleDSV = m_SceneDepthTarget.GetHandleDSV();
+
+    // レンダーターゲットを設定.
+    pCmd->OMSetRenderTargets(1, &handleRTV->HandleCPU, FALSE, &handleDSV->HandleCPU);
+
+    // レンダーターゲットをクリア.
+    m_SceneColorTarget.ClearView(pCmd);
+    m_SceneDepthTarget.ClearView(pCmd);
+
+    // ビューポート設定.
+    pCmd->RSSetViewports(1, &m_Viewport);
+    pCmd->RSSetScissorRects(1, &m_Scissor);
+
+    // 背景描画.
+    m_SkyBox.Draw(pCmd, m_SphereMapConverter.GetCubeMapHandleGPU(), m_View, m_Proj, 100.0f);
+
+    // シーンの描画.
+    DrawScene(pCmd);
+
+    // 読み込み用リソースバリア設定.
+    DirectX::TransitionResource(pCmd,
+        m_SceneColorTarget.GetResource(),
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+}
+
+void SampleApp::ToneMapProcess(ID3D12GraphicsCommandList* pCmd) {
     {
         // 書き込み用リソースバリア設定.
         DirectX::TransitionResource(pCmd,
@@ -840,7 +660,7 @@ void SampleApp::OnRender()
         m_DepthTarget.ClearView(pCmd);
 
         // トーンマップを適用.
-        DrawTonemap(pCmd);
+        m_ToneMap.DrawTonemap(pCmd, m_FrameIndex, m_SceneColorTarget, &m_Viewport, &m_Scissor, m_QuadVB);
 
         // 表示用リソースバリア設定.
         DirectX::TransitionResource(pCmd,
@@ -848,21 +668,6 @@ void SampleApp::OnRender()
             D3D12_RESOURCE_STATE_RENDER_TARGET,
             D3D12_RESOURCE_STATE_PRESENT);
     }
-
-    // IMGUIの描画
-    {
-        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), pCmd);
-    }
-
-    // コマンドリストの記録を終了.
-    pCmd->Close();
-
-    // コマンドリストを実行.
-    ID3D12CommandList* pLists[] = { pCmd };
-    m_pQueue->ExecuteCommandLists( 1, pLists );
-
-    // 画面に表示.
-    Present(1);
 }
 
 void SampleApp::UpdateCamera() {
@@ -905,7 +710,7 @@ void SampleApp::DrawScene(ID3D12GraphicsCommandList* pCmd)
 }
 
 void SampleApp::UpdateLightBuffer() {
-    auto ptr = m_LightCB[m_FrameIndex].GetPtr<CbLight>();
+    auto ptr = m_LightCB[m_FrameIndex].GetPtr<SampleAppSpace::CbLight>();
     ptr->TextureSize = m_IBLBaker.LDTextureSize;
     ptr->MipCount = m_IBLBaker.MipCount;
     ptr->LightDirection = Vector3(0.0f, -1.0f, 0.0f);
@@ -913,18 +718,18 @@ void SampleApp::UpdateLightBuffer() {
 }
 
 void SampleApp::UpdateCameraBuffer() {
-    auto ptr = m_CameraCB[m_FrameIndex].GetPtr<CbCamera>();
+    auto ptr = m_CameraCB[m_FrameIndex].GetPtr<SampleAppSpace::CbCamera>();
     ptr->CameraPosition = m_Camera.GetPosition();
 }
 
 void SampleApp::UpdateViewProjMatrix() {
-    auto ptr = m_TransformCB[m_FrameIndex].GetPtr<CbTransform>();
+    auto ptr = m_TransformCB[m_FrameIndex].GetPtr<SampleAppSpace::CbTransform>();
     ptr->View = m_View;
     ptr->Proj = m_Proj;
 }
 
 void SampleApp::UpdateWorldMatrix() {
-    auto ptr = m_MeshCB[m_FrameIndex].GetPtr<CbMesh>();
+    auto ptr = m_MeshCB[m_FrameIndex].GetPtr<SampleAppSpace::CbMesh>();
 }
 
 //-----------------------------------------------------------------------------
@@ -946,33 +751,6 @@ void SampleApp::DrawMesh(ID3D12GraphicsCommandList* pCmd)
         // メッシュを描画.
         m_pMesh[i]->Draw(pCmd);
     }
-}
-
-//-----------------------------------------------------------------------------
-//      トーンマップを適用します.
-//-----------------------------------------------------------------------------
-void SampleApp::DrawTonemap(ID3D12GraphicsCommandList* pCmd)
-{
-    // 定数バッファ更新
-    {
-        auto ptr = m_TonemapCB[m_FrameIndex].GetPtr<CbTonemap>();
-        ptr->Type           = m_TonemapType;
-        ptr->ColorSpace     = m_ColorSpace;
-        ptr->BaseLuminance  = m_BaseLuminance;
-        ptr->MaxLuminance   = m_MaxLuminance;
-    }
-
-    pCmd->SetGraphicsRootSignature(m_TonemapRootSig.GetPtr());
-    pCmd->SetGraphicsRootDescriptorTable(0, m_TonemapCB[m_FrameIndex].GetHandleGPU());
-    pCmd->SetGraphicsRootDescriptorTable(1, m_SceneColorTarget.GetHandleSRV()->HandleGPU);
-
-    pCmd->SetPipelineState(m_pTonemapPSO.Get());
-    pCmd->RSSetViewports(1, &m_Viewport);
-    pCmd->RSSetScissorRects(1, &m_Scissor);
-
-    pCmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    pCmd->IASetVertexBuffers(0, 1, &m_QuadVB.GetView());
-    pCmd->DrawInstanced(3, 1, 0, 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -1008,14 +786,14 @@ void SampleApp::ChangeDisplayMode(bool hdr)
         DXGI_HDR_METADATA_HDR10 metaData = {};
 
         // ITU-R BT.2100の原刺激と白色点を設定.
-        metaData.RedPrimary[0]      = GetChromaticityCoord(0.708);
-        metaData.RedPrimary[1]      = GetChromaticityCoord(0.292);
-        metaData.BluePrimary[0]     = GetChromaticityCoord(0.170);
-        metaData.BluePrimary[1]     = GetChromaticityCoord(0.797);
-        metaData.GreenPrimary[0]    = GetChromaticityCoord(0.131);
-        metaData.GreenPrimary[1]    = GetChromaticityCoord(0.046);
-        metaData.WhitePoint[0]      = GetChromaticityCoord(0.3127);
-        metaData.WhitePoint[1]      = GetChromaticityCoord(0.3290);
+        metaData.RedPrimary[0]      = SampleAppSpace::GetChromaticityCoord(0.708);
+        metaData.RedPrimary[1]      = SampleAppSpace::GetChromaticityCoord(0.292);
+        metaData.BluePrimary[0]     = SampleAppSpace::GetChromaticityCoord(0.170);
+        metaData.BluePrimary[1]     = SampleAppSpace::GetChromaticityCoord(0.797);
+        metaData.GreenPrimary[0]    = SampleAppSpace::GetChromaticityCoord(0.131);
+        metaData.GreenPrimary[1]    = SampleAppSpace::GetChromaticityCoord(0.046);
+        metaData.WhitePoint[0]      = SampleAppSpace::GetChromaticityCoord(0.3127);
+        metaData.WhitePoint[1]      = SampleAppSpace::GetChromaticityCoord(0.3290);
 
         // ディスプレイがサポートすると最大輝度値と最小輝度値を設定.
         metaData.MaxMasteringLuminance = UINT(GetMaxLuminance() * 10000);
@@ -1030,8 +808,7 @@ void SampleApp::ChangeDisplayMode(bool hdr)
             ELOG("Error : IDXGISwapChain::SetHDRMetaData() Failed.");
         }
 
-        m_BaseLuminance = 100.0f;
-        m_MaxLuminance  = GetMaxLuminance();
+        m_ToneMap.SetLuminance(100.0f, GetMaxLuminance());
 
         // 成功したことを知らせるダイアログを出す.
         std::string message;
@@ -1066,14 +843,14 @@ void SampleApp::ChangeDisplayMode(bool hdr)
         DXGI_HDR_METADATA_HDR10 metaData = {};
 
         // ITU-R BT.709の原刺激と白色点を設定.
-        metaData.RedPrimary[0]      = GetChromaticityCoord(0.640);
-        metaData.RedPrimary[1]      = GetChromaticityCoord(0.330);
-        metaData.BluePrimary[0]     = GetChromaticityCoord(0.300);
-        metaData.BluePrimary[1]     = GetChromaticityCoord(0.600);
-        metaData.GreenPrimary[0]    = GetChromaticityCoord(0.150);
-        metaData.GreenPrimary[1]    = GetChromaticityCoord(0.060);
-        metaData.WhitePoint[0]      = GetChromaticityCoord(0.3127);
-        metaData.WhitePoint[1]      = GetChromaticityCoord(0.3290);
+        metaData.RedPrimary[0]      = SampleAppSpace::GetChromaticityCoord(0.640);
+        metaData.RedPrimary[1]      = SampleAppSpace::GetChromaticityCoord(0.330);
+        metaData.BluePrimary[0]     = SampleAppSpace::GetChromaticityCoord(0.300);
+        metaData.BluePrimary[1]     = SampleAppSpace::GetChromaticityCoord(0.600);
+        metaData.GreenPrimary[0]    = SampleAppSpace::GetChromaticityCoord(0.150);
+        metaData.GreenPrimary[1]    = SampleAppSpace::GetChromaticityCoord(0.060);
+        metaData.WhitePoint[0]      = SampleAppSpace::GetChromaticityCoord(0.3127);
+        metaData.WhitePoint[1]      = SampleAppSpace::GetChromaticityCoord(0.3290);
 
         // ディスプレイがサポートすると最大輝度値と最小輝度値を設定.
         metaData.MaxMasteringLuminance = UINT(GetMaxLuminance() * 10000);
@@ -1088,8 +865,7 @@ void SampleApp::ChangeDisplayMode(bool hdr)
             ELOG("Error : IDXGISwapChain::SetHDRMetaData() Failed.");
         }
 
-        m_BaseLuminance = 100.0f;
-        m_MaxLuminance  = 100.0f;
+        m_ToneMap.SetLuminance(100.0f, GetMaxLuminance());
 
         // 成功したことを知らせるダイアログを出す.
         std::string message;
@@ -1152,21 +928,21 @@ void SampleApp::OnMsgProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             // トーンマップなし.
             case 'N':
                 {
-                    m_TonemapType = TONEMAP_NONE;
+                    m_ToneMap.SetToneMapType(SampleAppSpace::TONEMAP_NONE);
                 }
                 break;
 
             // Reinhardトーンマップ.
             case 'R':
                 {
-                    m_TonemapType = TONEMAP_REINHARD;
+                    m_ToneMap.SetToneMapType(SampleAppSpace::TONEMAP_REINHARD);
                 }
                 break;
 
             // GTトーンマップ
             case 'G':
                 {
-                    m_TonemapType = TONEMAP_GT;
+                    m_ToneMap.SetToneMapType(SampleAppSpace::TONEMAP_GT);
                 }
                 break;
 
