@@ -64,11 +64,9 @@ namespace CommonCb {
 
 class CommonBufferManager {
 public:
-    bool CommonBufferManager::CreateLightBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool);
-    bool CommonBufferManager::CreateCameraBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool);
-    bool CommonBufferManager::CreateMeshBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool);
-    bool CommonBufferManager::CreateVertexBuffer(ComPtr<ID3D12Device> pDevice);
-    bool CommonBufferManager::CreateMatrixConstantBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, float width, float height);
+    bool Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, float width, float height);
+
+
 
     void CommonBufferManager::UpdateLightBuffer(int frameindex, float texSize, float mipCount);
     void CommonBufferManager::UpdateCameraBuffer(int frameindex, Vector3 pos);
@@ -76,7 +74,7 @@ public:
     void CommonBufferManager::UpdateWorldMatrix(int frameindex);
     void Term();
 
-    VertexBuffer                    m_QuadVB;                           //!< 頂点バッファです.
+    VertexBuffer                    m_QuadVB;                            //!< 頂点バッファです.
     ConstantBuffer                  m_LightCB[App::FrameCount];          //!< ライトバッファです.
     ConstantBuffer                  m_CameraCB[App::FrameCount];         //!< カメラバッファです.
     ConstantBuffer                  m_TransformCB[App::FrameCount];      //!< 変換用バッファです.
@@ -86,5 +84,11 @@ private:
     //=========================================================================
     // private variables.
     //=========================================================================
+    bool CommonBufferManager::CreateLightBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool);
+    bool CommonBufferManager::CreateCameraBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool);
+    bool CommonBufferManager::CreateMeshBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool);
+    bool CommonBufferManager::CreateVertexBuffer(ComPtr<ID3D12Device> pDevice);
+    bool CommonBufferManager::CreateMatrixConstantBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, float width, float height);
+
 
 };

@@ -48,27 +48,22 @@ bool SampleApp::OnInit()
     // テクスチャ/メッシュをロード.
     if (!PrepareMesh())              return false;
 
-    // シーン用定数バッファ/レンダーターゲット
-    if (!m_CommonBufferManager.CreateLightBuffer(m_pDevice.Get(), m_pPool[POOL_TYPE_RES]))                                              return false;
-    if (!m_CommonBufferManager.CreateCameraBuffer(m_pDevice.Get(), m_pPool[POOL_TYPE_RES]))                                             return false;
-    if (!m_CommonBufferManager.CreateVertexBuffer(m_pDevice.Get()))                                                                     return false;
-    if (!m_CommonBufferManager.CreateMeshBuffer(m_pDevice.Get(), m_pPool[POOL_TYPE_RES]))                                               return false;
-    if (!m_CommonBufferManager.CreateMatrixConstantBuffer(m_pDevice.Get(), m_pPool[POOL_TYPE_RES],m_Width, m_Height))                   return false;
-    if (!m_CommonRTManager.CreateColorTarget(m_pDevice.Get(), m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_Width, m_Height))      return false;
-    if (!m_CommonRTManager.CreateDepthTarget(m_pDevice.Get(), m_pPool[POOL_TYPE_DSV], m_Width, m_Height))                              return false;
-
-    // シーン用ルートシグニチャ/パイプラインステートの生成.
-    if (!CreateSceneRootSig())                  return false;
-    if (!CreateScenePipeLineState())            return false;
+    // 共通定数バッファ/レンダーターゲット
+    if (!m_CommonBufferManager.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], m_Width, m_Height))                                                return false;
+    if (!m_CommonRTManager.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_pPool[POOL_TYPE_DSV], m_Width, m_Height))    return false;
 
     // スカイボックス
     if (!CreateSkyBox())                        return false;
 
-    //依存しているのに関数が分かれている
-    // スフィアマップ
+    //依存しているのに関数が分かれている  IBL
     if (!LoadSphereMapTexture())                return false;
     if (!CreateSphereMapConverter())            return false;
     if (!IBLBake())                             return false;
+
+    // メッシュ用シェーダー初期化.
+    if (!m_BasicShader.Init(m_pDevice,
+        m_CommonRTManager.m_SceneColorTarget.GetRTVDesc().Format,
+        m_CommonRTManager.m_SceneDepthTarget.GetDSVDesc().Format))      return false;
 
     // ポストプロセス初期化
     if (!m_ToneMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format))    return false;
@@ -151,10 +146,10 @@ bool SampleApp::PrepareMesh() {
     // テクスチャとマテリアルを設定.
     {
         /* ここではマテリアルが1個分かっているのでハードコーディングしています.*/
-        m_Material.SetTexture(0, TU_BASE_COLOR, L"../res/texture/gold_bc.dds", batch);
-        m_Material.SetTexture(0, TU_METALLIC, L"../res/texture/gold_m.dds", batch);
-        m_Material.SetTexture(0, TU_ROUGHNESS, L"../res/texture/gold_r.dds", batch);
-        m_Material.SetTexture(0, TU_NORMAL, L"../res/texture/gold_n.dds", batch);
+        m_Material.SetTexture(0, TU_BASE_COLOR, L"../res/texture/gold_bc.dds",  batch);
+        m_Material.SetTexture(0, TU_METALLIC,   L"../res/texture/gold_m.dds",   batch);
+        m_Material.SetTexture(0, TU_ROUGHNESS,  L"../res/texture/gold_r.dds",   batch);
+        m_Material.SetTexture(0, TU_NORMAL,     L"../res/texture/gold_n.dds",   batch);
     }
 
     // バッチ終了.
@@ -164,108 +159,6 @@ bool SampleApp::PrepareMesh() {
     future.wait();
 
     return true;
-}
-
-bool SampleApp::CreateSceneRootSig() {
-    RootSignature::Desc desc;
-    desc.Begin(11)
-        .SetCBV(ShaderStage::VS, 0, 0)
-        .SetCBV(ShaderStage::VS, 1, 1)
-        .SetCBV(ShaderStage::PS, 2, 1)
-        .SetCBV(ShaderStage::PS, 3, 2)
-        .SetSRV(ShaderStage::PS, 4, 0)
-        .SetSRV(ShaderStage::PS, 5, 1)
-        .SetSRV(ShaderStage::PS, 6, 2)
-        .SetSRV(ShaderStage::PS, 7, 3)
-        .SetSRV(ShaderStage::PS, 8, 4)
-        .SetSRV(ShaderStage::PS, 9, 5)
-        .SetSRV(ShaderStage::PS, 10, 6)
-        .AddStaticSmp(ShaderStage::PS, 0, SamplerState::LinearWrap)
-        .AddStaticSmp(ShaderStage::PS, 1, SamplerState::LinearWrap)
-        .AddStaticSmp(ShaderStage::PS, 2, SamplerState::LinearWrap)
-        .AddStaticSmp(ShaderStage::PS, 3, SamplerState::LinearWrap)
-        .AddStaticSmp(ShaderStage::PS, 4, SamplerState::LinearWrap)
-        .AddStaticSmp(ShaderStage::PS, 5, SamplerState::LinearWrap)
-        .AddStaticSmp(ShaderStage::PS, 6, SamplerState::LinearWrap)
-        .AllowIL()
-        .End();
-
-    if (!m_SceneRootSig.Init(m_pDevice.Get(), desc.GetDesc()))
-    {
-        ELOG("Error : RootSignature::Init() Failed.");
-        return false;
-    }
-
-    return true;
-}
-bool SampleApp::CreateScenePipeLineState() {
-    std::wstring vsPath;
-    std::wstring psPath;
-
-    // 頂点シェーダを検索.
-    if (!SearchFilePath(L"BasicVS.cso", vsPath))
-    {
-        ELOG("Error : Vertex Shader Not Found.");
-        return false;
-    }
-
-    // ピクセルシェーダを検索.
-    if (!SearchFilePath(L"BasicPS.cso", psPath))
-    {
-        ELOG("Error : Pixel Shader Node Found.");
-        return false;
-    }
-
-    ComPtr<ID3DBlob> pVSBlob;
-    ComPtr<ID3DBlob> pPSBlob;
-
-    // 頂点シェーダを読み込む.
-    auto hr = D3DReadFileToBlob(vsPath.c_str(), pVSBlob.GetAddressOf());
-    if (FAILED(hr))
-    {
-        ELOG("Error : D3DReadFiledToBlob() Failed. path = %ls", vsPath.c_str());
-        return false;
-    }
-
-    // ピクセルシェーダを読み込む.
-    hr = D3DReadFileToBlob(psPath.c_str(), pPSBlob.GetAddressOf());
-    if (FAILED(hr))
-    {
-        ELOG("Error : D3DReadFileToBlob() Failed. path = %ls", psPath.c_str());
-        return false;
-    }
-
-    D3D12_INPUT_ELEMENT_DESC elements[] = {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        { "TANGENT",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-    };
-
-    // グラフィックスパイプラインステートを設定.
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
-    desc.InputLayout                        = { elements, 4 };
-    desc.pRootSignature                     = m_SceneRootSig.GetPtr();
-    desc.VS                                 = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
-    desc.PS                                 = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
-    desc.RasterizerState                    = DirectX::CommonStates::CullNone;
-    desc.BlendState                         = DirectX::CommonStates::Opaque;
-    desc.DepthStencilState                  = DirectX::CommonStates::DepthDefault;
-    desc.SampleMask                         = UINT_MAX;
-    desc.PrimitiveTopologyType              = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    desc.NumRenderTargets                   = 1;
-    desc.RTVFormats[0]                      = m_CommonRTManager.m_SceneColorTarget.GetRTVDesc().Format;
-    desc.DSVFormat                          = m_CommonRTManager.m_SceneDepthTarget.GetDSVDesc().Format;
-    desc.SampleDesc.Count                   = 1;
-    desc.SampleDesc.Quality                 = 0;
-
-    // パイプラインステートを生成.
-    hr = m_pDevice->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(m_pScenePSO.GetAddressOf()));
-    if (FAILED(hr))
-    {
-        ELOG("Error : ID3D12Device::CreateGraphicsPipelineState() Failed. retcode = 0x%x", hr);
-        return false;
-    }
 }
 
 bool SampleApp::LoadSphereMapTexture() {
@@ -385,8 +278,7 @@ void SampleApp::OnTerm()
     m_CommonBufferManager.Term();
     m_CommonRTManager.Term();
 
-    m_pScenePSO   .Reset();
-    m_SceneRootSig.Term();
+    m_BasicShader.Term();
 
     m_IBLBaker.Term();
     m_SphereMapConverter.Term();
@@ -402,7 +294,7 @@ void SampleApp::OnRenderIMGUI() {
         m_Camera.Reset();
     }
 
-    // HDR SDR
+    // HDR/SDRの選択
     if (ImGui::Button("HDR")) {
         ChangeDisplayMode(true);
     }
@@ -443,16 +335,10 @@ void SampleApp::OnRender()
 
     // コマンドリストの記録を開始.
     auto pCmd = m_CommandList.Reset();
-
     ID3D12DescriptorHeap* const pHeaps[] = {
         m_pPool[POOL_TYPE_RES]->GetHeap(),
     };
     pCmd->SetDescriptorHeaps(1, pHeaps);
-
-    //　生出力
-    {
-        // OpaqueProcess(pCmd, m_ColorTarget[m_FrameIndex], m_DepthTarget, &m_SkyBox);
-    }
 
     {
         OpaqueProcess(pCmd, m_CommonRTManager.m_SceneColorTarget, m_CommonRTManager.m_SceneDepthTarget, &m_SkyBox);
@@ -469,6 +355,14 @@ void SampleApp::OnRender()
 
     // 画面に表示.
     Present(1);
+}
+
+void SampleApp::UpdateCamera() {
+    auto fovY = DirectX::XMConvertToRadians(37.5f);
+    auto aspect = static_cast<float>(m_Width) / static_cast<float>(m_Height);
+
+    m_View = m_Camera.GetView();
+    m_Proj = Matrix::CreatePerspectiveFieldOfView(fovY, aspect, 0.1f, 1000.0f);
 }
 
 void SampleApp::OpaqueProcess(ID3D12GraphicsCommandList* pCmd, ColorTarget& colorDest, DepthTarget& depthDest , SkyBox* skyBox = nullptr) 
@@ -491,8 +385,8 @@ void SampleApp::OpaqueProcess(ID3D12GraphicsCommandList* pCmd, ColorTarget& colo
     depthDest.ClearView(pCmd);
 
     // ビューポート設定.
-    pCmd->RSSetViewports(1, &m_Viewport);
-    pCmd->RSSetScissorRects(1, &m_Scissor);
+    pCmd->RSSetViewports(1,     &m_Viewport);
+    pCmd->RSSetScissorRects(1,  &m_Scissor);
 
     // 背景描画.
     if (skyBox != nullptr) skyBox->Draw(pCmd, m_SphereMapConverter.GetCubeMapHandleGPU(), m_View, m_Proj, 300.0f);
@@ -517,18 +411,7 @@ void SampleApp::DrawScene(ID3D12GraphicsCommandList* pCmd)
     m_CommonBufferManager.UpdateCameraBuffer(m_FrameIndex, m_Camera.GetPosition());
     m_CommonBufferManager.UpdateViewProjMatrix(m_FrameIndex, m_View, m_Proj);
     m_CommonBufferManager.UpdateWorldMatrix(m_FrameIndex);
-
-    pCmd->SetGraphicsRootSignature(m_SceneRootSig.GetPtr());
-    pCmd->SetGraphicsRootDescriptorTable(0, m_CommonBufferManager.m_TransformCB[m_FrameIndex].GetHandleGPU());
-    pCmd->SetGraphicsRootDescriptorTable(2, m_CommonBufferManager.m_LightCB[m_FrameIndex].GetHandleGPU());
-    pCmd->SetGraphicsRootDescriptorTable(3, m_CommonBufferManager.m_CameraCB[m_FrameIndex].GetHandleGPU());
-    pCmd->SetGraphicsRootDescriptorTable(4, m_IBLBaker.GetHandleGPU_DFG());
-    pCmd->SetGraphicsRootDescriptorTable(5, m_IBLBaker.GetHandleGPU_DiffuseLD());
-    pCmd->SetGraphicsRootDescriptorTable(6, m_IBLBaker.GetHandleGPU_SpecularLD());
-    pCmd->SetPipelineState(m_pScenePSO.Get());
-
-    // オブジェクトを描く.
-    pCmd->SetGraphicsRootDescriptorTable(1, m_CommonBufferManager.m_MeshCB[m_FrameIndex].GetHandleGPU());
+    
     DrawMesh(pCmd);
 }
 
@@ -542,26 +425,13 @@ void SampleApp::DrawMesh(ID3D12GraphicsCommandList* pCmd)
         // マテリアルIDを取得.
         auto id = m_pMesh[i]->GetMaterialId();
 
-        // テクスチャを設定.
-        pCmd->SetGraphicsRootDescriptorTable(7, m_Material.GetTextureHandle(id, TU_BASE_COLOR));
-        pCmd->SetGraphicsRootDescriptorTable(8, m_Material.GetTextureHandle(id, TU_METALLIC));
-        pCmd->SetGraphicsRootDescriptorTable(9, m_Material.GetTextureHandle(id, TU_ROUGHNESS));
-        pCmd->SetGraphicsRootDescriptorTable(10, m_Material.GetTextureHandle(id, TU_NORMAL));
-
+        // 使用するShaderをセット
+        m_BasicShader.SetShader(pCmd, m_FrameIndex, m_Material,i ,m_CommonBufferManager, m_IBLBaker);
+        
         // メッシュを描画.
-        m_pMesh[i]->Draw(pCmd);
+        m_pMesh[i]->Draw(pCmd);                 
     }
 }
-
-
-void SampleApp::UpdateCamera() {
-    auto fovY = DirectX::XMConvertToRadians(37.5f);
-    auto aspect = static_cast<float>(m_Width) / static_cast<float>(m_Height);
-
-    m_View = m_Camera.GetView();
-    m_Proj = Matrix::CreatePerspectiveFieldOfView(fovY, aspect, 0.1f, 1000.0f);
-}
-
 
 
 
@@ -579,8 +449,6 @@ void SampleApp::PostProcess(ID3D12GraphicsCommandList* pCmd)
         &m_Scissor,
         m_CommonBufferManager.m_QuadVB);
 }
-
-
 
 //-----------------------------------------------------------------------------
 //      ディスプレイモードを変更します.

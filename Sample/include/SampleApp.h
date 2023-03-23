@@ -19,6 +19,7 @@
 #include <ToneMap.h>
 #include <CommonBufferManager.h>
 #include <CommonRTVManager.h>
+#include <BasicShader.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // SampleApp class
@@ -59,8 +60,7 @@ private:
     //=========================================================================
     // private variables.
     //=========================================================================
-    ComPtr<ID3D12PipelineState>     m_pScenePSO;                    //!< シーン用パイプラインステートです.
-    RootSignature                   m_SceneRootSig;                 //!< シーン用ルートシグニチャです.
+
     
     CommonRTManager                 m_CommonRTManager;
     CommonBufferManager             m_CommonBufferManager;
@@ -81,6 +81,8 @@ private:
     //　オブジェクト依存にしたい
     std::vector<Mesh*>              m_pMesh;                        //!< メッシュです.
     Material                        m_Material;                     //!< マテリアルです.
+    BasicShader                     m_BasicShader;
+
 
     //  スフィアマップとIBLベイクがここにあることがおかしい
     Texture                         m_SphereMap;                    //!< スフィアマップです.
@@ -99,8 +101,6 @@ private:
     //-------------------------------------------------------------------------
     bool OnInit() override;
     bool PrepareMesh();
-    bool CreateSceneRootSig();
-    bool CreateScenePipeLineState();
     bool LoadSphereMapTexture();
     bool CreateSphereMapConverter();
     bool CreateSkyBox();

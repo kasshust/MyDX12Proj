@@ -16,6 +16,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\BasicShader.cpp" />
     <ClCompile Include="..\src\CommonBufferManager.cpp" />
     <ClCompile Include="..\src\CommonRTVManager.cpp" />
     <ClCompile Include="..\src\IBLBaker.cpp" />
@@ -26,6 +27,7 @@
     <ClCompile Include="..\src\ToneMap.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\BasicShader.h" />
     <ClInclude Include="..\include\CommonBufferManager.h" />
     <ClInclude Include="..\include\CommonRTVManager.h" />
     <ClInclude Include="..\include\IBLBaker.h" />

@@ -36,6 +36,13 @@ bool CommonRTManager::CreateDepthTarget(ComPtr<ID3D12Device> pDevice, Descriptor
     return true;
 }
 
+bool CommonRTManager::Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* rtvpool, DescriptorPool* respool, DescriptorPool* dsvpool, float width, float height)
+{
+    if (!CreateColorTarget(pDevice, rtvpool, respool, width, height))   return false;
+    if (!CreateDepthTarget(pDevice, dsvpool, width, height))            return false;
+    return true;
+}
+
 void CommonRTManager::Term()
 {
     m_SceneColorTarget.Term();

@@ -13,6 +13,24 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="ソース ファイル\CommonBuffer">
+      <UniqueIdentifier>{a6408cdb-55bf-4c12-9e0e-27e1fb1ab32c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\CommonBuffer">
+      <UniqueIdentifier>{24f02f98-33a4-4aef-9b39-f817fafadcc2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\PostProcess">
+      <UniqueIdentifier>{da848004-08cd-4520-bd55-757d364be5ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\PostProcess">
+      <UniqueIdentifier>{3603d9bc-9d2b-4b95-bee8-df839f916f2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Shader">
+      <UniqueIdentifier>{f83ed4a8-30c1-4b45-a60b-1eb5578b4f98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Shader">
+      <UniqueIdentifier>{ca523f52-67ca-4077-9cdd-e137eee16c9c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp">
@@ -30,14 +48,17 @@
     <ClCompile Include="..\src\SkyBox.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ToneMap.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\CommonBufferManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\CommonBuffer</Filter>
     </ClCompile>
     <ClCompile Include="..\src\CommonRTVManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\CommonBuffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ToneMap.cpp">
+      <Filter>ソース ファイル\PostProcess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\BasicShader.cpp">
+      <Filter>ソース ファイル\Shader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -53,14 +74,17 @@
     <ClInclude Include="..\include\SkyBox.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\ToneMap.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\CommonBufferManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\CommonBuffer</Filter>
     </ClInclude>
     <ClInclude Include="..\include\CommonRTVManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\CommonBuffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ToneMap.h">
+      <Filter>ヘッダー ファイル\PostProcess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\BasicShader.h">
+      <Filter>ヘッダー ファイル\Shader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
