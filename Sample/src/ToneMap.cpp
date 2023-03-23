@@ -3,7 +3,7 @@
 #include "Logger.h"
 #include "App.h"
 #include <FileUtil.h>
-#include "SampleAppSpace.h"
+
 #include <CommonStates.h>
 
 bool ToneMap::Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format)
@@ -17,8 +17,8 @@ bool ToneMap::Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, DXGI_FORM
 
 ToneMap::ToneMap()
 {
-    m_TonemapType   = (SampleAppSpace::TONEMAP_GT);
-    m_ColorSpace    = (SampleAppSpace::COLOR_SPACE_BT709);
+    m_TonemapType   = (TONEMAP_GT);
+    m_ColorSpace    = (COLOR_SPACE_BT709);
     m_BaseLuminance = (100.0f);
     m_MaxLuminance  = (100.0f);
 }
@@ -132,7 +132,7 @@ bool ToneMap::CreateToneMapConstantBuffer(ComPtr<ID3D12Device> pDevice, Descript
     // 
     for (auto i = 0; i < App::FrameCount; ++i)
     {
-        if (!m_TonemapCB[i].Init(pDevice.Get(), pool, sizeof(SampleAppSpace::CbTonemap)))
+        if (!m_TonemapCB[i].Init(pDevice.Get(), pool, sizeof(CbTonemap)))
         {
             ELOG("Error : ConstantBuffer::Init() Failed.");
             return false;
@@ -140,11 +140,28 @@ bool ToneMap::CreateToneMapConstantBuffer(ComPtr<ID3D12Device> pDevice, Descript
     }
 }
 
-void ToneMap::DrawTonemap(ID3D12GraphicsCommandList* pCmd, int frameindex, ColorTarget& colortarget, D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, VertexBuffer &vb)
+void ToneMap::DrawTonemap(ID3D12GraphicsCommandList* pCmd, int frameindex, ColorTarget& colorDest, DepthTarget& depthDest, ColorTarget& colorSource, D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, VertexBuffer &vb)
 {
+    // 書き込み用リソースバリア設定.
+    DirectX::TransitionResource(pCmd,
+        colorDest.GetResource(),
+        D3D12_RESOURCE_STATE_PRESENT,
+        D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    // ディスクリプタ取得.
+    auto handleRTV = colorDest.GetHandleRTV();
+    auto handleDSV = depthDest.GetHandleDSV();
+
+    // レンダーターゲットを設定.
+    pCmd->OMSetRenderTargets(1, &handleRTV->HandleCPU, FALSE, &handleDSV->HandleCPU);
+
+    // レンダーターゲットをクリア.
+    colorDest.ClearView(pCmd);
+    depthDest.ClearView(pCmd);
+
     // 定数バッファ更新
     {
-        auto ptr           = m_TonemapCB[frameindex].GetPtr<SampleAppSpace::CbTonemap>();
+        auto ptr           = m_TonemapCB[frameindex].GetPtr<CbTonemap>();
         ptr->Type          = m_TonemapType;
         ptr->ColorSpace    = m_ColorSpace;
         ptr->BaseLuminance = m_BaseLuminance;
@@ -153,7 +170,7 @@ void ToneMap::DrawTonemap(ID3D12GraphicsCommandList* pCmd, int frameindex, Color
 
     pCmd->SetGraphicsRootSignature(m_TonemapRootSig.GetPtr());
     pCmd->SetGraphicsRootDescriptorTable(0, m_TonemapCB[frameindex].GetHandleGPU());
-    pCmd->SetGraphicsRootDescriptorTable(1, colortarget.GetHandleSRV()->HandleGPU);
+    pCmd->SetGraphicsRootDescriptorTable(1, colorSource.GetHandleSRV()->HandleGPU);
 
     pCmd->SetPipelineState(m_pTonemapPSO.Get());
     pCmd->RSSetViewports(1,     viewport);
@@ -163,6 +180,12 @@ void ToneMap::DrawTonemap(ID3D12GraphicsCommandList* pCmd, int frameindex, Color
     pCmd->IASetVertexBuffers(0, 1, &vb.GetView());
 
     pCmd->DrawInstanced(3, 1, 0, 0);
+
+    // 表示用リソースバリア設定.
+    DirectX::TransitionResource(pCmd,
+        colorDest.GetResource(),
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        D3D12_RESOURCE_STATE_PRESENT);
 }
 
 void ToneMap::SetLuminance(float base, float max)
@@ -171,7 +194,9 @@ void ToneMap::SetLuminance(float base, float max)
     m_MaxLuminance  = max;
 }
 
-void ToneMap::SetToneMapType(SampleAppSpace::TONEMAP_TYPE t)
+/*
+void ToneMap::SetToneMapType(TONEMAP_TYPE t)
 {
     m_TonemapType = t;
 }
+*/

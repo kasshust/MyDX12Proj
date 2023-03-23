@@ -13,7 +13,7 @@
 #include "CommonStates.h"
 #include "DirectXHelpers.h"
 #include "SimpleMath.h"
-#include "SampleAppSpace.h"
+#include "SampleAppCb.h"
 
 //-----------------------------------------------------------------------------
 // Using Statements
@@ -47,41 +47,31 @@ bool SampleApp::OnInit()
 {
     // テクスチャ/メッシュをロード.
     if (!PrepareMesh())              return false;
-    
 
-    // ライトバッファ/カメラバッファの生成.
-    if (!CreateLightBuffer())        return false;
-    if (!CreateCameraBuffer())       return false;
-    
-    // シーン用カラーターゲット/深度ターゲットの生成.
-    if (!CreateColorTarget())        return false;
-    if (!CreateDepthTarget())        return false;
+    // シーン用定数バッファ/レンダーターゲット
+    if (!m_CommonBufferManager.CreateLightBuffer(m_pDevice.Get(), m_pPool[POOL_TYPE_RES]))                                              return false;
+    if (!m_CommonBufferManager.CreateCameraBuffer(m_pDevice.Get(), m_pPool[POOL_TYPE_RES]))                                             return false;
+    if (!m_CommonBufferManager.CreateVertexBuffer(m_pDevice.Get()))                                                                     return false;
+    if (!m_CommonBufferManager.CreateMeshBuffer(m_pDevice.Get(), m_pPool[POOL_TYPE_RES]))                                               return false;
+    if (!m_CommonBufferManager.CreateMatrixConstantBuffer(m_pDevice.Get(), m_pPool[POOL_TYPE_RES],m_Width, m_Height))                   return false;
+    if (!m_CommonRTManager.CreateColorTarget(m_pDevice.Get(), m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_Width, m_Height))      return false;
+    if (!m_CommonRTManager.CreateDepthTarget(m_pDevice.Get(), m_pPool[POOL_TYPE_DSV], m_Width, m_Height))                              return false;
 
     // シーン用ルートシグニチャ/パイプラインステートの生成.
-    if (!CreateSceneRootSig())       return false;
-    if (!CreateScenePipeLineState())          return false;
+    if (!CreateSceneRootSig())                  return false;
+    if (!CreateScenePipeLineState())            return false;
 
-    // スカイボックス初期化.
-    if (!CreateSkyBox())             return false;
-    
-    // メッシュ/頂点バッファの生成.
-    if (!CreateVertexBuffer())       return false;
-    if (!CreateMeshBuffer())         return false;
-
-    // 変換行列用の定数バッファの生成.
-    if (!CreateMatrixConstantBuffer())return false;
-
+    // スカイボックス
+    if (!CreateSkyBox())                        return false;
 
     //依存しているのに関数が分かれている
     // スフィアマップ
-    if (!LoadSphereMapTexture())     return false;
-    if (!CreateSphereMapConverter()) return false;
-    // ベイク処理を実行.
-    if (!IBLBake())                   return false;
+    if (!LoadSphereMapTexture())                return false;
+    if (!CreateSphereMapConverter())            return false;
+    if (!IBLBake())                             return false;
 
-
-    // トーンマップ初期化
-    if (!m_ToneMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format))               return false;
+    // ポストプロセス初期化
+    if (!m_ToneMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format))    return false;
 
     return true;
 }
@@ -145,7 +135,7 @@ bool SampleApp::PrepareMesh() {
     if (!m_Material.Init(
         m_pDevice.Get(),
         m_pPool[POOL_TYPE_RES],
-        sizeof(SampleAppSpace::CbMaterial),
+        sizeof(CommonCb::CbMaterial),
         resMaterial.size()))
     {
         ELOG("Error : Material::Init() Failed.");
@@ -173,100 +163,6 @@ bool SampleApp::PrepareMesh() {
     // バッチ完了を待機.
     future.wait();
 
-    return true;
-}
-
-bool SampleApp::LoadSphereMapTexture() {
-    DirectX::ResourceUploadBatch batch(m_pDevice.Get());
-
-    // バッチ開始.
-    batch.Begin();
-
-    // スフィアマップ読み込み.
-    {
-        std::wstring sphereMapPath;
-        if (!SearchFilePathW(L"../res/texture/hdr014.dds", sphereMapPath))
-        {
-            ELOG("Error : File Not Found.");
-            return false;
-        }
-
-        // テクスチャ初期化.
-        if (!m_SphereMap.Init(
-            m_pDevice.Get(),
-            m_pPool[POOL_TYPE_RES],
-            sphereMapPath.c_str(),
-            batch))
-        {
-            ELOG("Error : Texture::Init() Failed.");
-            return false;
-        }
-    }
-
-    // バッチ終了.
-    auto future = batch.End(m_pQueue.Get());
-
-    // 完了を待機.
-    future.wait();
-}
-
-bool SampleApp::CreateLightBuffer() {
-    for (auto i = 0; i < FrameCount; ++i)
-    {
-        if (!m_LightCB[i].Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], sizeof(SampleAppSpace::CbLight)))
-        {
-            ELOG("Error : ConstantBuffer::Init() Failed.");
-            return false;
-        }
-    }
-    return true;
-}
-
-bool SampleApp::CreateCameraBuffer() {
-    for (auto i = 0; i < FrameCount; ++i)
-    {
-        if (!m_CameraCB[i].Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], sizeof(SampleAppSpace::CbCamera)))
-        {
-            ELOG("Error : ConstantBuffer::Init() Failed.");
-            return false;
-        }
-    }
-    return true;
-}
-
-bool SampleApp::CreateColorTarget() {
-    float clearColor[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
-
-    if (!m_SceneColorTarget.Init(
-        m_pDevice.Get(),
-        m_pPool[POOL_TYPE_RTV],
-        m_pPool[POOL_TYPE_RES],
-        m_Width,
-        m_Height,
-        DXGI_FORMAT_R10G10B10A2_UNORM,
-        clearColor))
-    {
-        ELOG("Error : ColorTarget::Init() Failed.");
-        return false;
-    }
-
-    return true;
-}
-
-bool SampleApp::CreateDepthTarget() {
-    if (!m_SceneDepthTarget.Init(
-        m_pDevice.Get(),
-        m_pPool[POOL_TYPE_DSV],
-        nullptr,
-        m_Width,
-        m_Height,
-        DXGI_FORMAT_D32_FLOAT,
-        1.0f,
-        0))
-    {
-        ELOG("Error : DepthTarget::Init() Failed.");
-        return false;
-    }
     return true;
 }
 
@@ -302,7 +198,6 @@ bool SampleApp::CreateSceneRootSig() {
 
     return true;
 }
-
 bool SampleApp::CreateScenePipeLineState() {
     std::wstring vsPath;
     std::wstring psPath;
@@ -359,8 +254,8 @@ bool SampleApp::CreateScenePipeLineState() {
     desc.SampleMask                         = UINT_MAX;
     desc.PrimitiveTopologyType              = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     desc.NumRenderTargets                   = 1;
-    desc.RTVFormats[0]                      = m_SceneColorTarget.GetRTVDesc().Format;
-    desc.DSVFormat                          = m_SceneDepthTarget.GetDSVDesc().Format;
+    desc.RTVFormats[0]                      = m_CommonRTManager.m_SceneColorTarget.GetRTVDesc().Format;
+    desc.DSVFormat                          = m_CommonRTManager.m_SceneDepthTarget.GetDSVDesc().Format;
     desc.SampleDesc.Count                   = 1;
     desc.SampleDesc.Quality                 = 0;
 
@@ -373,78 +268,39 @@ bool SampleApp::CreateScenePipeLineState() {
     }
 }
 
-bool SampleApp::CreateVertexBuffer() {
-    struct Vertex
+bool SampleApp::LoadSphereMapTexture() {
+    DirectX::ResourceUploadBatch batch(m_pDevice.Get());
+
+    // バッチ開始.
+    batch.Begin();
+
+    // スフィアマップ読み込み.
     {
-        float px;
-        float py;
-
-        float tx;
-        float ty;
-    };
-
-    if (!m_QuadVB.Init<Vertex>(m_pDevice.Get(), 3))
-    {
-        ELOG("Error : VertexBuffer::Init() Failed.");
-        return false;
-    }
-
-    
-    auto ptr = m_QuadVB.Map<Vertex>();
-    assert(ptr != nullptr);
-    ptr[0].px = -1.0f;  ptr[0].py = 1.0f;  ptr[0].tx = 0.0f;   ptr[0].ty = -1.0f;
-    ptr[1].px = 3.0f;  ptr[1].py = 1.0f;  ptr[1].tx = 2.0f;   ptr[1].ty = -1.0f;
-    ptr[2].px = -1.0f;  ptr[2].py = -3.0f;  ptr[2].tx = 0.0f;   ptr[2].ty = 1.0f;
-    m_QuadVB.Unmap();
-
-    return true;
-}
-
-bool SampleApp::CreateMatrixConstantBuffer() {
-    for (auto i = 0u; i < FrameCount; ++i)
-    {
-        // 定数バッファ初期化.
-        if (!m_TransformCB[i].Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], sizeof(SampleAppSpace::CbTransform)))
+        std::wstring sphereMapPath;
+        if (!SearchFilePathW(L"../res/texture/hdr014.dds", sphereMapPath))
         {
-            ELOG("Error : ConstantBuffer::Init() Failed.");
+            ELOG("Error : File Not Found.");
             return false;
         }
 
-        // カメラ設定.
-        auto eyePos = Vector3(0.0f, 0.0f, 1.0f);
-        auto targetPos = Vector3::Zero;
-        auto upward = Vector3::UnitY;
-
-        // 垂直画角とアスペクト比の設定.
-        auto fovY = DirectX::XMConvertToRadians(37.5f);
-        auto aspect = static_cast<float>(m_Width) / static_cast<float>(m_Height);
-
-        // 変換行列を設定.
-        auto ptr = m_TransformCB[i].GetPtr<SampleAppSpace::CbTransform>();
-        ptr->View = Matrix::CreateLookAt(eyePos, targetPos, upward);
-        ptr->Proj = Matrix::CreatePerspectiveFieldOfView(fovY, aspect, 0.1f, 1000.0f);
-    }
-
-    return true;
-}
-
-bool SampleApp::CreateMeshBuffer() {
-    for (auto i = 0; i < FrameCount; ++i)
-    {
-        if (!m_MeshCB[i].Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], sizeof(SampleAppSpace::CbMesh)))
+        // テクスチャ初期化.
+        if (!m_SphereMap.Init(
+            m_pDevice.Get(),
+            m_pPool[POOL_TYPE_RES],
+            sphereMapPath.c_str(),
+            batch))
         {
-            ELOG("Error : ConstantBuffer::Init() Failed.");
+            ELOG("Error : Texture::Init() Failed.");
             return false;
         }
-
-        auto ptr = m_MeshCB[i].GetPtr<SampleAppSpace::CbMesh>();
-        ptr->World = Matrix::Identity;
     }
 
-    return true;
+    // バッチ終了.
+    auto future = batch.End(m_pQueue.Get());
+
+    // 完了を待機.
+    future.wait();
 }
-
-
 bool SampleApp::CreateSphereMapConverter() {
     if (!m_SphereMapConverter.Init(
         m_pDevice.Get(),
@@ -456,7 +312,6 @@ bool SampleApp::CreateSphereMapConverter() {
         return false;
     }
 }
-
 bool SampleApp::CreateSkyBox() {
     if (!m_SkyBox.Init(
         m_pDevice.Get(),
@@ -468,7 +323,6 @@ bool SampleApp::CreateSkyBox() {
         return false;
     }
 }
-
 bool SampleApp::IBLBake() {
 
     if (!m_IBLBaker.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], m_pPool[POOL_TYPE_RTV]))
@@ -517,14 +371,6 @@ bool SampleApp::IBLBake() {
 //-----------------------------------------------------------------------------
 void SampleApp::OnTerm()
 {
-    m_QuadVB.Term();
-    for(auto i=0; i<FrameCount; ++i)
-    {
-        m_LightCB    [i].Term();
-        m_CameraCB   [i].Term();
-        m_TransformCB[i].Term();
-    }
-
     m_ToneMap.Term();
 
     // メッシュ破棄.
@@ -534,17 +380,10 @@ void SampleApp::OnTerm()
     }
     m_pMesh.clear();
     m_pMesh.shrink_to_fit();
-
-    // マテリアル破棄.
     m_Material.Term();
 
-    for(auto i=0; i<FrameCount; ++i)
-    {
-        m_MeshCB[i].Term();
-    }
-
-    m_SceneColorTarget.Term();
-    m_SceneDepthTarget.Term();
+    m_CommonBufferManager.Term();
+    m_CommonRTManager.Term();
 
     m_pScenePSO   .Reset();
     m_SceneRootSig.Term();
@@ -556,7 +395,37 @@ void SampleApp::OnTerm()
 }
 
 void SampleApp::OnRenderIMGUI() {
-    ImGui::Begin("Hello, world!");
+    ImGui::Begin("Setting");
+
+    // Camera Rest
+    if (ImGui::Button("Camera Reset")) {
+        m_Camera.Reset();
+    }
+
+    // HDR SDR
+    if (ImGui::Button("HDR")) {
+        ChangeDisplayMode(true);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("SDR")) {
+        ChangeDisplayMode(false);
+    }
+
+    if (ImGui::TreeNode("PostProcess")) {
+
+        if (ImGui::TreeNode("ToneMap")) {
+            ImGui::RadioButton("NONE", &m_ToneMap.m_TonemapType, ToneMap::TONEMAP_NONE);
+            ImGui::RadioButton("REINHARD", &m_ToneMap.m_TonemapType, ToneMap::TONEMAP_REINHARD);
+            ImGui::RadioButton("GT", &m_ToneMap.m_TonemapType, ToneMap::TONEMAP_GT);
+            ImGui::TreePop();
+        }
+        ImGui::TreePop();
+    }
+
+    if (ImGui::Button("Close Window")) {
+        PostQuitMessage(0);
+    }
+
     ImGui::End();
 }
 
@@ -566,6 +435,7 @@ void SampleApp::OnRenderIMGUI() {
 //-----------------------------------------------------------------------------
 void SampleApp::OnRender()
 {
+    // IMGUI 初期設定
     OnRenderIMGUICommonProcess();
 
     // カメラ更新.
@@ -579,18 +449,14 @@ void SampleApp::OnRender()
     };
     pCmd->SetDescriptorHeaps(1, pHeaps);
 
-    //　不透描画
+    //　生出力
     {
-        OpaqueProcess(pCmd);
+        // OpaqueProcess(pCmd, m_ColorTarget[m_FrameIndex], m_DepthTarget, &m_SkyBox);
     }
 
-    // ポストエフェクト
     {
-        ToneMapProcess(pCmd);       // ここもToneMapに組み込む
-    }
-
-    // IMGUIの描画
-    {
+        OpaqueProcess(pCmd, m_CommonRTManager.m_SceneColorTarget, m_CommonRTManager.m_SceneDepthTarget, &m_SkyBox);
+        PostProcess(pCmd);  
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), pCmd);
     }
 
@@ -605,70 +471,88 @@ void SampleApp::OnRender()
     Present(1);
 }
 
-void SampleApp::OpaqueProcess(ID3D12GraphicsCommandList* pCmd) {
+void SampleApp::OpaqueProcess(ID3D12GraphicsCommandList* pCmd, ColorTarget& colorDest, DepthTarget& depthDest , SkyBox* skyBox = nullptr) 
+{
     // 書き込み用リソースバリア設定.
     DirectX::TransitionResource(pCmd,
-        m_SceneColorTarget.GetResource(),
+        colorDest.GetResource(),
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
         D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     // ディスクリプタ取得.
-    auto handleRTV = m_SceneColorTarget.GetHandleRTV();
-    auto handleDSV = m_SceneDepthTarget.GetHandleDSV();
+    auto handleRTV = colorDest.GetHandleRTV();
+    auto handleDSV = depthDest.GetHandleDSV();
 
     // レンダーターゲットを設定.
     pCmd->OMSetRenderTargets(1, &handleRTV->HandleCPU, FALSE, &handleDSV->HandleCPU);
 
     // レンダーターゲットをクリア.
-    m_SceneColorTarget.ClearView(pCmd);
-    m_SceneDepthTarget.ClearView(pCmd);
+    colorDest.ClearView(pCmd);
+    depthDest.ClearView(pCmd);
 
     // ビューポート設定.
     pCmd->RSSetViewports(1, &m_Viewport);
     pCmd->RSSetScissorRects(1, &m_Scissor);
 
     // 背景描画.
-    m_SkyBox.Draw(pCmd, m_SphereMapConverter.GetCubeMapHandleGPU(), m_View, m_Proj, 100.0f);
+    if (skyBox != nullptr) skyBox->Draw(pCmd, m_SphereMapConverter.GetCubeMapHandleGPU(), m_View, m_Proj, 300.0f);
 
     // シーンの描画.
     DrawScene(pCmd);
 
     // 読み込み用リソースバリア設定.
     DirectX::TransitionResource(pCmd,
-        m_SceneColorTarget.GetResource(),
+        colorDest.GetResource(),
         D3D12_RESOURCE_STATE_RENDER_TARGET,
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
 
-void SampleApp::ToneMapProcess(ID3D12GraphicsCommandList* pCmd) {
+//-----------------------------------------------------------------------------
+//      シーンを描画します.
+//-----------------------------------------------------------------------------
+void SampleApp::DrawScene(ID3D12GraphicsCommandList* pCmd)
+{
+    // 定数バッファの更新.
+    m_CommonBufferManager.UpdateLightBuffer(m_FrameIndex, m_IBLBaker.LDTextureSize, m_IBLBaker.MipCount);
+    m_CommonBufferManager.UpdateCameraBuffer(m_FrameIndex, m_Camera.GetPosition());
+    m_CommonBufferManager.UpdateViewProjMatrix(m_FrameIndex, m_View, m_Proj);
+    m_CommonBufferManager.UpdateWorldMatrix(m_FrameIndex);
+
+    pCmd->SetGraphicsRootSignature(m_SceneRootSig.GetPtr());
+    pCmd->SetGraphicsRootDescriptorTable(0, m_CommonBufferManager.m_TransformCB[m_FrameIndex].GetHandleGPU());
+    pCmd->SetGraphicsRootDescriptorTable(2, m_CommonBufferManager.m_LightCB[m_FrameIndex].GetHandleGPU());
+    pCmd->SetGraphicsRootDescriptorTable(3, m_CommonBufferManager.m_CameraCB[m_FrameIndex].GetHandleGPU());
+    pCmd->SetGraphicsRootDescriptorTable(4, m_IBLBaker.GetHandleGPU_DFG());
+    pCmd->SetGraphicsRootDescriptorTable(5, m_IBLBaker.GetHandleGPU_DiffuseLD());
+    pCmd->SetGraphicsRootDescriptorTable(6, m_IBLBaker.GetHandleGPU_SpecularLD());
+    pCmd->SetPipelineState(m_pScenePSO.Get());
+
+    // オブジェクトを描く.
+    pCmd->SetGraphicsRootDescriptorTable(1, m_CommonBufferManager.m_MeshCB[m_FrameIndex].GetHandleGPU());
+    DrawMesh(pCmd);
+}
+
+//-----------------------------------------------------------------------------
+//      メッシュを描画します.
+//-----------------------------------------------------------------------------
+void SampleApp::DrawMesh(ID3D12GraphicsCommandList* pCmd)
+{
+    for (size_t i = 0; i < m_pMesh.size(); ++i)
     {
-        // 書き込み用リソースバリア設定.
-        DirectX::TransitionResource(pCmd,
-            m_ColorTarget[m_FrameIndex].GetResource(),
-            D3D12_RESOURCE_STATE_PRESENT,
-            D3D12_RESOURCE_STATE_RENDER_TARGET);
+        // マテリアルIDを取得.
+        auto id = m_pMesh[i]->GetMaterialId();
 
-        // ディスクリプタ取得.
-        auto handleRTV = m_ColorTarget[m_FrameIndex].GetHandleRTV();
-        auto handleDSV = m_DepthTarget.GetHandleDSV();
+        // テクスチャを設定.
+        pCmd->SetGraphicsRootDescriptorTable(7, m_Material.GetTextureHandle(id, TU_BASE_COLOR));
+        pCmd->SetGraphicsRootDescriptorTable(8, m_Material.GetTextureHandle(id, TU_METALLIC));
+        pCmd->SetGraphicsRootDescriptorTable(9, m_Material.GetTextureHandle(id, TU_ROUGHNESS));
+        pCmd->SetGraphicsRootDescriptorTable(10, m_Material.GetTextureHandle(id, TU_NORMAL));
 
-        // レンダーターゲットを設定.
-        pCmd->OMSetRenderTargets(1, &handleRTV->HandleCPU, FALSE, &handleDSV->HandleCPU);
-
-        // レンダーターゲットをクリア.
-        m_ColorTarget[m_FrameIndex].ClearView(pCmd);
-        m_DepthTarget.ClearView(pCmd);
-
-        // トーンマップを適用.
-        m_ToneMap.DrawTonemap(pCmd, m_FrameIndex, m_SceneColorTarget, &m_Viewport, &m_Scissor, m_QuadVB);
-
-        // 表示用リソースバリア設定.
-        DirectX::TransitionResource(pCmd,
-            m_ColorTarget[m_FrameIndex].GetResource(),
-            D3D12_RESOURCE_STATE_RENDER_TARGET,
-            D3D12_RESOURCE_STATE_PRESENT);
+        // メッシュを描画.
+        m_pMesh[i]->Draw(pCmd);
     }
 }
+
 
 void SampleApp::UpdateCamera() {
     auto fovY = DirectX::XMConvertToRadians(37.5f);
@@ -678,80 +562,25 @@ void SampleApp::UpdateCamera() {
     m_Proj = Matrix::CreatePerspectiveFieldOfView(fovY, aspect, 0.1f, 1000.0f);
 }
 
+
+
+
 //-----------------------------------------------------------------------------
-//      シーンを描画します.
+//      ポストプロセス
 //-----------------------------------------------------------------------------
-void SampleApp::DrawScene(ID3D12GraphicsCommandList* pCmd)
+void SampleApp::PostProcess(ID3D12GraphicsCommandList* pCmd)
 {
-    // ライトバッファの更新.
-    UpdateLightBuffer();
-
-    // カメラバッファの更新.
-    UpdateCameraBuffer();
-
-    // 変換パラメータの更新
-    UpdateViewProjMatrix();
-
-    // メッシュのワールド行列の更新
-    UpdateWorldMatrix();
-
-    pCmd->SetGraphicsRootSignature(m_SceneRootSig.GetPtr());
-    pCmd->SetGraphicsRootDescriptorTable(0, m_TransformCB[m_FrameIndex].GetHandleGPU());
-    pCmd->SetGraphicsRootDescriptorTable(2, m_LightCB    [m_FrameIndex].GetHandleGPU());
-    pCmd->SetGraphicsRootDescriptorTable(3, m_CameraCB   [m_FrameIndex].GetHandleGPU());
-    pCmd->SetGraphicsRootDescriptorTable(4, m_IBLBaker.GetHandleGPU_DFG());
-    pCmd->SetGraphicsRootDescriptorTable(5, m_IBLBaker.GetHandleGPU_DiffuseLD());
-    pCmd->SetGraphicsRootDescriptorTable(6, m_IBLBaker.GetHandleGPU_SpecularLD());
-    pCmd->SetPipelineState(m_pScenePSO.Get());
-
-    // オブジェクトを描く.
-    pCmd->SetGraphicsRootDescriptorTable(1, m_MeshCB[m_FrameIndex].GetHandleGPU());
-    DrawMesh(pCmd);
+    m_ToneMap.DrawTonemap(pCmd, 
+        m_FrameIndex,
+        m_ColorTarget[m_FrameIndex], 
+        m_DepthTarget, 
+        m_CommonRTManager.m_SceneColorTarget, 
+        &m_Viewport, 
+        &m_Scissor,
+        m_CommonBufferManager.m_QuadVB);
 }
 
-void SampleApp::UpdateLightBuffer() {
-    auto ptr = m_LightCB[m_FrameIndex].GetPtr<SampleAppSpace::CbLight>();
-    ptr->TextureSize = m_IBLBaker.LDTextureSize;
-    ptr->MipCount = m_IBLBaker.MipCount;
-    ptr->LightDirection = Vector3(0.0f, -1.0f, 0.0f);
-    ptr->LightIntensity = 1.0f;
-}
 
-void SampleApp::UpdateCameraBuffer() {
-    auto ptr = m_CameraCB[m_FrameIndex].GetPtr<SampleAppSpace::CbCamera>();
-    ptr->CameraPosition = m_Camera.GetPosition();
-}
-
-void SampleApp::UpdateViewProjMatrix() {
-    auto ptr = m_TransformCB[m_FrameIndex].GetPtr<SampleAppSpace::CbTransform>();
-    ptr->View = m_View;
-    ptr->Proj = m_Proj;
-}
-
-void SampleApp::UpdateWorldMatrix() {
-    auto ptr = m_MeshCB[m_FrameIndex].GetPtr<SampleAppSpace::CbMesh>();
-}
-
-//-----------------------------------------------------------------------------
-//      メッシュを描画します.
-//-----------------------------------------------------------------------------
-void SampleApp::DrawMesh(ID3D12GraphicsCommandList* pCmd)
-{
-    for (size_t i = 0; i<m_pMesh.size(); ++i)
-    {
-        // マテリアルIDを取得.
-        auto id = m_pMesh[i]->GetMaterialId();
-
-        // テクスチャを設定.
-        pCmd->SetGraphicsRootDescriptorTable(7,  m_Material.GetTextureHandle(id, TU_BASE_COLOR));
-        pCmd->SetGraphicsRootDescriptorTable(8,  m_Material.GetTextureHandle(id, TU_METALLIC));
-        pCmd->SetGraphicsRootDescriptorTable(9,  m_Material.GetTextureHandle(id, TU_ROUGHNESS));
-        pCmd->SetGraphicsRootDescriptorTable(10, m_Material.GetTextureHandle(id, TU_NORMAL));
-
-        // メッシュを描画.
-        m_pMesh[i]->Draw(pCmd);
-    }
-}
 
 //-----------------------------------------------------------------------------
 //      ディスプレイモードを変更します.
@@ -786,14 +615,14 @@ void SampleApp::ChangeDisplayMode(bool hdr)
         DXGI_HDR_METADATA_HDR10 metaData = {};
 
         // ITU-R BT.2100の原刺激と白色点を設定.
-        metaData.RedPrimary[0]      = SampleAppSpace::GetChromaticityCoord(0.708);
-        metaData.RedPrimary[1]      = SampleAppSpace::GetChromaticityCoord(0.292);
-        metaData.BluePrimary[0]     = SampleAppSpace::GetChromaticityCoord(0.170);
-        metaData.BluePrimary[1]     = SampleAppSpace::GetChromaticityCoord(0.797);
-        metaData.GreenPrimary[0]    = SampleAppSpace::GetChromaticityCoord(0.131);
-        metaData.GreenPrimary[1]    = SampleAppSpace::GetChromaticityCoord(0.046);
-        metaData.WhitePoint[0]      = SampleAppSpace::GetChromaticityCoord(0.3127);
-        metaData.WhitePoint[1]      = SampleAppSpace::GetChromaticityCoord(0.3290);
+        metaData.RedPrimary[0]      = ToneMap::GetChromaticityCoord(0.708);
+        metaData.RedPrimary[1]      = ToneMap::GetChromaticityCoord(0.292);
+        metaData.BluePrimary[0]     = ToneMap::GetChromaticityCoord(0.170);
+        metaData.BluePrimary[1]     = ToneMap::GetChromaticityCoord(0.797);
+        metaData.GreenPrimary[0]    = ToneMap::GetChromaticityCoord(0.131);
+        metaData.GreenPrimary[1]    = ToneMap::GetChromaticityCoord(0.046);
+        metaData.WhitePoint[0]      = ToneMap::GetChromaticityCoord(0.3127);
+        metaData.WhitePoint[1]      = ToneMap::GetChromaticityCoord(0.3290);
 
         // ディスプレイがサポートすると最大輝度値と最小輝度値を設定.
         metaData.MaxMasteringLuminance = UINT(GetMaxLuminance() * 10000);
@@ -843,14 +672,14 @@ void SampleApp::ChangeDisplayMode(bool hdr)
         DXGI_HDR_METADATA_HDR10 metaData = {};
 
         // ITU-R BT.709の原刺激と白色点を設定.
-        metaData.RedPrimary[0]      = SampleAppSpace::GetChromaticityCoord(0.640);
-        metaData.RedPrimary[1]      = SampleAppSpace::GetChromaticityCoord(0.330);
-        metaData.BluePrimary[0]     = SampleAppSpace::GetChromaticityCoord(0.300);
-        metaData.BluePrimary[1]     = SampleAppSpace::GetChromaticityCoord(0.600);
-        metaData.GreenPrimary[0]    = SampleAppSpace::GetChromaticityCoord(0.150);
-        metaData.GreenPrimary[1]    = SampleAppSpace::GetChromaticityCoord(0.060);
-        metaData.WhitePoint[0]      = SampleAppSpace::GetChromaticityCoord(0.3127);
-        metaData.WhitePoint[1]      = SampleAppSpace::GetChromaticityCoord(0.3290);
+        metaData.RedPrimary[0]      = ToneMap::GetChromaticityCoord(0.640);
+        metaData.RedPrimary[1]      = ToneMap::GetChromaticityCoord(0.330);
+        metaData.BluePrimary[0]     = ToneMap::GetChromaticityCoord(0.300);
+        metaData.BluePrimary[1]     = ToneMap::GetChromaticityCoord(0.600);
+        metaData.GreenPrimary[0]    = ToneMap::GetChromaticityCoord(0.150);
+        metaData.GreenPrimary[1]    = ToneMap::GetChromaticityCoord(0.060);
+        metaData.WhitePoint[0]      = ToneMap::GetChromaticityCoord(0.3127);
+        metaData.WhitePoint[1]      = ToneMap::GetChromaticityCoord(0.3290);
 
         // ディスプレイがサポートすると最大輝度値と最小輝度値を設定.
         metaData.MaxMasteringLuminance = UINT(GetMaxLuminance() * 10000);
@@ -889,72 +718,6 @@ void SampleApp::ChangeDisplayMode(bool hdr)
 //-----------------------------------------------------------------------------
 void SampleApp::OnMsgProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
-    // キーボードの処理.
-    if ( ( msg == WM_KEYDOWN )
-      || ( msg == WM_SYSKEYDOWN )
-      || ( msg == WM_KEYUP )
-      || ( msg == WM_SYSKEYUP ) )
-    {
-        DWORD mask = ( 1 << 29 );
-
-        auto isKeyDown = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
-        auto isAltDown = ((lp & mask) != 0 );
-        auto keyCode   = uint32_t(wp);
-
-        if (isKeyDown)
-        {
-            switch (keyCode)
-            {
-            case VK_ESCAPE:
-                {
-                    PostQuitMessage(0);
-                }
-                break;
-
-            // HDRモード.
-            case 'H':
-                {
-                    ChangeDisplayMode(true);
-                }
-                break;
-
-            // SDRモード.
-            case 'S':
-                {
-                    ChangeDisplayMode(false);
-                }
-                break;
-
-            // トーンマップなし.
-            case 'N':
-                {
-                    m_ToneMap.SetToneMapType(SampleAppSpace::TONEMAP_NONE);
-                }
-                break;
-
-            // Reinhardトーンマップ.
-            case 'R':
-                {
-                    m_ToneMap.SetToneMapType(SampleAppSpace::TONEMAP_REINHARD);
-                }
-                break;
-
-            // GTトーンマップ
-            case 'G':
-                {
-                    m_ToneMap.SetToneMapType(SampleAppSpace::TONEMAP_GT);
-                }
-                break;
-
-            case 'C':
-                {
-                    m_Camera.Reset();
-                }
-                break;
-            }
-        }
-    }
-
     // 古いWM_MOUSEWHEELの定義.
     const UINT OLD_WM_MOUSEWHEEL = 0x020A;
 

@@ -17,6 +17,8 @@
 #include <Camera.h>
 #include <RootSignature.h>
 #include <ToneMap.h>
+#include <CommonBufferManager.h>
+#include <CommonRTVManager.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // SampleApp class
@@ -59,18 +61,11 @@ private:
     //=========================================================================
     ComPtr<ID3D12PipelineState>     m_pScenePSO;                    //!< シーン用パイプラインステートです.
     RootSignature                   m_SceneRootSig;                 //!< シーン用ルートシグニチャです.
-    ColorTarget                     m_SceneColorTarget;             //!< シーン用レンダーターゲットです.
-    DepthTarget                     m_SceneDepthTarget;             //!< シーン用深度ターゲットです.
-
-    VertexBuffer                    m_QuadVB;                       //!< 頂点バッファです.
-    ConstantBuffer                  m_LightCB[FrameCount];          //!< ライトバッファです.
-    ConstantBuffer                  m_CameraCB[FrameCount];         //!< カメラバッファです.
-    ConstantBuffer                  m_TransformCB[FrameCount];      //!< 変換用バッファです.
-    ConstantBuffer                  m_MeshCB[FrameCount];           //!< メッシュ用バッファです.
+    
+    CommonRTManager                 m_CommonRTManager;
+    CommonBufferManager             m_CommonBufferManager;
 
     float                           m_RotateAngle;                  //!< ライトの回転角です.
-    
-
     float                           m_Exposure;                     //!< 露光値.
     
     DirectX::SimpleMath::Matrix     m_View;                         //!< ビュー行列.
@@ -81,21 +76,16 @@ private:
 
     SkyBox                          m_SkyBox;                       //!< スカイボックスです.
     ToneMap                         m_ToneMap;                      //!< トーンマップです.
-
-
-    //　以下未整理部分
-
+    
+                                                                    // 以下未整理
     //　オブジェクト依存にしたい
     std::vector<Mesh*>              m_pMesh;                        //!< メッシュです.
     Material                        m_Material;                     //!< マテリアルです.
-
 
     //  スフィアマップとIBLベイクがここにあることがおかしい
     Texture                         m_SphereMap;                    //!< スフィアマップです.
     SphereMapConverter              m_SphereMapConverter;           //!< スフィアマップコンバータ.
     IBLBaker                        m_IBLBaker;                     //!< IBLベイク.
-
-
 
     //=========================================================================
     // private methods.
@@ -108,21 +98,9 @@ private:
     //! @retval false   初期化に失敗.
     //-------------------------------------------------------------------------
     bool OnInit() override;
-
     bool PrepareMesh();
-    bool CreateLightBuffer();
-    bool CreateCameraBuffer();
-    
-    bool CreateColorTarget();
-    bool CreateDepthTarget();
-    
     bool CreateSceneRootSig();
     bool CreateScenePipeLineState();
-    
-    bool CreateVertexBuffer();
-
-    bool CreateMatrixConstantBuffer();
-    bool CreateMeshBuffer();
     bool LoadSphereMapTexture();
     bool CreateSphereMapConverter();
     bool CreateSkyBox();
@@ -133,22 +111,14 @@ private:
     //-------------------------------------------------------------------------
     void OnTerm() override;
 
-    void OnRenderIMGUI() override;
-
-
-
     //-------------------------------------------------------------------------
     //! @brief      描画時の処理です.
     //-------------------------------------------------------------------------
     void OnRender() override;
-
-    void OpaqueProcess(ID3D12GraphicsCommandList* pCmd);
-
-    void ToneMapProcess(ID3D12GraphicsCommandList* pCmd);
-
+    void OpaqueProcess(ID3D12GraphicsCommandList* pCmd, ColorTarget& colorSource, DepthTarget& depthSource, SkyBox* skyBox);
+    void OnRenderIMGUI() override;
+    void PostProcess(ID3D12GraphicsCommandList* pCmd);
     void UpdateCamera();
-
-
 
     //-------------------------------------------------------------------------
     //! @brief      メッセージプロシージャです.
@@ -166,16 +136,6 @@ private:
     //! @brief      シーンを描画します.
     //-------------------------------------------------------------------------
     void DrawScene(ID3D12GraphicsCommandList* pCmdList);
-
-    void UpdateLightBuffer();
-    void UpdateCameraBuffer();
-    void UpdateViewProjMatrix();
-    void UpdateWorldMatrix();
-
-    //-------------------------------------------------------------------------
-    //! @brief      トーンマップを適用します.
-    //-------------------------------------------------------------------------
-    void DrawTonemap(ID3D12GraphicsCommandList* pCmdList);
 
     //-------------------------------------------------------------------------
     //! @brief      メッシュを描画します.

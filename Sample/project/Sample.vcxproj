@@ -16,6 +16,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\CommonBufferManager.cpp" />
+    <ClCompile Include="..\src\CommonRTVManager.cpp" />
     <ClCompile Include="..\src\IBLBaker.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\SampleApp.cpp" />
@@ -24,9 +26,10 @@
     <ClCompile Include="..\src\ToneMap.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\CommonBufferManager.h" />
+    <ClInclude Include="..\include\CommonRTVManager.h" />
     <ClInclude Include="..\include\IBLBaker.h" />
     <ClInclude Include="..\include\SampleApp.h" />
-    <ClInclude Include="..\include\SampleAppSpace.h" />
     <ClInclude Include="..\include\SkyBox.h" />
     <ClInclude Include="..\include\SphereMapConverter.h" />
     <ClInclude Include="..\include\ToneMap.h" />
