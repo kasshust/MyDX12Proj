@@ -6,7 +6,6 @@
 #include <RootSignature.h>
 
 class ToneMap {
-
 public:
 	///////////////////////////////////////////////////////////////////////////////
 	// COLOR_SPACE_TYPE enum
@@ -46,10 +45,9 @@ public:
 		return UINT16(value * 50000);
 	}
 
-
 public:
 	bool Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format);
-	
+
 	ToneMap();
 	~ToneMap();
 	void Term();
@@ -59,7 +57,7 @@ public:
 	int                             m_TonemapType;              //!< トーンマップタイプ.
 
 private:
-	
+
 	int                             m_ColorSpace;                   //!< 出力色空間
 	float                           m_BaseLuminance;                //!< 基準輝度値.
 	float                           m_MaxLuminance;                 //!< 最大輝度値.

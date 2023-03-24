@@ -13,20 +13,19 @@
 #include <string>
 #include <vector>
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // ResMaterial structure
 ///////////////////////////////////////////////////////////////////////////////
 struct ResMaterial
 {
-    DirectX::XMFLOAT3   Diffuse;        //!< 拡散反射成分です.
-    DirectX::XMFLOAT3   Specular;       //!< 鏡面反射成分です.
-    float               Alpha;          //!< 透過成分です.
-    float               Shininess;      //!< 鏡面反射強度です.
-    std::wstring        DiffuseMap;     //!< ディフューズマップファイルパスです.
-    std::wstring        SpecularMap;    //!< スペキュラーマップファイルパスです.
-    std::wstring        ShininessMap;   //!< シャイネスマップファイルパスです.
-    std::wstring        NormalMap;      //!< 法線マップファイルパスです.
+	DirectX::XMFLOAT3   Diffuse;        //!< 拡散反射成分です.
+	DirectX::XMFLOAT3   Specular;       //!< 鏡面反射成分です.
+	float               Alpha;          //!< 透過成分です.
+	float               Shininess;      //!< 鏡面反射強度です.
+	std::wstring        DiffuseMap;     //!< ディフューズマップファイルパスです.
+	std::wstring        SpecularMap;    //!< スペキュラーマップファイルパスです.
+	std::wstring        ShininessMap;   //!< シャイネスマップファイルパスです.
+	std::wstring        NormalMap;      //!< 法線マップファイルパスです.
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -35,29 +34,30 @@ struct ResMaterial
 class MeshVertex
 {
 public:
-    DirectX::XMFLOAT3   Position;
-    DirectX::XMFLOAT3   Normal;
-    DirectX::XMFLOAT2   TexCoord;
-    DirectX::XMFLOAT3   Tangent;
+	DirectX::XMFLOAT3   Position;
+	DirectX::XMFLOAT3   Normal;
+	DirectX::XMFLOAT2   TexCoord;
+	DirectX::XMFLOAT3   Tangent;
 
-    MeshVertex() = default;
+	MeshVertex() = default;
 
-    MeshVertex(
-        DirectX::XMFLOAT3 const& position,
-        DirectX::XMFLOAT3 const& normal,
-        DirectX::XMFLOAT2 const& texcoord,
-        DirectX::XMFLOAT3 const& tangent)
-    : Position  (position)
-    , Normal    (normal)
-    , TexCoord  (texcoord)
-    , Tangent   (tangent)
-    { /* DO_NOTHING */ }
+	MeshVertex(
+		DirectX::XMFLOAT3 const& position,
+		DirectX::XMFLOAT3 const& normal,
+		DirectX::XMFLOAT2 const& texcoord,
+		DirectX::XMFLOAT3 const& tangent)
+		: Position(position)
+		, Normal(normal)
+		, TexCoord(texcoord)
+		, Tangent(tangent)
+	{ /* DO_NOTHING */
+	}
 
-    static const D3D12_INPUT_LAYOUT_DESC InputLayout;
+	static const D3D12_INPUT_LAYOUT_DESC InputLayout;
 
 private:
-    static const int InputElementCount = 4;
-    static const D3D12_INPUT_ELEMENT_DESC InputElements[InputElementCount];
+	static const int InputElementCount = 4;
+	static const D3D12_INPUT_ELEMENT_DESC InputElements[InputElementCount];
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -65,9 +65,9 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 struct ResMesh
 {
-    std::vector<MeshVertex>     Vertices;     //!< 頂点データです.
-    std::vector<uint32_t>       Indices;      //!< 頂点インデックスです.
-    uint32_t                    MaterialId;   //!< マテリアル番号です.
+	std::vector<MeshVertex>     Vertices;     //!< 頂点データです.
+	std::vector<uint32_t>       Indices;      //!< 頂点インデックスです.
+	uint32_t                    MaterialId;   //!< マテリアル番号です.
 };
 
 //-----------------------------------------------------------------------------
@@ -80,6 +80,6 @@ struct ResMesh
 //! @retval false   ロードに失敗.
 //-----------------------------------------------------------------------------
 bool LoadMesh(
-    const wchar_t*             filename,
-    std::vector<ResMesh>&      meshes,
-    std::vector<ResMaterial>&  materials);
+	const wchar_t* filename,
+	std::vector<ResMesh>& meshes,
+	std::vector<ResMaterial>& materials);

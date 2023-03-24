@@ -55,6 +55,18 @@
     <Filter Include="ヘッダー ファイル\Buffer\Resource">
       <UniqueIdentifier>{824c01af-391e-4e7d-aa31-d37c1efadcd7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\Buffer\CommonBuffer">
+      <UniqueIdentifier>{d4aa179a-5404-49b5-8ef1-19ea9630832b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Buffer\CommonBuffer">
+      <UniqueIdentifier>{4b51e6cd-ce96-406b-bd9f-3a01fae1c01d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Buffer\Resource\Sky">
+      <UniqueIdentifier>{92720798-a494-4257-a8e2-317860ef0f0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Buffer\Resource\Sky">
+      <UniqueIdentifier>{73e3022d-3678-4c78-876f-05b287e39445}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\App.cpp">
@@ -125,6 +137,30 @@
     </ClCompile>
     <ClCompile Include="..\src\ResMesh.cpp">
       <Filter>ソース ファイル\Buffer\Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Shader.cpp">
+      <Filter>ソース ファイル\Buffer\Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ShaderedMaterial.cpp">
+      <Filter>ソース ファイル\Buffer\Resource</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\CommonBufferManager.cpp">
+      <Filter>ソース ファイル\Buffer\CommonBuffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\CommonRTVManager.cpp">
+      <Filter>ソース ファイル\Buffer\CommonBuffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\IBLBaker.cpp">
+      <Filter>ソース ファイル\Buffer\Resource\Sky</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SkyBox.cpp">
+      <Filter>ソース ファイル\Buffer\Resource\Sky</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SkyTextureManager.cpp">
+      <Filter>ソース ファイル\Buffer\Resource\Sky</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SphereMapConverter.cpp">
+      <Filter>ソース ファイル\Buffer\Resource\Sky</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -211,6 +247,30 @@
     </ClInclude>
     <ClInclude Include="..\include\ResMesh.h">
       <Filter>ヘッダー ファイル\Buffer\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Shader.h">
+      <Filter>ヘッダー ファイル\Buffer\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ShaderedMaterial.h">
+      <Filter>ヘッダー ファイル\Buffer\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\CommonBufferManager.h">
+      <Filter>ヘッダー ファイル\Buffer\CommonBuffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\CommonRTVManager.h">
+      <Filter>ヘッダー ファイル\Buffer\CommonBuffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\IBLBaker.h">
+      <Filter>ヘッダー ファイル\Buffer\Resource\Sky</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\SkyBox.h">
+      <Filter>ヘッダー ファイル\Buffer\Resource\Sky</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\SkyTextureManager.h">
+      <Filter>ヘッダー ファイル\Buffer\Resource\Sky</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\SphereMapConverter.h">
+      <Filter>ヘッダー ファイル\Buffer\Resource\Sky</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

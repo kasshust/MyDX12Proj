@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="ソース ファイル\CommonBuffer">
-      <UniqueIdentifier>{a6408cdb-55bf-4c12-9e0e-27e1fb1ab32c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ヘッダー ファイル\CommonBuffer">
       <UniqueIdentifier>{24f02f98-33a4-4aef-9b39-f817fafadcc2}</UniqueIdentifier>
     </Filter>
@@ -25,11 +22,23 @@
     <Filter Include="ヘッダー ファイル\PostProcess">
       <UniqueIdentifier>{3603d9bc-9d2b-4b95-bee8-df839f916f2a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\Shader">
-      <UniqueIdentifier>{f83ed4a8-30c1-4b45-a60b-1eb5578b4f98}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ソース ファイル\Shader">
       <UniqueIdentifier>{ca523f52-67ca-4077-9cdd-e137eee16c9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\Basic">
+      <UniqueIdentifier>{59430246-2505-4bc7-8f36-95c72647b053}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\IBL">
+      <UniqueIdentifier>{6d6ef80f-87f6-4cad-9c38-b9355a1e4d32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\SkyBox">
+      <UniqueIdentifier>{0a95d80c-a288-4a33-92a6-5e70985f019d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\Tonemap">
+      <UniqueIdentifier>{c8d32c73-47ae-4d78-b82c-a0dee7b9e365}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Shaders">
+      <UniqueIdentifier>{38db1f8f-12a1-43e2-b432-b4dcb5d824f2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -39,41 +48,17 @@
     <ClCompile Include="..\src\SampleApp.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\IBLBaker.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\SphereMapConverter.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\SkyBox.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\CommonBufferManager.cpp">
-      <Filter>ソース ファイル\CommonBuffer</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\CommonRTVManager.cpp">
-      <Filter>ソース ファイル\CommonBuffer</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ToneMap.cpp">
       <Filter>ソース ファイル\PostProcess</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\BasicShader.cpp">
+    <ClCompile Include="..\src\ModelLoader.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Shaders.cpp">
       <Filter>ソース ファイル\Shader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\SampleApp.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\IBLBaker.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\SphereMapConverter.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\SkyBox.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\CommonBufferManager.h">
       <Filter>ヘッダー ファイル\CommonBuffer</Filter>
     </ClInclude>
@@ -83,8 +68,17 @@
     <ClInclude Include="..\include\ToneMap.h">
       <Filter>ヘッダー ファイル\PostProcess</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\BasicShader.h">
-      <Filter>ヘッダー ファイル\Shader</Filter>
+    <ClInclude Include="..\include\ModelLoader.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\SampleApp.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Materials.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Shaders.h">
+      <Filter>ヘッダー ファイル\Shaders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -97,24 +91,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\res\TonemapPS.hlsl">
-      <Filter>リソース ファイル</Filter>
-    </FxCompile>
-    <FxCompile Include="..\res\BasicVS.hlsl">
-      <Filter>リソース ファイル</Filter>
-    </FxCompile>
-    <FxCompile Include="..\res\BasicPS.hlsl">
-      <Filter>リソース ファイル</Filter>
-    </FxCompile>
-    <FxCompile Include="..\res\IntegrateDFG_PS.hlsl">
-      <Filter>リソース ファイル</Filter>
-    </FxCompile>
-    <FxCompile Include="..\res\IntegrateSpecularLD_PS.hlsl">
-      <Filter>リソース ファイル</Filter>
-    </FxCompile>
-    <FxCompile Include="..\res\IntegrateDiffuseLD_PS.hlsl">
-      <Filter>リソース ファイル</Filter>
-    </FxCompile>
     <FxCompile Include="..\res\QuadVS.hlsl">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
@@ -124,11 +100,29 @@
     <FxCompile Include="..\res\SphereToCubeVS.hlsl">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
-    <FxCompile Include="..\res\SkyBoxVS.hlsl">
-      <Filter>リソース ファイル</Filter>
+    <FxCompile Include="..\res\BasicVS.hlsl">
+      <Filter>リソース ファイル\Basic</Filter>
+    </FxCompile>
+    <FxCompile Include="..\res\BasicPS.hlsl">
+      <Filter>リソース ファイル\Basic</Filter>
+    </FxCompile>
+    <FxCompile Include="..\res\IntegrateDFG_PS.hlsl">
+      <Filter>リソース ファイル\IBL</Filter>
+    </FxCompile>
+    <FxCompile Include="..\res\IntegrateDiffuseLD_PS.hlsl">
+      <Filter>リソース ファイル\IBL</Filter>
+    </FxCompile>
+    <FxCompile Include="..\res\IntegrateSpecularLD_PS.hlsl">
+      <Filter>リソース ファイル\IBL</Filter>
     </FxCompile>
     <FxCompile Include="..\res\SkyBoxPS.hlsl">
-      <Filter>リソース ファイル</Filter>
+      <Filter>リソース ファイル\SkyBox</Filter>
+    </FxCompile>
+    <FxCompile Include="..\res\SkyBoxVS.hlsl">
+      <Filter>リソース ファイル\SkyBox</Filter>
+    </FxCompile>
+    <FxCompile Include="..\res\TonemapPS.hlsl">
+      <Filter>リソース ファイル\Tonemap</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

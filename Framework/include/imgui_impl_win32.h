@@ -19,9 +19,9 @@ IMGUI_IMPL_API bool     ImGui_ImplWin32_Init(void* hwnd);
 IMGUI_IMPL_API void     ImGui_ImplWin32_Shutdown();
 IMGUI_IMPL_API void     ImGui_ImplWin32_NewFrame();
 
-// あなたのアプリケーションが呼び出す必要があるWin32メッセージハンドラー。 
-// - <windows.h>からの依存関係を避けるために、意図的に ‘#if 0’ ブロックでコメントアウトしました。 
-// - 下の行を .cpp コードにコピーして関数を前方宣言し、それから呼び出すことができます。 
+// あなたのアプリケーションが呼び出す必要があるWin32メッセージハンドラー。
+// - <windows.h>からの依存関係を避けるために、意図的に ‘#if 0’ ブロックでコメントアウトしました。
+// - 下の行を .cpp コードにコピーして関数を前方宣言し、それから呼び出すことができます。
 // - アプリケーションのメッセージハンドラーから呼び出します。この関数が TRUE を返すまで、メッセージハンドラーを呼び出し続けます。
 #if 0
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);

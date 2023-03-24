@@ -5,18 +5,17 @@
 //-----------------------------------------------------------------------------
 #pragma once
 
-
 //-----------------------------------------------------------------------------
 //      nullptr を考慮して delete 処理を行います.
 //-----------------------------------------------------------------------------
 template<typename T>
 inline void SafeDelete(T*& ptr)
 {
-    if (ptr != nullptr)
-    {
-        delete ptr;
-        ptr = nullptr;
-    }
+	if (ptr != nullptr)
+	{
+		delete ptr;
+		ptr = nullptr;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -25,11 +24,11 @@ inline void SafeDelete(T*& ptr)
 template<typename T>
 inline void SafeDeleteArray(T*& ptr)
 {
-    if (ptr != nullptr)
-    {
-        delete[] ptr;
-        ptr = nullptr;
-    }
+	if (ptr != nullptr)
+	{
+		delete[] ptr;
+		ptr = nullptr;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -38,11 +37,11 @@ inline void SafeDeleteArray(T*& ptr)
 template<typename T>
 inline void SafeRelease(T*& ptr)
 {
-    if (ptr != nullptr)
-    {
-        ptr->Release();
-        ptr = nullptr;
-    }
+	if (ptr != nullptr)
+	{
+		ptr->Release();
+		ptr = nullptr;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -51,10 +50,10 @@ inline void SafeRelease(T*& ptr)
 template<typename T>
 inline void SafeTerm(T*& ptr)
 {
-    if (ptr != nullptr)
-    {
-        ptr->Term();
-        delete ptr;
-        ptr = nullptr;
-    }
+	if (ptr != nullptr)
+	{
+		ptr->Term();
+		delete ptr;
+		ptr = nullptr;
+	}
 }

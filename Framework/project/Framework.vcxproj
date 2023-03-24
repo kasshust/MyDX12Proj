@@ -79,11 +79,14 @@
     <ClCompile Include="..\src\Camera.cpp" />
     <ClCompile Include="..\src\ColorTarget.cpp" />
     <ClCompile Include="..\src\CommandList.cpp" />
+    <ClCompile Include="..\src\CommonBufferManager.cpp" />
+    <ClCompile Include="..\src\CommonRTVManager.cpp" />
     <ClCompile Include="..\src\ConstantBuffer.cpp" />
     <ClCompile Include="..\src\DepthTarget.cpp" />
     <ClCompile Include="..\src\DescriptorPool.cpp" />
     <ClCompile Include="..\src\Fence.cpp" />
     <ClCompile Include="..\src\FileUtil.cpp" />
+    <ClCompile Include="..\src\IBLBaker.cpp" />
     <ClCompile Include="..\src\imgui.cpp" />
     <ClCompile Include="..\src\imgui_draw.cpp" />
     <ClCompile Include="..\src\imgui_impl_dx12.cpp" />
@@ -96,6 +99,11 @@
     <ClCompile Include="..\src\Mesh.cpp" />
     <ClCompile Include="..\src\ResMesh.cpp" />
     <ClCompile Include="..\src\RootSignature.cpp" />
+    <ClCompile Include="..\src\Shader.cpp" />
+    <ClCompile Include="..\src\ShaderedMaterial.cpp" />
+    <ClCompile Include="..\src\SkyBox.cpp" />
+    <ClCompile Include="..\src\SkyTextureManager.cpp" />
+    <ClCompile Include="..\src\SphereMapConverter.cpp" />
     <ClCompile Include="..\src\Texture.cpp" />
     <ClCompile Include="..\src\VertexBuffer.cpp" />
   </ItemGroup>
@@ -104,12 +112,15 @@
     <ClInclude Include="..\include\Camera.h" />
     <ClInclude Include="..\include\ColorTarget.h" />
     <ClInclude Include="..\include\CommandList.h" />
+    <ClInclude Include="..\include\CommonBufferManager.h" />
+    <ClInclude Include="..\include\CommonRTVManager.h" />
     <ClInclude Include="..\include\ComPtr.h" />
     <ClInclude Include="..\include\ConstantBuffer.h" />
     <ClInclude Include="..\include\DepthTarget.h" />
     <ClInclude Include="..\include\DescriptorPool.h" />
     <ClInclude Include="..\include\Fence.h" />
     <ClInclude Include="..\include\FileUtil.h" />
+    <ClInclude Include="..\include\IBLBaker.h" />
     <ClInclude Include="..\include\imconfig.h" />
     <ClInclude Include="..\include\imgui.h" />
     <ClInclude Include="..\include\imgui_impl_dx12.h" />
@@ -126,6 +137,11 @@
     <ClInclude Include="..\include\Mesh.h" />
     <ClInclude Include="..\include\Pool.h" />
     <ClInclude Include="..\include\RootSignature.h" />
+    <ClInclude Include="..\include\Shader.h" />
+    <ClInclude Include="..\include\ShaderedMaterial.h" />
+    <ClInclude Include="..\include\SkyBox.h" />
+    <ClInclude Include="..\include\SkyTextureManager.h" />
+    <ClInclude Include="..\include\SphereMapConverter.h" />
     <ClInclude Include="..\include\Texture.h" />
     <ClInclude Include="..\include\VertexBuffer.h" />
   </ItemGroup>
