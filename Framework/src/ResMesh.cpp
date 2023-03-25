@@ -337,16 +337,20 @@ const D3D12_INPUT_ELEMENT_DESC MeshVertex::InputElements[] = {
 const D3D12_INPUT_LAYOUT_DESC MeshVertex::InputLayout = { MeshVertex::InputElements, MeshVertex::InputElementCount };
 static_assert(sizeof(MeshVertex) == 44, "Vertex struct/layout mismatch");
 
-//-----------------------------------------------------------------------------
-//      メッシュをロードします.
-//-----------------------------------------------------------------------------
-bool LoadMesh
-(
-	const wchar_t* filename,
-	std::vector<ResMesh>& meshes,
-	std::vector<ResMaterial>& materials
-)
-{
-	MeshLoader loader;
-	return loader.Load(filename, meshes, materials);
+
+namespace Res {
+
+	//-----------------------------------------------------------------------------
+	//      メッシュをロードします.
+	//-----------------------------------------------------------------------------
+	bool LoadMesh
+	(
+		const wchar_t* filename,
+		std::vector<ResMesh>& meshes,
+		std::vector<ResMaterial>& materials
+	)
+	{
+		MeshLoader loader;
+		return loader.Load(filename, meshes, materials);
+	}
 }

@@ -74,8 +74,6 @@ private:
 	int                             m_PrevCursorX;                  //!< 前回のカーソル位置X.
 	int                             m_PrevCursorY;                  //!< 前回のカーソル位置Y.
 
-	ConstantBuffer                  m_MeshCB[2];
-
 	//=========================================================================
 	// private methods.
 	//=========================================================================
@@ -117,6 +115,7 @@ private:
 	void DrawScene(ID3D12GraphicsCommandList* pCmdList);
 	void RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& colorSource, DepthTarget& depthSource, SkyBox* skyBox);
 	void RenderPostProcess(ID3D12GraphicsCommandList* pCmd);
+	void RenderImGui(ID3D12GraphicsCommandList* pCmd);
 	void UpdateCamera();
 	//-------------------------------------------------------------------------
 	//! @brief      モデルを描画します.

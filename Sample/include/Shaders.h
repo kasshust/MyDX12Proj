@@ -22,14 +22,6 @@ public:
 		const ModelLoader& loader
 	);
 
-	virtual void SetShader(
-		ID3D12GraphicsCommandList* pCmd,
-		int frameindex,
-		const Material& mat,
-		int id,
-		CommonBufferManager& commonbufmanager,
-		const IBLBaker& baker,
-		const ConstantBuffer& buf) override;
 
 protected:
 

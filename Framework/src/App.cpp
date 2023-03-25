@@ -10,6 +10,7 @@
 #include "App.h"
 #include <algorithm>
 
+
 namespace /* anonymous */ {
 	//-----------------------------------------------------------------------------
 	// Constant Values.
@@ -74,6 +75,11 @@ void App::Run()
 //-----------------------------------------------------------------------------
 bool App::InitApp()
 {
+	// グローバル変数の初期化
+	if (!InitGlobal()) {
+		return false;
+	}
+
 	// ウィンドウの初期化.
 	if (!InitWnd())
 	{
@@ -127,6 +133,19 @@ void App::TermApp()
 
 	// ウィンドウの終了処理.
 	TermWnd();
+
+	// グローバル変数の破棄
+	TermGlobal();
+}
+
+bool App::InitGlobal() {
+	AppResourceManager::GetInstance().Init();
+
+	return true;
+}
+
+void App::TermGlobal() {
+	AppResourceManager::GetInstance().Release();
 }
 
 //-----------------------------------------------------------------------------

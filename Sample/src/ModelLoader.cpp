@@ -3,36 +3,41 @@
 #include <ResMesh.h>
 #include <Logger.h>
 #include <CommonBufferManager.h>
+#include <App.h>
+#include <ResourceManager.h>
 
 bool ModelLoader::LoadModel(const wchar_t* filePath, ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool, ComPtr<ID3D12CommandQueue> commandQueue)
 {
 	std::wstring dir = GetDirectoryPath(filePath);
 
-	std::vector<ResMesh>        resMesh;
-	std::vector<ResMaterial>    resMaterial;
-
-	// メッシュリソースをロード.
-	if (!LoadMesh(filePath, resMesh, resMaterial))
-	{
-		ELOG("Error : Load Mesh Failed. filepath = %ls", filePath);
-		return false;
-	}
+	AppResourceManager::GetInstance().LoadResModel(filePath);
 
 	// 定数バッファ作成
 	if (!CreateMeshBuffer(pDevice, resPool))			return false;
 
 	// Mesh作成
-	if (!CreateMesh(pDevice, resMesh))					return false;
-	if (!CreateMaterial(pDevice, resMaterial, resPool)) return false;
+	if (!CreateMesh(pDevice,	 *AppResourceManager::GetInstance().GetMesh(filePath)))					return false;
+	if (!CreateMaterial(pDevice, *AppResourceManager::GetInstance().GetMaterial(filePath), resPool)) return false;
 
 	// リソースバッチを用意.
 	DirectX::ResourceUploadBatch batch(pDevice.Get());
 	batch.Begin(); // バッチ開始.
+	
+	const wchar_t* bc = L"../res/texture/gold_bc.dds";
+	const wchar_t* m  = L"../res/texture/gold_m.dds";
+	const wchar_t* r  = L"../res/texture/gold_r.dds";
+	const wchar_t* n  = L"../res/texture/gold_n.dds";
+
+	// AppResourceManager::GetInstance().LoadTexture(bc, pDevice, m_Material.GetPool(), true, batch);
+	// AppResourceManager::GetInstance().LoadTexture(m , pDevice, resPool, false, batch);
+	// AppResourceManager::GetInstance().LoadTexture(r , pDevice, resPool, false, batch);
+	// AppResourceManager::GetInstance().LoadTexture(n , pDevice, resPool, false, batch);
 	{
-		m_Material.SetTexture(0, Material::TEXTURE_USAGE_04, L"../res/texture/gold_bc.dds", batch, true);
-		m_Material.SetTexture(0, Material::TEXTURE_USAGE_05, L"../res/texture/gold_m.dds", batch, false);
-		m_Material.SetTexture(0, Material::TEXTURE_USAGE_06, L"../res/texture/gold_r.dds", batch, false);
-		m_Material.SetTexture(0, Material::TEXTURE_USAGE_03, L"../res/texture/gold_n.dds", batch, false);
+		// m_Material.SetTexture(0, Material::TEXTURE_USAGE_04, bc, AppResourceManager::GetInstance().GetTexture(bc));
+		m_Material.SetTexture(0, Material::TEXTURE_USAGE_04, bc, batch, false);
+		m_Material.SetTexture(0, Material::TEXTURE_USAGE_05, m, batch, false);
+		m_Material.SetTexture(0, Material::TEXTURE_USAGE_06, r, batch, false);
+		m_Material.SetTexture(0, Material::TEXTURE_USAGE_03, n, batch, false);
 	}
 	auto future = batch.End(commandQueue.Get()); // バッチ終了.
 	future.wait();// バッチ完了を待機.

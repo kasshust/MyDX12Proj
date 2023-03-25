@@ -183,7 +183,39 @@ void Material::Term()
 }
 
 //-----------------------------------------------------------------------------
-//      テクスチャを設定します.
+//      既に生成されているテクスチャを登録します.
+//-----------------------------------------------------------------------------
+bool Material::SetTexture
+(
+	size_t                          index,
+	TEXTURE_USAGE                   usage,
+	const							std::wstring& path,
+	Texture*						pTexture
+) 
+{
+	// 範囲内であるかチェック.
+	if (index >= GetCount())
+	{
+		return false;
+	}
+
+	// 既に登録済みかチェック.
+	if (m_pTexture.find(path) != m_pTexture.end())
+	{
+		m_Subset[index].TextureHandle[usage] = m_pTexture[path]->GetHandleGPU();
+		return true;
+	}
+
+	// 登録.
+	m_pTexture[path] = pTexture;
+	m_Subset[index].TextureHandle[usage] = pTexture->GetHandleGPU();
+
+	// 正常終了.
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+//      テクスチャを内部生成して、設定します.
 //-----------------------------------------------------------------------------
 bool Material::SetTexture
 (

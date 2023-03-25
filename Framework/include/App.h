@@ -27,6 +27,7 @@
 #include <Mesh.h>
 #include <Texture.h>
 #include <InlineUtil.h>
+#include <ResourceManager.h>
 
 //-----------------------------------------------------------------------------
 // Linker
@@ -35,6 +36,10 @@
 #pragma comment( lib, "dxgi.lib" )
 #pragma comment( lib, "dxguid.lib" )
 #pragma comment( lib, "d3dcompiler.lib" )
+
+///////////////////////////////////////////////////////////////////////////////
+// Global Instance
+///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
 // App class
@@ -110,6 +115,8 @@ protected:
 	ID3D12DescriptorHeap*		m_ImGuiDescriptorHeap;		 // ImGui用のディスクリプタヒープ
 	CommandList                 m_ImGuiCommandList;          // ImGui用のコマンドリストです.
 
+
+
 	//=========================================================================
 	// protected methods.
 	//=========================================================================
@@ -150,6 +157,8 @@ private:
 	//=========================================================================
 	// private methods.
 	//=========================================================================
+	bool InitGlobal();
+	void TermGlobal();
 	bool InitApp();
 	void TermApp();
 	bool InitIMGUI();
@@ -166,3 +175,4 @@ protected:
 
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
 };
+

@@ -136,6 +136,7 @@
     <ClInclude Include="..\include\ResMesh.h" />
     <ClInclude Include="..\include\Mesh.h" />
     <ClInclude Include="..\include\Pool.h" />
+    <ClInclude Include="..\include\ResourceManager.h" />
     <ClInclude Include="..\include\RootSignature.h" />
     <ClInclude Include="..\include\Shader.h" />
     <ClInclude Include="..\include\ShaderedMaterial.h" />

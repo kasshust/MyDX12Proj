@@ -25,12 +25,6 @@
     <Filter Include="ソース ファイル\Buffer\RenderTarget">
       <UniqueIdentifier>{779674f7-7b0d-4419-84eb-fc30650c4a6f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\Buffer">
-      <UniqueIdentifier>{40bda6f4-b29c-4872-900f-a16c0a934c17}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ヘッダー ファイル\Buffer\RenderTarget">
-      <UniqueIdentifier>{3a89d639-e696-46b7-ba16-b7a7009d5faf}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ヘッダー ファイル\Pool">
       <UniqueIdentifier>{c0f5f784-af6a-410b-8d42-8a43803ed9e2}</UniqueIdentifier>
     </Filter>
@@ -52,20 +46,26 @@
     <Filter Include="ソース ファイル\Buffer\Resource">
       <UniqueIdentifier>{57387c7e-6766-4b96-b787-0788b3a7ca0b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\Buffer\Resource">
-      <UniqueIdentifier>{824c01af-391e-4e7d-aa31-d37c1efadcd7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ソース ファイル\Buffer\CommonBuffer">
       <UniqueIdentifier>{d4aa179a-5404-49b5-8ef1-19ea9630832b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\Buffer\CommonBuffer">
-      <UniqueIdentifier>{4b51e6cd-ce96-406b-bd9f-3a01fae1c01d}</UniqueIdentifier>
+    <Filter Include="ソース ファイル\Buffer\Resource\Sky">
+      <UniqueIdentifier>{73e3022d-3678-4c78-876f-05b287e39445}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Buffer">
+      <UniqueIdentifier>{40bda6f4-b29c-4872-900f-a16c0a934c17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Buffer\RenderTarget">
+      <UniqueIdentifier>{3a89d639-e696-46b7-ba16-b7a7009d5faf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\Buffer\Resource">
+      <UniqueIdentifier>{824c01af-391e-4e7d-aa31-d37c1efadcd7}</UniqueIdentifier>
     </Filter>
     <Filter Include="ヘッダー ファイル\Buffer\Resource\Sky">
       <UniqueIdentifier>{92720798-a494-4257-a8e2-317860ef0f0d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ソース ファイル\Buffer\Resource\Sky">
-      <UniqueIdentifier>{73e3022d-3678-4c78-876f-05b287e39445}</UniqueIdentifier>
+    <Filter Include="ヘッダー ファイル\Buffer\CommonBuffer">
+      <UniqueIdentifier>{4b51e6cd-ce96-406b-bd9f-3a01fae1c01d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -271,6 +271,9 @@
     </ClInclude>
     <ClInclude Include="..\include\SphereMapConverter.h">
       <Filter>ヘッダー ファイル\Buffer\Resource\Sky</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ResourceManager.h">
+      <Filter>ヘッダー ファイル\Buffer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

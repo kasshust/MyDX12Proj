@@ -66,18 +66,6 @@ bool SampleApp::OnInit()
 	// ポストプロセス初期化
 	if (!m_ToneMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format))    return false;
 
-	for (auto i = 0; i < 2; ++i)
-	{
-		if (!m_MeshCB[i].Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], sizeof(CommonCb::CbMesh)))
-		{
-			ELOG("Error : ConstantBuffer::Init() Failed.");
-			return false;
-		}
-
-		auto ptr = m_MeshCB[i].GetPtr<CommonCb::CbMesh>();
-		ptr->World = Matrix::Identity;
-	}
-
 	return true;
 }
 
@@ -124,6 +112,36 @@ void SampleApp::OnRenderIMGUI() {
 		ImGui::TreePop();
 	}
 
+	if (ImGui::TreeNode("Resource")) {
+
+		if (ImGui::TreeNode("Texture")) {
+			const auto m = AppResourceManager::GetInstance().GetTexturesMap();
+			for (auto itr = m.begin(); itr != m.end(); ++itr) {
+				ImGui::Text("%ls", itr->first);
+			}
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("ResMesh")) {
+			const auto m = AppResourceManager::GetInstance().GetResMeshesMap();
+			for (auto itr = m.begin(); itr != m.end(); ++itr) {
+				ImGui::Text("%ls", itr->first);
+			}
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("ResMaterial")) {
+			const auto m = AppResourceManager::GetInstance().GetResMaterialsMap();
+			for (auto itr = m.begin(); itr != m.end(); ++itr) {
+				ImGui::Text("%ls", itr->first);
+			}
+			ImGui::TreePop();
+		}
+
+		
+		ImGui::TreePop();
+	}
+
 	if (ImGui::Button("Close Window")) {
 		PostQuitMessage(0);
 	}
@@ -139,8 +157,7 @@ void SampleApp::OnRender()
 	// カメラ更新.
 	UpdateCamera();
 
-
-	// Normal Draw
+	// レンダリングエンジン描画
 	auto pCmd = m_CommandList.Reset();
 	ID3D12DescriptorHeap* const pHeaps[] = {
 		m_pPool[POOL_TYPE_RES]->GetHeap(),
@@ -148,41 +165,24 @@ void SampleApp::OnRender()
 	pCmd->SetDescriptorHeaps(1, pHeaps);
 	{
 		RenderOpaque(pCmd, m_CommonRTManager.m_SceneColorTarget, m_CommonRTManager.m_SceneDepthTarget, m_SkyTextureManager.GetSkyBox());
-		RenderPostProcess(pCmd);	
+		RenderPostProcess(pCmd);
 	}
 	pCmd->Close();
 
-	// ImGui Draw
+	// ImGui描画
 	OnRenderIMGUICommonProcess();
-
-	auto pImGuiCmd = m_ImGuiCommandList.Reset();
 	ID3D12DescriptorHeap* const pImGuiHeaps[] = {
 		m_ImGuiDescriptorHeap,
 	};
-
-	auto handleRTV = m_ColorTarget[m_FrameIndex].GetHandleRTV();
-	pImGuiCmd->OMSetRenderTargets(1, &handleRTV->HandleCPU, FALSE, NULL);
-
+	auto pImGuiCmd = m_ImGuiCommandList.Reset();
 	pImGuiCmd->SetDescriptorHeaps(1, pImGuiHeaps);
 	{
-		DirectX::TransitionResource(pImGuiCmd,
-			m_ColorTarget[m_FrameIndex].GetResource(),
-			D3D12_RESOURCE_STATE_PRESENT,
-			D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), pImGuiCmd);
-		
-		DirectX::TransitionResource(pImGuiCmd,
-			m_ColorTarget[m_FrameIndex].GetResource(),
-			D3D12_RESOURCE_STATE_RENDER_TARGET,
-			D3D12_RESOURCE_STATE_PRESENT);
+		RenderImGui(pImGuiCmd);
 	}
 	pImGuiCmd->Close();
 
-
-
 	// コマンドリストを実行.
-	ID3D12CommandList* pLists[] = { pCmd ,pImGuiCmd};
+	ID3D12CommandList* pLists[] = { pCmd ,pImGuiCmd };
 	m_pQueue->ExecuteCommandLists(2, pLists);
 
 	// 画面に表示.
@@ -282,6 +282,26 @@ void SampleApp::RenderPostProcess(ID3D12GraphicsCommandList* pCmd)
 		&m_Viewport,
 		&m_Scissor,
 		m_CommonBufferManager.m_QuadVB);
+}
+
+void SampleApp::RenderImGui(ID3D12GraphicsCommandList* pImGuiCmd)
+{
+	auto handleRTV = m_ColorTarget[m_FrameIndex].GetHandleRTV();
+	pImGuiCmd->OMSetRenderTargets(1, &handleRTV->HandleCPU, FALSE, NULL);
+
+	{
+		DirectX::TransitionResource(pImGuiCmd,
+			m_ColorTarget[m_FrameIndex].GetResource(),
+			D3D12_RESOURCE_STATE_PRESENT,
+			D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), pImGuiCmd);
+
+		DirectX::TransitionResource(pImGuiCmd,
+			m_ColorTarget[m_FrameIndex].GetResource(),
+			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			D3D12_RESOURCE_STATE_PRESENT);
+	}
 }
 
 //-----------------------------------------------------------------------------
