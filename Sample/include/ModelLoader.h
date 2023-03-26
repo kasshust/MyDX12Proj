@@ -4,26 +4,25 @@
 #include <Material.h>
 #include <Mesh.h>
 #include <ConstantBuffer.h>
+#include <Shader.h>
 
-class ModelLoader
+class Model
 {
 public:
-	ModelLoader() = default;
-	~ModelLoader() = default;
+	Model() = default;
+	~Model() = default;
 
 	bool LoadModel(const wchar_t* filePath, ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool, ComPtr<ID3D12CommandQueue> commandQueue);
-	bool CreateMesh(ComPtr<ID3D12Device> pDevice, std::vector<ResMesh> resMesh);
-	bool CreateMaterial(ComPtr<ID3D12Device> pDevice, std::vector<ResMaterial> resMaterial, DescriptorPool* resPool);
+	void DrawModel(ID3D12GraphicsCommandList* pCmd, int frameIndex, const CommonBufferManager& commonBufferManager, const IBLBaker& baker, Shader& shader);
 	void Release();
-
-	const std::vector<Mesh*>& GetMeshes() const { return m_pMesh; }
-	const Material& GetMaterial() const { return m_Material; }
 	ConstantBuffer						 m_MeshCB[App::FrameCount];           //!< メッシュ用バッファです.
 
-	void ModelLoader::UpdateWorldMatrix(int frameindex);
+	void Model::UpdateWorldMatrix(int frameindex);
+
+	const wchar_t* m_FilePath;
 
 private:
-	std::vector<Mesh*> m_pMesh;
-	Material m_Material;
-	bool ModelLoader::CreateMeshBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool);
+	// std::vector<Mesh*> m_pMesh;
+	// Material m_Material;
+	bool Model::CreateMeshBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool);
 };

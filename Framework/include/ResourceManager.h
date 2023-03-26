@@ -8,6 +8,7 @@
 #include <Logger.h>
 #include <ResMesh.h>
 #include <Material.h>
+#include <CommonBufferManager.h>
 
 // ResourceManagerクラス
 class AppResourceManager {
@@ -19,128 +20,67 @@ public:
         return instance;
     }
 
+    void Init();
 
-    void Init() {}
+    void Release();
 
-    void Release() {
-        // m_Textures.clear();
-        // m_ResMeshes.clear();
-        // m_ResMaterials.clear();
-    }
-
-    bool CheckFilePath(const wchar_t* path) {
-        std::wstring findPath;
-        if (!SearchFilePathW(path, findPath))
-        {
-            ELOG("Error : File Path is not exist");
-            return false;
-        }
-
-        // ファイル名であることをチェック.
-        if (PathIsDirectoryW(findPath.c_str()) != FALSE)
-        {
-            ELOG("Error : This is not FilePath");
-            return false;
-        }
-    }
+    bool CheckFilePath(const wchar_t* path);
 
     // Textureを読み込んでunordered_mapに登録する
     bool LoadTexture(const wchar_t* path,
         ComPtr<ID3D12Device> pDevice,
         DescriptorPool* pPool,
         bool isSRGB,
-        DirectX::ResourceUploadBatch& batch) {
-
-        // 既に登録されている場合は何もしない
-        if (m_Textures.count(path) > 0) return false;
-
-        // ファイルパスが存在するかチェックします.
-        if (!CheckFilePath(path)) return false;
-
-        // テクスチャを読み込んで登録
-        auto tex = &Texture();
-        // インスタンス生成.
-        if (tex == nullptr)
-        {
-            ELOG("Error : Out of memory.");
-            return false;
-        }
-
-        // 初期化.
-        if (!tex->Init(pDevice.Get(), pPool, path, isSRGB, batch))
-        {
-            ELOG("Error : Texture::Init() Failed.");
-            tex->Term();
-            return false;
-        }
-
-        m_Textures[path] = tex;
-    }
+        DirectX::ResourceUploadBatch& batch);
 
     // Modelを読み込んでunordered_mapに登録する
-    bool LoadResModel(const wchar_t* path
-        ) {
+    bool LoadResModel(const wchar_t* path);
 
-        if (m_ResMeshes.count(path) == 0 || m_ResMaterials.count(path) == 0) {
-            std::shared_ptr <std::vector<ResMesh>>        resMesh       = std::make_shared<std::vector<ResMesh>>();;
-            std::shared_ptr <std::vector<ResMaterial>>    resMaterial   = std::make_shared<std::vector<ResMaterial>>();;
+    // ResMeshからMeshを作成する
+    bool CreateMesh(ComPtr<ID3D12Device> pDevice, const wchar_t* key, std::vector<ResMesh> resMesh);
 
-            // メッシュリソースをロード.
-            if (!Res::LoadMesh(path, *resMesh, *resMaterial))
-            {
-                ELOG("Error : Load Mesh Failed. filepath = %ls", path);
-                return false;
-            }
-
-            if (m_ResMeshes.count(path) == 0)        m_ResMeshes[path] = resMesh;
-            if (m_ResMaterials.count(path) == 0)     m_ResMaterials[path] = resMaterial;
-        }
-        else return false;
-    }
+    bool CreateMaterial(ComPtr<ID3D12Device> pDevice, const wchar_t* key, std::vector<ResMaterial> resMaterial, DescriptorPool* resPool);
 
     // テクスチャを取得する
-    Texture* GetTexture(const wchar_t* path) {
-        auto it = m_Textures.find(path);
-        if (it != m_Textures.end()) {
-            return it->second;
-        }
-        return nullptr;
-    }
+    Texture* GetTexture(const wchar_t* path);
+
+    // テクスチャに対するロードとゲットを同時に行う
+    Texture* LoadGetTexture(const wchar_t* path,
+        ComPtr<ID3D12Device> pDevice,
+        DescriptorPool* pPool,
+        bool isSRGB,
+        DirectX::ResourceUploadBatch& batch);
+
+    // リソースメッシュを取得する
+    std::vector<ResMesh> GetResMesh(const wchar_t* path);
+
+    // リソースマテリアルを取得する
+    std::vector<ResMaterial> GetResMaterial(const wchar_t* path);
 
     // メッシュを取得する
-    std::shared_ptr<std::vector<ResMesh>> GetMesh(const wchar_t*  path) {
-        auto it = m_ResMeshes.find(path);
-        if (it != m_ResMeshes.end()) {
-            return it->second;
-        }
-        return nullptr;
-    }
+    
+    std::vector<Mesh*> GetMesh(const wchar_t* path);
 
     // マテリアルを取得する
-    std::shared_ptr<std::vector<ResMaterial>> GetMaterial(const wchar_t* path) {
-        auto it = m_ResMaterials.find(path);
-        if (it != m_ResMaterials.end()) {
-            return it->second;
-        }
-        return nullptr;
-    }
+    std::vector<Material*> GetMaterial(const wchar_t* path);
+    
 
-    const std::unordered_map<const wchar_t*, Texture*> GetTexturesMap() {
-        return m_Textures;
-    }
+    const std::unordered_map<const wchar_t*, Texture*> GetTexturesMap();
 
-    const std::unordered_map<const wchar_t*, std::shared_ptr<std::vector<ResMesh>>> GetResMeshesMap() {
-        return m_ResMeshes;
-    }
+    const std::unordered_map<const wchar_t*, std::vector<ResMesh>>     GetResMeshesMap();
 
-    const std::unordered_map<const wchar_t*, std::shared_ptr<std::vector<ResMaterial>>> GetResMaterialsMap() {
-        return m_ResMaterials;
-    }
+    const std::unordered_map<const wchar_t*, std::vector<ResMaterial>> GetResMaterialsMap();
 
 private:
-    std::unordered_map<const wchar_t*, Texture*>                                    m_Textures{};
-    std::unordered_map<const wchar_t*, std::shared_ptr<std::vector<ResMesh>>>       m_ResMeshes{};
-    std::unordered_map<const wchar_t*, std::shared_ptr<std::vector<ResMaterial>>>   m_ResMaterials{};
+    std::unordered_map<const wchar_t*, Texture*>                                 m_Textures{};
+    
+    std::unordered_map<const wchar_t*, std::vector<Mesh*>>                       m_pMeshs{};
+    std::unordered_map<const wchar_t*, std::vector<Material*>>                   m_pMaterials{};
+
+    // 念のためにリソースも保持しておく
+    std::unordered_map<const wchar_t*, std::vector<ResMesh>>                    m_ResMeshes{};
+    std::unordered_map<const wchar_t*, std::vector<ResMaterial>>                m_ResMaterials{};
+
 
     AppResourceManager() {}
     ~AppResourceManager() {}

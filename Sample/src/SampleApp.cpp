@@ -14,6 +14,7 @@
 #include "DirectXHelpers.h"
 #include "SimpleMath.h"
 #include "CommonBufferManager.h"
+#include <ResourceManager.h>
 
 //-----------------------------------------------------------------------------
 // Using Statements
@@ -48,7 +49,7 @@ SampleApp::~SampleApp()
 bool SampleApp::OnInit()
 {
 	// テクスチャ/メッシュをロード.
-	if (!m_ModelLoader.LoadModel(L"../res/matball/matball.obj", m_pDevice, m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
+	if (!m_Model.LoadModel(L"../res/matball/matball.obj", m_pDevice, m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
 
 	// 共通定数バッファ/レンダーターゲット
 	if (!m_CommonBufferManager.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], m_Width, m_Height))                                                return false;
@@ -75,7 +76,7 @@ bool SampleApp::OnInit()
 void SampleApp::OnTerm()
 {
 	// メッシュ破棄.
-	m_ModelLoader.Release();
+	m_Model.Release();
 	m_BasicShader.Term();
 
 	m_ToneMap.Term();
@@ -242,32 +243,16 @@ void SampleApp::DrawScene(ID3D12GraphicsCommandList* pCmd)
 	m_CommonBufferManager.UpdateLightBuffer(m_FrameIndex, m_SkyTextureManager.m_IBLBaker.LDTextureSize, m_SkyTextureManager.m_IBLBaker.MipCount);
 	m_CommonBufferManager.UpdateCameraBuffer(m_FrameIndex, m_Camera.GetPosition());
 	m_CommonBufferManager.UpdateViewProjMatrix(m_FrameIndex, m_View, m_Proj);
-	m_ModelLoader.UpdateWorldMatrix(m_FrameIndex);
-
-	DrawModel(pCmd, m_ModelLoader, m_BasicShader);
+	
+	m_Model.DrawModel(pCmd, m_FrameIndex, m_CommonBufferManager, m_SkyTextureManager.m_IBLBaker, m_BasicShader);
+		
+	
 }
 
 //-----------------------------------------------------------------------------
 //      メッシュを描画します.
 //-----------------------------------------------------------------------------
-void SampleApp::DrawModel(ID3D12GraphicsCommandList* pCmd, ModelLoader& loader, Shader& shader)
-{
-	const std::vector<Mesh*> meshs = loader.GetMeshes();
-	const Material& mat = loader.GetMaterial();
 
-	for (size_t i = 0; i < meshs.size(); ++i)
-	{
-		// マテリアルIDを取得.
-		auto id = meshs[i]->GetMaterialId();
-
-		// 使用するShaderをセット
-		// shader.SetShader(pCmd, m_FrameIndex, mat, i, m_CommonBufferManager, m_SkyTextureManager.m_IBLBaker, m_MeshCB[m_FrameIndex]);
-		shader.SetShader(pCmd, m_FrameIndex, mat, i, m_CommonBufferManager, m_SkyTextureManager.m_IBLBaker, m_ModelLoader);
-
-		// メッシュを描画.
-		meshs[i]->Draw(pCmd);
-	}
-}
 
 //-----------------------------------------------------------------------------
 //      ポストプロセス

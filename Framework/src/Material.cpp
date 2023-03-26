@@ -193,6 +193,9 @@ bool Material::SetTexture
 	Texture*						pTexture
 ) 
 {
+
+	if (pTexture == nullptr)return false;
+
 	// 範囲内であるかチェック.
 	if (index >= GetCount())
 	{
@@ -206,6 +209,7 @@ bool Material::SetTexture
 		return true;
 	}
 
+	
 	// 登録.
 	m_pTexture[path] = pTexture;
 	m_Subset[index].TextureHandle[usage] = pTexture->GetHandleGPU();

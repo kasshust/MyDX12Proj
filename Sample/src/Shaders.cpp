@@ -1,9 +1,9 @@
-#include "Shaders.h"
 #include "Logger.h"
 #include "DirectXHelpers.h"
 #include <CommonStates.h>
 #include <FileUtil.h>
 #include <ModelLoader.h>
+#include "Shaders.h"
 
 // BasicShader
 bool BasicShader::CreateRootSig(ComPtr<ID3D12Device> pDevice) {
@@ -110,27 +110,28 @@ bool BasicShader::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT 
 
 	return true;
 }
-void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, const Material& mat, int id, const CommonBufferManager& commonbufmanager, const IBLBaker& baker, const ModelLoader& loader)
+void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, const Material& mat, int id, const CommonBufferManager& commonbufmanager, const IBLBaker& baker)
 {
 	//　マテリアル共通のバッファ
 	{
 		pCmd->SetGraphicsRootSignature(m_RootSig.GetPtr());
-
 		pCmd->SetGraphicsRootDescriptorTable(0, commonbufmanager.m_TransformCB[frameindex].GetHandleGPU());
+
+
 		pCmd->SetGraphicsRootDescriptorTable(2, commonbufmanager.m_LightCB[frameindex].GetHandleGPU());
 		pCmd->SetGraphicsRootDescriptorTable(3, commonbufmanager.m_CameraCB[frameindex].GetHandleGPU());
 		pCmd->SetGraphicsRootDescriptorTable(4, baker.GetHandleGPU_DFG());
 		pCmd->SetGraphicsRootDescriptorTable(5, baker.GetHandleGPU_DiffuseLD());
 		pCmd->SetGraphicsRootDescriptorTable(6, baker.GetHandleGPU_SpecularLD());
 	}
-	pCmd->SetPipelineState(m_pPSO.Get());
+	
 
-	pCmd->SetGraphicsRootDescriptorTable(1, loader.m_MeshCB[frameindex].GetHandleGPU());
 	//　マテリアルごとに異なるバッファ
 	{
-		pCmd->SetGraphicsRootDescriptorTable(7, mat.GetTextureHandle(id, Material::TEXTURE_USAGE_04));
-		pCmd->SetGraphicsRootDescriptorTable(8, mat.GetTextureHandle(id, Material::TEXTURE_USAGE_05));
-		pCmd->SetGraphicsRootDescriptorTable(9, mat.GetTextureHandle(id, Material::TEXTURE_USAGE_06));
-		pCmd->SetGraphicsRootDescriptorTable(10, mat.GetTextureHandle(id, Material::TEXTURE_USAGE_03));
+		pCmd->SetGraphicsRootDescriptorTable(7,		mat.GetTextureHandle(id, Material::TEXTURE_USAGE_04));
+		pCmd->SetGraphicsRootDescriptorTable(8,		mat.GetTextureHandle(id, Material::TEXTURE_USAGE_05));
+		pCmd->SetGraphicsRootDescriptorTable(9,		mat.GetTextureHandle(id, Material::TEXTURE_USAGE_06));
+		pCmd->SetGraphicsRootDescriptorTable(10,	mat.GetTextureHandle(id, Material::TEXTURE_USAGE_03));
 	}
+	pCmd->SetPipelineState(m_pPSO.Get());
 }

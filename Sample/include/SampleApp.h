@@ -64,7 +64,7 @@ private:
 	ToneMap                         m_ToneMap;
 	BasicShader                     m_BasicShader;
 	Camera                          m_Camera;
-	ModelLoader						m_ModelLoader;
+	Model						m_Model;
 
 	float                           m_Exposure;                     //!< 露光値.
 
@@ -120,5 +120,5 @@ private:
 	//-------------------------------------------------------------------------
 	//! @brief      モデルを描画します.
 	//-------------------------------------------------------------------------
-	void DrawModel(ID3D12GraphicsCommandList* pCmd, ModelLoader& loader, Shader& shader);
+	void DrawModel(ID3D12GraphicsCommandList* pCmd, Model& loader, Shader& shader);
 };

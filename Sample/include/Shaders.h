@@ -18,8 +18,7 @@ public:
 		const Material& mat,
 		int id,
 		const CommonBufferManager& commonbufmanager,
-		const IBLBaker& baker,
-		const ModelLoader& loader
+		const IBLBaker& baker
 	);
 
 

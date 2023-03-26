@@ -162,6 +162,9 @@
     <ClCompile Include="..\src\SphereMapConverter.cpp">
       <Filter>ソース ファイル\Buffer\Resource\Sky</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ResourceManager.cpp">
+      <Filter>ソース ファイル\Buffer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\App.h">

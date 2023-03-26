@@ -27,7 +27,6 @@
 #include <Mesh.h>
 #include <Texture.h>
 #include <InlineUtil.h>
-#include <ResourceManager.h>
 
 //-----------------------------------------------------------------------------
 // Linker

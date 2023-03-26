@@ -6,7 +6,6 @@
 #include <RootSignature.h>
 #include <IBLBaker.h>
 #include <CommonBufferManager.h>
-#include "../../Sample/include/ModelLoader.h"
 
 class Shader {
 public:
@@ -16,8 +15,7 @@ public:
 		int frameindex, const Material& mat,
 		int id,
 		const CommonBufferManager& commonbufmanager,
-		const IBLBaker& baker,
-		const ModelLoader& loader) = 0;
+		const IBLBaker& baker) = 0;
 
 protected:
 	ComPtr<ID3D12PipelineState>     m_pPSO;                    //!< シーン用パイプラインステートです.
