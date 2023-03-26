@@ -190,10 +190,9 @@ bool Material::SetTexture
 	size_t                          index,
 	TEXTURE_USAGE                   usage,
 	const							std::wstring& path,
-	Texture*						pTexture
-) 
+	Texture* pTexture
+)
 {
-
 	if (pTexture == nullptr)return false;
 
 	// 範囲内であるかチェック.
@@ -209,7 +208,6 @@ bool Material::SetTexture
 		return true;
 	}
 
-	
 	// 登録.
 	m_pTexture[path] = pTexture;
 	m_Subset[index].TextureHandle[usage] = pTexture->GetHandleGPU();

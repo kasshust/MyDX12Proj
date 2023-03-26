@@ -8,18 +8,26 @@
 // BasicShader
 bool BasicShader::CreateRootSig(ComPtr<ID3D12Device> pDevice) {
 	RootSignature::Desc desc;
-	desc.Begin(11)
+	desc.Begin(12)
+		
+		//VSの定数バッファ
 		.SetCBV(ShaderStage::VS, 0, 0)
 		.SetCBV(ShaderStage::VS, 1, 1)
+
+		//PSの定数バッファ
 		.SetCBV(ShaderStage::PS, 2, 1)
 		.SetCBV(ShaderStage::PS, 3, 2)
-		.SetSRV(ShaderStage::PS, 4, 0)
-		.SetSRV(ShaderStage::PS, 5, 1)
-		.SetSRV(ShaderStage::PS, 6, 2)
-		.SetSRV(ShaderStage::PS, 7, 3)
-		.SetSRV(ShaderStage::PS, 8, 4)
-		.SetSRV(ShaderStage::PS, 9, 5)
-		.SetSRV(ShaderStage::PS, 10, 6)
+		.SetCBV(ShaderStage::PS, 4,3)
+
+		// テクスチャ
+		.SetSRV(ShaderStage::PS, 5, 0)
+		.SetSRV(ShaderStage::PS, 6, 1)
+		.SetSRV(ShaderStage::PS, 7, 2)
+		.SetSRV(ShaderStage::PS, 8, 3)
+		.SetSRV(ShaderStage::PS, 9, 4)
+		.SetSRV(ShaderStage::PS, 10, 5)
+		.SetSRV(ShaderStage::PS, 11, 6)
+
 		.AddStaticSmp(ShaderStage::PS, 0, SamplerState::LinearWrap)
 		.AddStaticSmp(ShaderStage::PS, 1, SamplerState::LinearWrap)
 		.AddStaticSmp(ShaderStage::PS, 2, SamplerState::LinearWrap)
@@ -84,18 +92,18 @@ bool BasicShader::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT 
 
 	// グラフィックスパイプラインステートを設定.
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
-	desc.InputLayout = { elements, 4 };
-	desc.pRootSignature = m_RootSig.GetPtr();
-	desc.VS = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
-	desc.PS = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
-	desc.RasterizerState = DirectX::CommonStates::CullNone;
-	desc.BlendState = DirectX::CommonStates::Opaque;
-	desc.DepthStencilState = DirectX::CommonStates::DepthDefault;
-	desc.SampleMask = UINT_MAX;
-	desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	desc.NumRenderTargets = 1;
-	desc.RTVFormats[0] = rtvFormat;
-	desc.DSVFormat = dsvFormat;
+	desc.InputLayout                        = { elements, 4 };
+	desc.pRootSignature                     = m_RootSig.GetPtr();
+	desc.VS                                 = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
+	desc.PS                                 = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
+	desc.RasterizerState                    = DirectX::CommonStates::CullNone;
+	desc.BlendState                         = DirectX::CommonStates::Opaque;
+	desc.DepthStencilState                  = DirectX::CommonStates::DepthDefault;
+	desc.SampleMask                         = UINT_MAX;
+	desc.PrimitiveTopologyType              = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	desc.NumRenderTargets                   = 1;
+	desc.RTVFormats[0]                      = rtvFormat;
+	desc.DSVFormat                          = dsvFormat;
 
 	desc.SampleDesc.Count = 1;
 	desc.SampleDesc.Quality = 0;
@@ -110,28 +118,34 @@ bool BasicShader::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT 
 
 	return true;
 }
-void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, const Material& mat, int id, const CommonBufferManager& commonbufmanager, const IBLBaker& baker)
+void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Material& mat, int id, const CommonBufferManager& commonbufmanager, const IBLBaker& baker)
 {
 	//　マテリアル共通のバッファ
 	{
 		pCmd->SetGraphicsRootSignature(m_RootSig.GetPtr());
-		pCmd->SetGraphicsRootDescriptorTable(0, commonbufmanager.m_TransformCB[frameindex].GetHandleGPU());
 
+		// ココを外部化したい
+		{
+			pCmd->SetGraphicsRootDescriptorTable(0, commonbufmanager.m_TransformCB[frameindex].GetHandleGPU());
+			pCmd->SetGraphicsRootDescriptorTable(1, commonbufmanager.m_MeshCB[frameindex].GetHandleGPU());
+			pCmd->SetGraphicsRootDescriptorTable(2, commonbufmanager.m_LightCB[frameindex].GetHandleGPU());
+			pCmd->SetGraphicsRootDescriptorTable(3, commonbufmanager.m_CameraCB[frameindex].GetHandleGPU());
+		}
 
-		pCmd->SetGraphicsRootDescriptorTable(2, commonbufmanager.m_LightCB[frameindex].GetHandleGPU());
-		pCmd->SetGraphicsRootDescriptorTable(3, commonbufmanager.m_CameraCB[frameindex].GetHandleGPU());
-		pCmd->SetGraphicsRootDescriptorTable(4, baker.GetHandleGPU_DFG());
-		pCmd->SetGraphicsRootDescriptorTable(5, baker.GetHandleGPU_DiffuseLD());
-		pCmd->SetGraphicsRootDescriptorTable(6, baker.GetHandleGPU_SpecularLD());
+		pCmd->SetGraphicsRootDescriptorTable(5, baker.GetHandleGPU_DFG());
+		pCmd->SetGraphicsRootDescriptorTable(6, baker.GetHandleGPU_DiffuseLD());
+		pCmd->SetGraphicsRootDescriptorTable(7, baker.GetHandleGPU_SpecularLD());
 	}
-	
+
+	//  マテリアルから定数バッファを取り出す
+	pCmd->SetGraphicsRootDescriptorTable(4, mat.GetBufferHandle(id));
 
 	//　マテリアルごとに異なるバッファ
 	{
-		pCmd->SetGraphicsRootDescriptorTable(7,		mat.GetTextureHandle(id, Material::TEXTURE_USAGE_04));
-		pCmd->SetGraphicsRootDescriptorTable(8,		mat.GetTextureHandle(id, Material::TEXTURE_USAGE_05));
-		pCmd->SetGraphicsRootDescriptorTable(9,		mat.GetTextureHandle(id, Material::TEXTURE_USAGE_06));
-		pCmd->SetGraphicsRootDescriptorTable(10,	mat.GetTextureHandle(id, Material::TEXTURE_USAGE_03));
+		pCmd->SetGraphicsRootDescriptorTable(8,		mat.GetTextureHandle(id, Material::TEXTURE_USAGE_04));
+		pCmd->SetGraphicsRootDescriptorTable(9,		mat.GetTextureHandle(id, Material::TEXTURE_USAGE_05));
+		pCmd->SetGraphicsRootDescriptorTable(10,	mat.GetTextureHandle(id, Material::TEXTURE_USAGE_06));
+		pCmd->SetGraphicsRootDescriptorTable(11,	mat.GetTextureHandle(id, Material::TEXTURE_USAGE_03));
 	}
 	pCmd->SetPipelineState(m_pPSO.Get());
 }

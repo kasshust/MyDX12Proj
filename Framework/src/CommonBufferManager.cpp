@@ -12,10 +12,12 @@ using namespace DirectX::SimpleMath;
 
 bool CommonBufferManager::Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool, float width, float height)
 {
-	if (!CreateLightBuffer(pDevice.Get(), resPool))                                              return false;
-	if (!CreateCameraBuffer(pDevice.Get(), resPool))                                             return false;
-	if (!CreateVertexBuffer(pDevice.Get()))                                                   return false;
-	if (!CreateMatrixConstantBuffer(pDevice.Get(), resPool, width, height))                      return false;
+	if (!CreateLightBuffer(pDevice.Get(), resPool))  return false;
+	if (!CreateCameraBuffer(pDevice.Get(), resPool)) return false;
+	if (!CreateMeshBuffer(pDevice.Get(), resPool))   return false;
+	if (!CreateVertexBuffer(pDevice.Get()))          return false;
+	if (!CreateMatrixConstantBuffer(pDevice.Get(), resPool, width, height)) return false;
+
 	return true;
 }
 
@@ -38,6 +40,21 @@ bool CommonBufferManager::CreateCameraBuffer(ComPtr<ID3D12Device> pDevice, Descr
 			ELOG("Error : ConstantBuffer::Init() Failed.");
 			return false;
 		}
+	}
+	return true;
+}
+
+bool CommonBufferManager::CreateMeshBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool) {
+	for (auto i = 0; i < App::FrameCount; ++i)
+	{
+		if (!m_MeshCB[i].Init(pDevice.Get(), resPool, sizeof(CommonCb::CbMesh)))
+		{
+			ELOG("Error : ConstantBuffer::Init() Failed.");
+			return false;
+		}
+
+		auto ptr = m_MeshCB[i].GetPtr<CommonCb::CbMesh>();
+		ptr->World = Matrix::Identity;
 	}
 	return true;
 }
@@ -115,6 +132,12 @@ void CommonBufferManager::UpdateViewProjMatrix(int frameindex, Matrix& view, Mat
 	ptr->Proj = proj;
 }
 
+void CommonBufferManager::UpdateWorldMatrix(int frameindex, Matrix& modelMatrix)
+{
+	auto ptr = m_MeshCB[frameindex].GetPtr<CommonCb::CbMesh>();
+	ptr->World = modelMatrix;
+}
+
 void CommonBufferManager::Term()
 {
 	m_QuadVB.Term();
@@ -122,6 +145,7 @@ void CommonBufferManager::Term()
 	{
 		m_LightCB[i].Term();
 		m_CameraCB[i].Term();
+		m_MeshCB[i].Term();
 		m_TransformCB[i].Term();
 	}
 }

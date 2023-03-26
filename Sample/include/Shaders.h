@@ -15,12 +15,11 @@ public:
 	virtual void SetShader(
 		ID3D12GraphicsCommandList* pCmd,
 		int frameindex,
-		const Material& mat,
+		Material& mat,
 		int id,
 		const CommonBufferManager& commonbufmanager,
 		const IBLBaker& baker
 	);
-
 
 protected:
 

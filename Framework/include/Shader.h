@@ -12,7 +12,8 @@ public:
 	bool Init(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat);
 	void Term();
 	virtual void SetShader(ID3D12GraphicsCommandList* pCmd,
-		int frameindex, const Material& mat,
+		int frameindex, 
+		Material& mat,
 		int id,
 		const CommonBufferManager& commonbufmanager,
 		const IBLBaker& baker) = 0;

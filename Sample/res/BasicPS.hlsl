@@ -48,6 +48,14 @@ cbuffer CbCamera : register(b2)
     float3 CameraPosition : packoffset(c0);     // ÉJÉÅÉâà íuÇ≈Ç∑.
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Custom constant buffer
+///////////////////////////////////////////////////////////////////////////////
+cbuffer CbCustom : register(b3)
+{
+    float4 TestCustomParam : packoffset(c0);
+};
+
 //-----------------------------------------------------------------------------
 // Textures and Samplers
 //-----------------------------------------------------------------------------
@@ -166,8 +174,8 @@ PSOutput main(VSOutput input)
     lit += EvaluateIBLDiffuse(N) * Kd;
     lit += EvaluateIBLSpecular(NV, N, R, Ks, roughness, TextureSize, MipCount);
 
-    output.Color.rgb = lit * LightIntensity;
+    output.Color.rgb = lit * LightIntensity * TestCustomParam.xyz;
     output.Color.a   = 1.0f;
-
+    
     return output;
 }

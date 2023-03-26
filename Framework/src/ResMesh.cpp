@@ -337,9 +337,7 @@ const D3D12_INPUT_ELEMENT_DESC MeshVertex::InputElements[] = {
 const D3D12_INPUT_LAYOUT_DESC MeshVertex::InputLayout = { MeshVertex::InputElements, MeshVertex::InputElementCount };
 static_assert(sizeof(MeshVertex) == 44, "Vertex struct/layout mismatch");
 
-
 namespace Res {
-
 	//-----------------------------------------------------------------------------
 	//      メッシュをロードします.
 	//-----------------------------------------------------------------------------

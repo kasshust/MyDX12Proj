@@ -8,6 +8,7 @@
 // Includes
 //-----------------------------------------------------------------------------
 #include <App.h>
+#include <GameObject.h>
 #include <Camera.h>
 #include <ConstantBuffer.h>
 #include <Material.h>
@@ -58,13 +59,14 @@ private:
 	//=========================================================================
 	// private variables.
 	//=========================================================================
+	
+	std::vector<GameObject*>		m_GameObjects;
 	CommonRTManager                 m_CommonRTManager;
 	CommonBufferManager             m_CommonBufferManager;
 	SkyTextureManager               m_SkyTextureManager;
 	ToneMap                         m_ToneMap;
 	BasicShader                     m_BasicShader;
 	Camera                          m_Camera;
-	Model						m_Model;
 
 	float                           m_Exposure;                     //!< 露光値.
 

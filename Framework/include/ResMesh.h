@@ -80,7 +80,7 @@ struct ResMesh
 //! @retval false   ロードに失敗.
 //-----------------------------------------------------------------------------
 
-namespace Res{
+namespace Res {
 	bool LoadMesh(
 		const wchar_t* filename,
 		std::vector<ResMesh>& meshes,

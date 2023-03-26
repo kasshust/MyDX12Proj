@@ -370,7 +370,6 @@ bool App::InitD3D()
 		}
 	}
 
-
 	// レンダーターゲットビューの生成.
 	{
 		for (auto i = 0u; i < FrameCount; ++i)
@@ -437,11 +436,11 @@ bool App::InitD3D()
 bool App::InitIMGUI()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
-	desc.NumDescriptors             = FrameCount;
-	desc.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	desc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	desc.NodeMask					= 0;
-	auto hr                         = m_pDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_ImGuiDescriptorHeap));
+	desc.NumDescriptors = FrameCount;
+	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	desc.NodeMask = 0;
+	auto hr = m_pDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_ImGuiDescriptorHeap));
 	if (FAILED(hr))
 	{
 		return false;
@@ -458,9 +457,9 @@ bool App::InitIMGUI()
 	if (!ImGui_ImplWin32_Init(m_hWnd))return false;
 
 	ID3D12Device* device = m_pDevice.Get();
-	int frameCount       = FrameCount;
-	DXGI_FORMAT format   = m_ColorTarget[0].GetRTVDesc().Format;
-	
+	int frameCount = FrameCount;
+	DXGI_FORMAT format = m_ColorTarget[0].GetRTVDesc().Format;
+
 	// プールからじゃなくて独自に作ったほうがよくない？
 	D3D12_CPU_DESCRIPTOR_HANDLE  chandle = m_ImGuiDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	D3D12_GPU_DESCRIPTOR_HANDLE  ghandle = m_ImGuiDescriptorHeap->GetGPUDescriptorHandleForHeapStart();

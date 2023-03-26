@@ -206,11 +206,11 @@ bool Texture::Init
 	}
 
 	D3D12_HEAP_PROPERTIES prop = {};
-	prop.Type                  = D3D12_HEAP_TYPE_DEFAULT;
-	prop.MemoryPoolPreference  = D3D12_MEMORY_POOL_UNKNOWN;
-	prop.CPUPageProperty       = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	prop.CreationNodeMask      = 0;
-	prop.VisibleNodeMask       = 0;
+	prop.Type = D3D12_HEAP_TYPE_DEFAULT;
+	prop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	prop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	prop.CreationNodeMask = 0;
+	prop.VisibleNodeMask = 0;
 
 	auto hr = pDevice->CreateCommittedResource(
 		&prop,

@@ -14,74 +14,72 @@
 class AppResourceManager {
 public:
 
-    static AppResourceManager& GetInstance()
-    {
-        static AppResourceManager instance;
-        return instance;
-    }
+	static AppResourceManager& GetInstance()
+	{
+		static AppResourceManager instance;
+		return instance;
+	}
 
-    void Init();
+	void Init();
 
-    void Release();
+	void Release();
 
-    bool CheckFilePath(const wchar_t* path);
+	bool CheckFilePath(const wchar_t* path);
 
-    // Textureを読み込んでunordered_mapに登録する
-    bool LoadTexture(const wchar_t* path,
-        ComPtr<ID3D12Device> pDevice,
-        DescriptorPool* pPool,
-        bool isSRGB,
-        DirectX::ResourceUploadBatch& batch);
+	// Textureを読み込んでunordered_mapに登録する
+	bool LoadTexture(const wchar_t* path,
+		ComPtr<ID3D12Device> pDevice,
+		DescriptorPool* pPool,
+		bool isSRGB,
+		DirectX::ResourceUploadBatch& batch);
 
-    // Modelを読み込んでunordered_mapに登録する
-    bool LoadResModel(const wchar_t* path);
+	// Modelを読み込んでunordered_mapに登録する
+	bool LoadResModel(const wchar_t* path);
 
-    // ResMeshからMeshを作成する
-    bool CreateMesh(ComPtr<ID3D12Device> pDevice, const wchar_t* key, std::vector<ResMesh> resMesh);
+	// ResMeshからMeshを作成する
+	bool CreateMesh(ComPtr<ID3D12Device> pDevice, const wchar_t* key, std::vector<ResMesh> resMesh);
 
-    bool CreateMaterial(ComPtr<ID3D12Device> pDevice, const wchar_t* key, std::vector<ResMaterial> resMaterial, DescriptorPool* resPool);
+	bool CreateMaterial(ComPtr<ID3D12Device> pDevice, const wchar_t* key, std::vector<ResMaterial> resMaterial, DescriptorPool* resPool);
 
-    // テクスチャを取得する
-    Texture* GetTexture(const wchar_t* path);
+	// テクスチャを取得する
+	Texture* GetTexture(const wchar_t* path);
 
-    // テクスチャに対するロードとゲットを同時に行う
-    Texture* LoadGetTexture(const wchar_t* path,
-        ComPtr<ID3D12Device> pDevice,
-        DescriptorPool* pPool,
-        bool isSRGB,
-        DirectX::ResourceUploadBatch& batch);
+	// テクスチャに対するロードとゲットを同時に行う
+	Texture* LoadGetTexture(const wchar_t* path,
+		ComPtr<ID3D12Device> pDevice,
+		DescriptorPool* pPool,
+		bool isSRGB,
+		DirectX::ResourceUploadBatch& batch);
 
-    // リソースメッシュを取得する
-    std::vector<ResMesh> GetResMesh(const wchar_t* path);
+	// リソースメッシュを取得する
+	std::vector<ResMesh> GetResMesh(const wchar_t* path);
 
-    // リソースマテリアルを取得する
-    std::vector<ResMaterial> GetResMaterial(const wchar_t* path);
+	// リソースマテリアルを取得する
+	std::vector<ResMaterial> GetResMaterial(const wchar_t* path);
 
-    // メッシュを取得する
-    
-    std::vector<Mesh*> GetMesh(const wchar_t* path);
+	// メッシュを取得する
 
-    // マテリアルを取得する
-    std::vector<Material*> GetMaterial(const wchar_t* path);
-    
+	std::vector<Mesh*> GetMesh(const wchar_t* path);
 
-    const std::unordered_map<const wchar_t*, Texture*> GetTexturesMap();
+	// マテリアルを取得する
+	std::vector<Material*> GetMaterial(const wchar_t* path);
 
-    const std::unordered_map<const wchar_t*, std::vector<ResMesh>>     GetResMeshesMap();
+	const std::unordered_map<const wchar_t*, Texture*> GetTexturesMap();
 
-    const std::unordered_map<const wchar_t*, std::vector<ResMaterial>> GetResMaterialsMap();
+	const std::unordered_map<const wchar_t*, std::vector<ResMesh>>     GetResMeshesMap();
+
+	const std::unordered_map<const wchar_t*, std::vector<ResMaterial>> GetResMaterialsMap();
 
 private:
-    std::unordered_map<const wchar_t*, Texture*>                                 m_Textures{};
-    
-    std::unordered_map<const wchar_t*, std::vector<Mesh*>>                       m_pMeshs{};
-    std::unordered_map<const wchar_t*, std::vector<Material*>>                   m_pMaterials{};
+	std::unordered_map<const wchar_t*, Texture*>                                 m_Textures{};
 
-    // 念のためにリソースも保持しておく
-    std::unordered_map<const wchar_t*, std::vector<ResMesh>>                    m_ResMeshes{};
-    std::unordered_map<const wchar_t*, std::vector<ResMaterial>>                m_ResMaterials{};
+	std::unordered_map<const wchar_t*, std::vector<Mesh*>>                       m_pMeshs{};
+	std::unordered_map<const wchar_t*, std::vector<Material*>>                   m_pMaterials{};
 
+	// 念のためにリソースも保持しておく
+	std::unordered_map<const wchar_t*, std::vector<ResMesh>>                    m_ResMeshes{};
+	std::unordered_map<const wchar_t*, std::vector<ResMaterial>>                m_ResMaterials{};
 
-    AppResourceManager() {}
-    ~AppResourceManager() {}
+	AppResourceManager() {}
+	~AppResourceManager() {}
 };

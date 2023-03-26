@@ -67,6 +67,12 @@
     <Filter Include="ヘッダー ファイル\Buffer\CommonBuffer">
       <UniqueIdentifier>{4b51e6cd-ce96-406b-bd9f-3a01fae1c01d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\Component">
+      <UniqueIdentifier>{4583a2f9-4df7-453b-a70d-ccce82ef7352}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Component">
+      <UniqueIdentifier>{2785df0d-ca4a-41d0-b6ca-2ab02fea2117}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\App.cpp">
@@ -164,6 +170,12 @@
     </ClCompile>
     <ClCompile Include="..\src\ResourceManager.cpp">
       <Filter>ソース ファイル\Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\GameObject.cpp">
+      <Filter>ソース ファイル\GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TransformComponent.cpp">
+      <Filter>ソース ファイル\Component</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -277,6 +289,18 @@
     </ClInclude>
     <ClInclude Include="..\include\ResourceManager.h">
       <Filter>ヘッダー ファイル\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\GameObject.h">
+      <Filter>ヘッダー ファイル\GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Component.h">
+      <Filter>ヘッダー ファイル\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\TransformComponent.h">
+      <Filter>ヘッダー ファイル\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\MakeRandom.h">
+      <Filter>ヘッダー ファイル\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -51,10 +51,22 @@ namespace CommonCb {
 	///////////////////////////////////////////////////////////////////////////////
 	struct alignas(256) CbMaterial
 	{
-		Vector3 BaseColor;  //!< 基本色.
-		float   Alpha;      //!< 透過度.
-		float   Roughness;  //!< 面の粗さです(範囲は[0,1]).
-		float   Metallic;   //!< 金属度です(範囲は[0,1]).
+		Vector4  Param00;
+		Vector4  Param01;
+		Vector4  Param02;
+		Vector4  Param03;
+		Vector4  Param04;
+		Vector4  Param05;
+		Vector4  Param06;
+		Vector4  Param07;
+		Vector4  Param08;
+		Vector4  Param09;
+		Vector4  Param10;
+		Vector4  Param11;
+		Vector4  Param12;
+		Vector4  Param13;
+		Vector4  Param14;
+		Vector4  Param15;
 	};
 } // namespace
 
@@ -65,17 +77,20 @@ public:
 	void CommonBufferManager::UpdateLightBuffer(int frameindex, float texSize, float mipCount);
 	void CommonBufferManager::UpdateCameraBuffer(int frameindex, Vector3 pos);
 	void CommonBufferManager::UpdateViewProjMatrix(int frameindex, Matrix& view, Matrix& proj);
+	void CommonBufferManager::UpdateWorldMatrix(int frameindex, Matrix& modelMat);
 	void Term();
 
-	VertexBuffer                    m_QuadVB;                            //!< 頂点バッファです.
-	ConstantBuffer                  m_LightCB[App::FrameCount];          //!< ライトバッファです.
-	ConstantBuffer                  m_CameraCB[App::FrameCount];         //!< カメラバッファです.
-	ConstantBuffer                  m_TransformCB[App::FrameCount];      //!< 変換用バッファです.
+	VertexBuffer        m_QuadVB;                            //!< 頂点バッファです.
+	ConstantBuffer      m_LightCB[App::FrameCount];          //!< ライトバッファです.
+	ConstantBuffer      m_CameraCB[App::FrameCount];         //!< カメラバッファです.
+	ConstantBuffer      m_TransformCB[App::FrameCount];      //!< 変換用バッファです.
+	ConstantBuffer		m_MeshCB[App::FrameCount];           //!< メッシュ用バッファです.
 
 private:
 	//=========================================================================
 	// private variables.
 	//=========================================================================
+	bool CommonBufferManager::CreateMeshBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool);
 	bool CommonBufferManager::CreateLightBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool);
 	bool CommonBufferManager::CreateCameraBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool);
 	bool CommonBufferManager::CreateVertexBuffer(ComPtr<ID3D12Device> pDevice);

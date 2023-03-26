@@ -48,9 +48,13 @@ SampleApp::~SampleApp()
 //-----------------------------------------------------------------------------
 bool SampleApp::OnInit()
 {
-	// テクスチャ/メッシュをロード.
-	if (!m_Model.LoadModel(L"../res/matball/matball.obj", m_pDevice, m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
 
+	GameObject* g = new GameObject();
+	if (!g->m_Model.LoadModel(L"../res/matball/matball.obj", m_pDevice, m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
+	m_GameObjects.push_back(g);
+
+	// テクスチャ/メッシュをロード.
+	
 	// 共通定数バッファ/レンダーターゲット
 	if (!m_CommonBufferManager.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], m_Width, m_Height))                                                return false;
 	if (!m_CommonRTManager.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_pPool[POOL_TYPE_DSV], m_Width, m_Height))    return false;
@@ -75,12 +79,14 @@ bool SampleApp::OnInit()
 //-----------------------------------------------------------------------------
 void SampleApp::OnTerm()
 {
-	// メッシュ破棄.
-	m_Model.Release();
+	for (size_t i = 0; i < m_GameObjects.size(); i++) {
+		GameObject* g = m_GameObjects[i];
+		g->m_Model.Release();
+	}
+	m_GameObjects.clear();
+
 	m_BasicShader.Term();
-
 	m_ToneMap.Term();
-
 	m_CommonBufferManager.Term();
 	m_CommonRTManager.Term();
 	m_SkyTextureManager.Term();
@@ -114,7 +120,6 @@ void SampleApp::OnRenderIMGUI() {
 	}
 
 	if (ImGui::TreeNode("Resource")) {
-
 		if (ImGui::TreeNode("Texture")) {
 			const auto m = AppResourceManager::GetInstance().GetTexturesMap();
 			for (auto itr = m.begin(); itr != m.end(); ++itr) {
@@ -131,15 +136,54 @@ void SampleApp::OnRenderIMGUI() {
 			ImGui::TreePop();
 		}
 
+
 		if (ImGui::TreeNode("ResMaterial")) {
 			const auto m = AppResourceManager::GetInstance().GetResMaterialsMap();
+			
 			for (auto itr = m.begin(); itr != m.end(); ++itr) {
+				
+
 				ImGui::Text("%ls", itr->first);
 			}
 			ImGui::TreePop();
 		}
 
-		
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("GameObjects")) {
+
+
+		for (size_t i = 0; i < m_GameObjects.size(); i++) {
+			GameObject* g = m_GameObjects[i];
+			if (ImGui::TreeNode("GameObject")) {
+				
+				Vector3		pos     = g->Transform().GetPosition();
+				Quaternion	rot		= g->Transform().GetRotation();
+				Vector3		scale   = g->Transform().GetScale();
+
+				float* posArray = new float[] { pos.x, pos.y, pos.z };
+				float* rotArray = new float[] { rot.x, rot.y, rot.z};
+				float* scaleArray = new float[] { scale.x, scale.y, scale.z };
+
+				// float* ZeroArray = new float[] { 0.0f, 0.0f, 0.0f};
+
+				std::string s = "ID : " + std::to_string(g->GetId());
+				ImGui::Text(s.c_str());
+				ImGui::InputFloat3("Position", posArray);
+				ImGui::InputFloat3("Rotation", rotArray);
+				ImGui::InputFloat3("Scale",		scaleArray);
+				// ImGui::InputFloat3("Rotation", ZeroArray);
+
+				g->Transform().SetPosition(Vector3(posArray));
+				// g->Transform().SetRotation(Vector3(ZeroArray));
+				g->Transform().SetScale(Vector3(scaleArray));
+				
+				ImGui::TreePop();
+			}
+			
+		}
+
 		ImGui::TreePop();
 	}
 
@@ -243,16 +287,18 @@ void SampleApp::DrawScene(ID3D12GraphicsCommandList* pCmd)
 	m_CommonBufferManager.UpdateLightBuffer(m_FrameIndex, m_SkyTextureManager.m_IBLBaker.LDTextureSize, m_SkyTextureManager.m_IBLBaker.MipCount);
 	m_CommonBufferManager.UpdateCameraBuffer(m_FrameIndex, m_Camera.GetPosition());
 	m_CommonBufferManager.UpdateViewProjMatrix(m_FrameIndex, m_View, m_Proj);
-	
-	m_Model.DrawModel(pCmd, m_FrameIndex, m_CommonBufferManager, m_SkyTextureManager.m_IBLBaker, m_BasicShader);
-		
-	
+
+	for (size_t i = 0; i < m_GameObjects.size(); i++) {
+		GameObject* g = m_GameObjects[i];
+		m_CommonBufferManager.UpdateWorldMatrix(m_FrameIndex, g->Transform().GetTransform());
+
+		g->m_Model.DrawModel(pCmd, m_FrameIndex, m_CommonBufferManager, m_SkyTextureManager.m_IBLBaker, m_BasicShader);
+	}
 }
 
 //-----------------------------------------------------------------------------
 //      メッシュを描画します.
 //-----------------------------------------------------------------------------
-
 
 //-----------------------------------------------------------------------------
 //      ポストプロセス
