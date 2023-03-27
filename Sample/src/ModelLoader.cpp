@@ -14,6 +14,8 @@ bool Model::LoadModel(const wchar_t* filePath, ComPtr<ID3D12Device> pDevice, Des
 
 	// MeshとMaterialの作成
 	manager.LoadResModel(m_FilePath);
+
+	if (!CreateMeshBuffer(pDevice, resPool)) return false;
 	
 	if (!manager.CreateMesh(pDevice, m_FilePath, manager.GetResMesh(m_FilePath)))				return false;
 	if (!manager.CreateMaterial(pDevice, m_FilePath, manager.GetResMaterial(m_FilePath), resPool))	return false;
@@ -22,7 +24,7 @@ bool Model::LoadModel(const wchar_t* filePath, ComPtr<ID3D12Device> pDevice, Des
 
 	// マテリアルの定数バッファ値を読み取る
 	auto ptr = reinterpret_cast<CommonCb::CbMaterial*>(mat[0]->GetBufferPtr(0));
-	ptr->Param00 = Vector4(1.0f, 1.0f, 0.0f, 0.0f);
+	ptr->Param00 = Vector4(1.0f, 1.0f, 1.0f, 0.0f);
 
 	// テクスチャを決め打ちで与える
 	// 本来は以下のようにResourceのパスから読み込みたい
@@ -64,13 +66,38 @@ void Model::DrawModel(ID3D12GraphicsCommandList* pCmd, int frameIndex, CommonBuf
 		auto id = meshs[i]->GetMaterialId();
 
 		// mat[id]->SetProperty();
-		shader.SetShader(pCmd, frameIndex, *mat[id], i, commonBufferManager, baker);
+		shader.SetShader(pCmd, frameIndex, *mat[id], i, this, commonBufferManager, baker);
 
 		// メッシュを描画.
 		meshs[i]->Draw(pCmd);
 	}
 }
 
+bool Model::CreateMeshBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool) {
+	for (auto i = 0; i < App::FrameCount; ++i)
+	{
+		if (!m_MeshCB[i].Init(pDevice.Get(), resPool, sizeof(CommonCb::CbMesh)))
+		{
+			ELOG("Error : ConstantBuffer::Init() Failed.");
+			return false;
+		}
+
+		auto ptr = m_MeshCB[i].GetPtr<CommonCb::CbMesh>();
+		ptr->World = Matrix::Identity;
+	}
+	return true;
+}
+
+void Model::UpdateWorldMatrix(int frameindex, Matrix& modelMatrix)
+{
+	auto ptr = m_MeshCB[frameindex].GetPtr<CommonCb::CbMesh>();
+	ptr->World = modelMatrix;
+}
+
 void Model::Release()
 {
+	for (auto i = 0; i < App::FrameCount; ++i)
+	{
+		m_MeshCB[i].Term();
+	}
 }

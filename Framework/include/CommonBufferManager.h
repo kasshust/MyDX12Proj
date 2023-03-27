@@ -79,6 +79,9 @@ public:
 	void CommonBufferManager::UpdateViewProjMatrix(int frameindex, Matrix& view, Matrix& proj);
 	void CommonBufferManager::UpdateWorldMatrix(int frameindex, Matrix& modelMat);
 	void Term();
+	CommonCb::CbLight* GetLightProperty(int frameindex);
+	void SetLightProperty(int frameindex, CommonCb::CbLight& prop);
+
 
 	VertexBuffer        m_QuadVB;                            //!< 頂点バッファです.
 	ConstantBuffer      m_LightCB[App::FrameCount];          //!< ライトバッファです.
@@ -95,4 +98,8 @@ private:
 	bool CommonBufferManager::CreateCameraBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool);
 	bool CommonBufferManager::CreateVertexBuffer(ComPtr<ID3D12Device> pDevice);
 	bool CommonBufferManager::CreateMatrixConstantBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, float width, float height);
+
+
+
+	
 };

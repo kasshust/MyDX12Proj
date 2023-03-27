@@ -118,7 +118,7 @@ bool BasicShader::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT 
 
 	return true;
 }
-void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Material& mat, int id, const CommonBufferManager& commonbufmanager, const IBLBaker& baker)
+void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Material& mat, int id, const Model* model, const CommonBufferManager& commonbufmanager, const IBLBaker& baker)
 {
 	//　マテリアル共通のバッファ
 	{
@@ -127,7 +127,6 @@ void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Mat
 		// ココを外部化したい
 		{
 			pCmd->SetGraphicsRootDescriptorTable(0, commonbufmanager.m_TransformCB[frameindex].GetHandleGPU());
-			pCmd->SetGraphicsRootDescriptorTable(1, commonbufmanager.m_MeshCB[frameindex].GetHandleGPU());
 			pCmd->SetGraphicsRootDescriptorTable(2, commonbufmanager.m_LightCB[frameindex].GetHandleGPU());
 			pCmd->SetGraphicsRootDescriptorTable(3, commonbufmanager.m_CameraCB[frameindex].GetHandleGPU());
 		}
@@ -136,6 +135,9 @@ void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Mat
 		pCmd->SetGraphicsRootDescriptorTable(6, baker.GetHandleGPU_DiffuseLD());
 		pCmd->SetGraphicsRootDescriptorTable(7, baker.GetHandleGPU_SpecularLD());
 	}
+
+
+	pCmd->SetGraphicsRootDescriptorTable(1, model->m_MeshCB[frameindex].GetHandleGPU());
 
 	//  マテリアルから定数バッファを取り出す
 	pCmd->SetGraphicsRootDescriptorTable(4, mat.GetBufferHandle(id));

@@ -113,10 +113,20 @@ bool CommonBufferManager::CreateMatrixConstantBuffer(ComPtr<ID3D12Device> pDevic
 	return true;
 }
 
+CommonCb::CbLight* CommonBufferManager::GetLightProperty(int frameindex) {
+	CommonCb::CbLight* ptr = m_LightCB[frameindex].GetPtr<CommonCb::CbLight>();
+	return ptr;
+}
+
+void CommonBufferManager::SetLightProperty(int frameindex, CommonCb::CbLight& prop) {
+	CommonCb::CbLight* ptr = m_LightCB[frameindex].GetPtr<CommonCb::CbLight>();
+	ptr = &prop;
+}
+
 void CommonBufferManager::UpdateLightBuffer(int frameindex, float texSize, float mipCount) {
 	auto ptr = m_LightCB[frameindex].GetPtr<CommonCb::CbLight>();
-	ptr->TextureSize = texSize;
-	ptr->MipCount = mipCount;
+	ptr->TextureSize	= texSize;
+	ptr->MipCount		= mipCount;
 	ptr->LightDirection = Vector3(0.0f, -1.0f, 0.0f);
 	ptr->LightIntensity = 1.0f;
 }

@@ -28,7 +28,7 @@ bool AppResourceManager::LoadTexture(const wchar_t* path,
 	bool isSRGB,
 	DirectX::ResourceUploadBatch& batch) {
 	// 既に登録されている場合は何もしない
-	if (m_Textures.count(path) > 0) return false;
+	if (m_Textures.count(path) > 0) return true;
 
 	// ファイルパスが存在するかチェックします.
 	if (!CheckFilePath(path)) return false;
@@ -74,6 +74,9 @@ bool AppResourceManager::LoadResModel(const wchar_t* path) {
 
 // ResMeshからMeshを作成する
 bool AppResourceManager::CreateMesh(ComPtr<ID3D12Device> pDevice, const wchar_t* key, std::vector<ResMesh> resMesh) {
+
+	if (m_pMeshs.count(key) > 0) return true;
+
 	std::vector<Mesh*> pMesh = std::vector<Mesh*>();
 
 	// メモリを予約.

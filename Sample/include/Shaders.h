@@ -17,6 +17,7 @@ public:
 		int frameindex,
 		Material& mat,
 		int id,
+		const Model* model,
 		const CommonBufferManager& commonbufmanager,
 		const IBLBaker& baker
 	);

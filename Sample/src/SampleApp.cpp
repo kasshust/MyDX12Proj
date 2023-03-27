@@ -50,10 +50,13 @@ SampleApp::~SampleApp()
 bool SampleApp::OnInit()
 {
 
-	GameObject* g = new GameObject();
-	if (!g->m_Model.LoadModel(L"../res/matball/matball.obj", m_pDevice, m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
-	m_GameObjects.push_back(g);
+	for (size_t i = 0; i < 3; i++)
+	{
+		GameObject* g = new GameObject();
+		if (!g->m_Model.LoadModel(L"../res/matball/matball.obj", m_pDevice, m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
+		m_GameObjects.push_back(g);
 
+	}
 	// テクスチャ/メッシュをロード.
 	
 	// 共通定数バッファ/レンダーターゲット
@@ -110,6 +113,25 @@ void SampleApp::OnRenderIMGUI() {
 		ChangeDisplayMode(false);
 	}
 
+	if (ImGui::TreeNode("CommonBuffer")) {
+		if (ImGui::TreeNode("Light")) {
+
+			CommonCb::CbLight* prop = m_CommonBufferManager.GetLightProperty(m_FrameIndex);;
+			ImGui::InputFloat("LightIntensity",  &prop->LightIntensity);
+
+			Vector3 direction = prop->LightDirection;
+			float* dirArray = new float[] { direction.x, direction.y, direction.z};
+			ImGui::InputFloat3("LightDirection", dirArray);
+
+			Vector3 returnV = Vector3(dirArray);
+			// returnV.Normalize();
+			prop->LightDirection = returnV;
+
+			ImGui::TreePop();
+		}
+		ImGui::TreePop();
+	}
+
 	if (ImGui::TreeNode("PostProcess")) {
 		if (ImGui::TreeNode("ToneMap")) {
 			ImGui::RadioButton("NONE", &m_ToneMap.m_TonemapType, ToneMap::TONEMAP_NONE);
@@ -148,7 +170,6 @@ void SampleApp::OnRenderIMGUI() {
 			}
 			ImGui::TreePop();
 		}
-
 		ImGui::TreePop();
 	}
 
@@ -156,8 +177,12 @@ void SampleApp::OnRenderIMGUI() {
 
 
 		for (size_t i = 0; i < m_GameObjects.size(); i++) {
+			
+			ImGui::PushID(i);
 			GameObject* g = m_GameObjects[i];
-			if (ImGui::TreeNode("GameObject")) {
+			std::string s = "ID : " + std::to_string(g->GetId());
+
+			if (ImGui::TreeNode(s.c_str())) {
 				
 				Vector3		pos     = g->Transform().GetPosition();
 				Vector3		rot		= g->Transform().GetYawPitchRoll();
@@ -171,8 +196,7 @@ void SampleApp::OnRenderIMGUI() {
 
 				float* ZeroArray = new float[] { 0.0f, 0.0f, 0.0f};
 
-				std::string s = "ID : " + std::to_string(g->GetId());
-				ImGui::Text(s.c_str());
+				
 				ImGui::InputFloat3("Position", posArray);
 				ImGui::InputFloat3("Rotation", rotArray);
 				ImGui::InputFloat3("Scale",		scaleArray);
@@ -187,6 +211,8 @@ void SampleApp::OnRenderIMGUI() {
 				ImGui::TreePop();
 			}
 			
+			ImGui::PopID();
+
 		}
 
 		ImGui::TreePop();
@@ -289,14 +315,13 @@ void SampleApp::RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& color
 void SampleApp::DrawScene(ID3D12GraphicsCommandList* pCmd)
 {
 	// 定数バッファの更新.
-	m_CommonBufferManager.UpdateLightBuffer(m_FrameIndex, m_SkyTextureManager.m_IBLBaker.LDTextureSize, m_SkyTextureManager.m_IBLBaker.MipCount);
+	// m_CommonBufferManager.UpdateLightBuffer(m_FrameIndex, m_SkyTextureManager.m_IBLBaker.LDTextureSize, m_SkyTextureManager.m_IBLBaker.MipCount);
 	m_CommonBufferManager.UpdateCameraBuffer(m_FrameIndex, m_Camera.GetPosition());
 	m_CommonBufferManager.UpdateViewProjMatrix(m_FrameIndex, m_View, m_Proj);
 
 	for (size_t i = 0; i < m_GameObjects.size(); i++) {
 		GameObject* g = m_GameObjects[i];
-		m_CommonBufferManager.UpdateWorldMatrix(m_FrameIndex, g->Transform().GetTransform());
-
+		g->m_Model.UpdateWorldMatrix(m_FrameIndex, g->Transform().GetTransform());
 		g->m_Model.DrawModel(pCmd, m_FrameIndex, m_CommonBufferManager, m_SkyTextureManager.m_IBLBaker, m_BasicShader);
 	}
 }

@@ -174,7 +174,9 @@ PSOutput main(VSOutput input)
     lit += EvaluateIBLDiffuse(N) * Kd;
     lit += EvaluateIBLSpecular(NV, N, R, Ks, roughness, TextureSize, MipCount);
 
-    output.Color.rgb = lit * LightIntensity * TestCustomParam.xyz;
+    float3 TestLit = saturate(dot(N, normalize(LightDirection))) * TestCustomParam.xyz * LightIntensity;
+    
+    output.Color.rgb = lit * LightIntensity + TestLit;
     output.Color.a   = 1.0f;
     
     return output;
