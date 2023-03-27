@@ -15,7 +15,8 @@
 #include "SimpleMath.h"
 #include "CommonBufferManager.h"
 #include <ResourceManager.h>
-
+#include <algorithm>
+#include <cmath>
 //-----------------------------------------------------------------------------
 // Using Statements
 //-----------------------------------------------------------------------------
@@ -159,24 +160,28 @@ void SampleApp::OnRenderIMGUI() {
 			if (ImGui::TreeNode("GameObject")) {
 				
 				Vector3		pos     = g->Transform().GetPosition();
-				Quaternion	rot		= g->Transform().GetRotation();
+				Vector3		rot		= g->Transform().GetYawPitchRoll();
 				Vector3		scale   = g->Transform().GetScale();
+				
+				Vector3 degrees = Vector3( DirectX::XMConvertToDegrees(rot.x) , DirectX::XMConvertToDegrees(rot.y), DirectX::XMConvertToDegrees(rot.z));
 
 				float* posArray = new float[] { pos.x, pos.y, pos.z };
-				float* rotArray = new float[] { rot.x, rot.y, rot.z};
+				float* rotArray = new float[] { degrees.y, degrees.x, degrees.z};
 				float* scaleArray = new float[] { scale.x, scale.y, scale.z };
 
-				// float* ZeroArray = new float[] { 0.0f, 0.0f, 0.0f};
+				float* ZeroArray = new float[] { 0.0f, 0.0f, 0.0f};
 
 				std::string s = "ID : " + std::to_string(g->GetId());
 				ImGui::Text(s.c_str());
 				ImGui::InputFloat3("Position", posArray);
 				ImGui::InputFloat3("Rotation", rotArray);
 				ImGui::InputFloat3("Scale",		scaleArray);
-				// ImGui::InputFloat3("Rotation", ZeroArray);
+				ImGui::InputFloat3("Rotationzero", ZeroArray);
+
+				rotArray[1] =  std::min(std::max(rotArray[1], 0.f), 0.f);
 
 				g->Transform().SetPosition(Vector3(posArray));
-				// g->Transform().SetRotation(Vector3(ZeroArray));
+				g->Transform().SetRotation(Vector3(DirectX::XMConvertToRadians(rotArray[0]), DirectX::XMConvertToRadians(rotArray[1]), DirectX::XMConvertToRadians(rotArray[2])));
 				g->Transform().SetScale(Vector3(scaleArray));
 				
 				ImGui::TreePop();

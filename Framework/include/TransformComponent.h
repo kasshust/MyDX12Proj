@@ -21,12 +21,17 @@ public:
         return Quaternion::CreateFromRotationMatrix(m_transform); 
     }
 
+    Vector3 GetYawPitchRoll() const {
+        return m_transform.ToEuler();
+    }
+
     void SetRotation(const Vector3 YawPitchRoll) {
 
-        Matrix mat = Matrix::Identity * Matrix::CreateScale(GetScale());
+        Matrix mat = Matrix::Identity ;
+        mat = Matrix::CreateFromYawPitchRoll(YawPitchRoll.x, YawPitchRoll.y, YawPitchRoll.z) * mat;
+        mat = Matrix::CreateScale(GetScale()) * mat;
         mat.Translation(GetPosition());
-
-        m_transform = mat * Matrix::CreateFromYawPitchRoll(YawPitchRoll.x, YawPitchRoll.y, YawPitchRoll.z);
+        m_transform = mat;
     }
 
     void SetRotation(const Quaternion& rotation) {
