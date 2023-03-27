@@ -49,16 +49,6 @@ SampleApp::~SampleApp()
 //-----------------------------------------------------------------------------
 bool SampleApp::OnInit()
 {
-
-	for (size_t i = 0; i < 3; i++)
-	{
-		GameObject* g = new GameObject();
-		if (!g->m_Model.LoadModel(L"../res/matball/matball.obj", m_pDevice, m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
-		m_GameObjects.push_back(g);
-
-	}
-	// テクスチャ/メッシュをロード.
-	
 	// 共通定数バッファ/レンダーターゲット
 	if (!m_CommonBufferManager.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], m_Width, m_Height))                                                return false;
 	if (!m_CommonRTManager.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_pPool[POOL_TYPE_DSV], m_Width, m_Height))    return false;
@@ -74,6 +64,20 @@ bool SampleApp::OnInit()
 
 	// ポストプロセス初期化
 	if (!m_ToneMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format))    return false;
+
+	const wchar_t path[][OFS_MAXPATHNAME] = {
+		L"../res/matball/matball.obj",
+		L"../res/teapot/teapot.obj",
+		L"../res/cube/cube.obj",
+	};
+		
+	int size = sizeof(path) / sizeof(path[0]);
+	for (size_t i = 0; i < size; i++)
+	{
+		GameObject* g = new GameObject();
+		if (!g->m_Model.LoadModel(path[i] , m_pDevice, m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
+		m_GameObjects.push_back(g);
+	}
 
 	return true;
 }
@@ -184,29 +188,79 @@ void SampleApp::OnRenderIMGUI() {
 
 			if (ImGui::TreeNode(s.c_str())) {
 				
-				Vector3		pos     = g->Transform().GetPosition();
-				Vector3		rot		= g->Transform().GetYawPitchRoll();
-				Vector3		scale   = g->Transform().GetScale();
-				
-				Vector3 degrees = Vector3( DirectX::XMConvertToDegrees(rot.x) , DirectX::XMConvertToDegrees(rot.y), DirectX::XMConvertToDegrees(rot.z));
 
-				float* posArray = new float[] { pos.x, pos.y, pos.z };
-				float* rotArray = new float[] { degrees.y, degrees.x, degrees.z};
-				float* scaleArray = new float[] { scale.x, scale.y, scale.z };
+				if (ImGui::TreeNode("Transform")) {
+					Vector3		pos = g->Transform().GetPosition();
+					Vector3		rot = g->Transform().GetYawPitchRoll();
+					Vector3		scale = g->Transform().GetScale();
 
-				float* ZeroArray = new float[] { 0.0f, 0.0f, 0.0f};
+					Vector3 degrees = Vector3(DirectX::XMConvertToDegrees(rot.x), DirectX::XMConvertToDegrees(rot.y), DirectX::XMConvertToDegrees(rot.z));
 
-				
-				ImGui::InputFloat3("Position", posArray);
-				ImGui::InputFloat3("Rotation", rotArray);
-				ImGui::InputFloat3("Scale",		scaleArray);
-				ImGui::InputFloat3("Rotationzero", ZeroArray);
+					float* posArray = new float[] { pos.x, pos.y, pos.z };
+					float* rotArray = new float[] { degrees.y, degrees.x, degrees.z};
+					float* scaleArray = new float[] { scale.x, scale.y, scale.z };
 
-				rotArray[1] =  std::min(std::max(rotArray[1], 0.f), 0.f);
+					float* ZeroArray = new float[] { 0.0f, 0.0f, 0.0f};
 
-				g->Transform().SetPosition(Vector3(posArray));
-				g->Transform().SetRotation(Vector3(DirectX::XMConvertToRadians(rotArray[0]), DirectX::XMConvertToRadians(rotArray[1]), DirectX::XMConvertToRadians(rotArray[2])));
-				g->Transform().SetScale(Vector3(scaleArray));
+
+					ImGui::InputFloat3("Position", posArray);
+					ImGui::InputFloat3("Rotation", rotArray);
+					ImGui::InputFloat3("Scale", scaleArray);
+					ImGui::InputFloat3("Rotationzero", ZeroArray);
+
+					rotArray[1] = std::min(std::max(rotArray[1], 0.f), 0.f);
+
+					g->Transform().SetPosition(Vector3(posArray));
+					g->Transform().SetRotation(Vector3(DirectX::XMConvertToRadians(rotArray[0]), DirectX::XMConvertToRadians(rotArray[1]), DirectX::XMConvertToRadians(rotArray[2])));
+					g->Transform().SetScale(Vector3(scaleArray));
+					ImGui::TreePop();
+				}
+
+				if (ImGui::TreeNode("Material")) {
+					std::vector<Material*> mats = g->m_Model.GetMaterials();
+
+					for (size_t i = 0; i < mats.size(); i++)
+					{
+						auto ptr = reinterpret_cast<CommonCb::CbMaterial*>(mats[i]->GetBufferPtr(0));
+						
+						float* p00 = new float[] { ptr->Param00.x, ptr->Param00.y, ptr->Param00.z, ptr->Param00.w };
+						float* p01 = new float[] { ptr->Param01.x, ptr->Param01.y, ptr->Param01.z, ptr->Param01.w };
+						float* p02 = new float[] { ptr->Param02.x, ptr->Param02.y, ptr->Param02.z, ptr->Param02.w };
+						float* p03 = new float[] { ptr->Param03.x, ptr->Param03.y, ptr->Param03.z, ptr->Param03.w };
+						float* p04 = new float[] { ptr->Param04.x, ptr->Param04.y, ptr->Param04.z, ptr->Param04.w };
+						float* p05 = new float[] { ptr->Param05.x, ptr->Param05.y, ptr->Param05.z, ptr->Param05.w };
+						float* p06 = new float[] { ptr->Param06.x, ptr->Param06.y, ptr->Param06.z, ptr->Param06.w };
+						float* p07 = new float[] { ptr->Param07.x, ptr->Param07.y, ptr->Param07.z, ptr->Param07.w };
+						float* p08 = new float[] { ptr->Param08.x, ptr->Param08.y, ptr->Param08.z, ptr->Param08.w };
+						float* p09 = new float[] { ptr->Param09.x, ptr->Param09.y, ptr->Param09.z, ptr->Param09.w };
+						
+						ImGui::InputFloat4("Param00", p00);
+						ImGui::InputFloat4("Param01", p01);
+						ImGui::InputFloat4("Param02", p02);
+						ImGui::InputFloat4("Param03", p03);
+						ImGui::InputFloat4("Param04", p04);
+						ImGui::InputFloat4("Param05", p05);
+						ImGui::InputFloat4("Param06", p06);
+						ImGui::InputFloat4("Param07", p07);
+						ImGui::InputFloat4("Param08", p08);
+						ImGui::InputFloat4("Param09", p09);
+
+						ptr->Param00 = Vector4(p00);
+						ptr->Param01 = Vector4(p01);
+						ptr->Param02 = Vector4(p02);
+						ptr->Param03 = Vector4(p03);
+						ptr->Param04 = Vector4(p04);
+						ptr->Param05 = Vector4(p05);
+						ptr->Param06 = Vector4(p06);
+						ptr->Param07 = Vector4(p07);
+						ptr->Param08 = Vector4(p08);
+						ptr->Param09 = Vector4(p09);
+						
+					}
+
+					ImGui::TreePop();
+				}
+
 				
 				ImGui::TreePop();
 			}

@@ -264,6 +264,8 @@ namespace {
 			}
 		}
 
+		// 以下テクスチャ
+
 		// ディフューズマップ.
 		{
 			aiString path;
@@ -274,32 +276,6 @@ namespace {
 			else
 			{
 				dstMaterial.DiffuseMap.clear();
-			}
-		}
-
-		// スペキュラーマップ.
-		{
-			aiString path;
-			if (pSrcMaterial->Get(AI_MATKEY_TEXTURE_SPECULAR(0), path) == AI_SUCCESS)
-			{
-				dstMaterial.SpecularMap = Convert(path);
-			}
-			else
-			{
-				dstMaterial.SpecularMap.clear();
-			}
-		}
-
-		// シャイネスマップ.
-		{
-			aiString path;
-			if (pSrcMaterial->Get(AI_MATKEY_TEXTURE_SHININESS(0), path) == AI_SUCCESS)
-			{
-				dstMaterial.ShininessMap = Convert(path);
-			}
-			else
-			{
-				dstMaterial.ShininessMap.clear();
 			}
 		}
 
@@ -322,6 +298,87 @@ namespace {
 				}
 			}
 		}
+
+		// スペキュラーマップ(メタリック)
+		{
+			aiString path;
+			if (pSrcMaterial->Get(AI_MATKEY_TEXTURE_SPECULAR(0), path) == AI_SUCCESS)
+			{
+				dstMaterial.SpecularMap = Convert(path);
+			}
+			else
+			{
+				dstMaterial.SpecularMap.clear();
+			}
+		}
+
+		// シャイネスマップ(ラフネス)
+		{
+			aiString path;
+			if (pSrcMaterial->Get(AI_MATKEY_TEXTURE_SHININESS(0), path) == AI_SUCCESS)
+			{
+				dstMaterial.ShininessMap = Convert(path);
+			}
+			else
+			{
+				dstMaterial.ShininessMap.clear();
+			}
+		}
+
+		// アンビエント
+		{
+			aiString path;
+			if (pSrcMaterial->Get(AI_MATKEY_TEXTURE_AMBIENT(0), path) == AI_SUCCESS)
+			{
+				dstMaterial.AmbientMap = Convert(path);
+			}
+			else
+			{
+				dstMaterial.AmbientMap.clear();
+			}
+		}
+
+		// オパシティ
+		{
+			aiString path;
+			if (pSrcMaterial->Get(AI_MATKEY_TEXTURE_OPACITY(0), path) == AI_SUCCESS)
+			{
+				dstMaterial.OpacityMap = Convert(path);
+			}
+			else
+			{
+				dstMaterial.OpacityMap.clear();
+			}
+		}
+
+		// エミッシブ
+		{
+			aiString path;
+			if (pSrcMaterial->Get(AI_MATKEY_TEXTURE_EMISSIVE(0), path) == AI_SUCCESS)
+			{
+				dstMaterial.EmissiveMap = Convert(path);
+			}
+			else
+			{
+				dstMaterial.EmissiveMap.clear();
+			}
+		}
+
+
+		// ディスプレスメント
+		{
+			aiString path;
+			if (pSrcMaterial->Get(AI_MATKEY_TEXTURE_DISPLACEMENT(0), path) == AI_SUCCESS)
+			{
+				dstMaterial.DisplacementMap = Convert(path);
+			}
+			else
+			{
+				dstMaterial.DisplacementMap.clear();
+			}
+		}
+
+
 	}
 } // namespace
 

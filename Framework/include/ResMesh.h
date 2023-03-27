@@ -23,9 +23,13 @@ struct ResMaterial
 	float               Alpha;          //!< 透過成分です.
 	float               Shininess;      //!< 鏡面反射強度です.
 	std::wstring        DiffuseMap;     //!< ディフューズマップファイルパスです.
-	std::wstring        SpecularMap;    //!< スペキュラーマップファイルパスです.
-	std::wstring        ShininessMap;   //!< シャイネスマップファイルパスです.
+	std::wstring        SpecularMap;    //!< スペキュラーマップ(メタリック)ファイルパスです.
+	std::wstring        ShininessMap;   //!< シャイネスマップ(ラフネス)ファイルパスです.
 	std::wstring        NormalMap;      //!< 法線マップファイルパスです.
+	std::wstring        AmbientMap;     //!< 
+	std::wstring        OpacityMap;     //!<
+	std::wstring        EmissiveMap;    //!<
+	std::wstring        DisplacementMap;//!<
 };
 
 ///////////////////////////////////////////////////////////////////////////////

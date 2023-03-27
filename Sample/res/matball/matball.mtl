@@ -5,4 +5,11 @@ Ka 0.00000 0.00000 0.00000
 Kd 0.40157 0.40157 0.40157
 Ks 0.00000 0.00000 0.00000
 Ns 1.00000
-
+map_Kd ../res/texture/rubber_bc.dds
+map_Kn ../res/texture/rubber_n.dds
+map_Ks ../res/texture/rubber_m.dds
+map_ns ../res/texture/rubber_r.dds
+map_Ka 
+map_d 
+map_Ke 
+disp 

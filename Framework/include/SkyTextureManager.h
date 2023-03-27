@@ -11,6 +11,8 @@ class SkyTextureManager {
 	SkyBox                          m_SkyBox;                       //!< スカイボックスです.
 	Texture                         m_SphereMap;                    //!< スフィアマップです.
 	SphereMapConverter              m_SphereMapConverter;           //!< スフィアマップコンバータ.
+	
+	wchar_t m_SkyTexturePath[OFS_MAXPATHNAME] = L"../res/texture/hdr014.dds";
 
 	bool InitSphereMapTexture(ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool, ComPtr<ID3D12CommandQueue> commandQueue);
 	bool InitSphereMapConverter(ComPtr<ID3D12Device> pDevice, DescriptorPool* rtvPool, DescriptorPool* resPool);

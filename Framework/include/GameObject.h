@@ -4,8 +4,7 @@
 #include <SimpleMath.h>
 #include <vector>
 #include <MakeRandom.h>
-
-#include "../../Sample/include/ModelLoader.h"
+#include <ModelLoader.h>
 
 using namespace DirectX;
 using namespace DirectX::SimpleMath;

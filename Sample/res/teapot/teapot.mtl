@@ -5,5 +5,11 @@ Ka 0.60000 0.60000 0.60000
 Kd 0.80000 0.80000 0.80000
 Ks 0.80000 0.80000 0.80000
 Ns 50.00000
-map_Kd default.dds
-
+map_Kd ../res/texture/gold_bc.dds
+map_Kn ../res/texture/gold_n.dds
+map_Ks ../res/texture/gold_m.dds
+map_ns ../res/texture/gold_r.dds
+map_Ka 
+map_d 
+map_Ke 
+disp 

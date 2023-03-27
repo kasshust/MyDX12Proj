@@ -7,6 +7,8 @@
 #include "SimpleMath.h"
 
 bool SkyTextureManager::Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* rtvPool, DescriptorPool* resPool, ComPtr<ID3D12CommandQueue> commandQueue) {
+	
+	
 	if (!InitSphereMapTexture(pDevice, resPool, commandQueue)) return false;
 	if (!InitSphereMapConverter(pDevice, rtvPool, resPool)) return false;
 	if (!InitSkyBox(pDevice, resPool)) return false;
@@ -20,11 +22,11 @@ bool SkyTextureManager::InitSphereMapTexture(ComPtr<ID3D12Device> pDevice, Descr
 
 	// バッチ開始.
 	batch.Begin();
-
+	
 	// スフィアマップ読み込み.
 	{
 		std::wstring sphereMapPath;
-		if (!SearchFilePathW(L"../res/texture/hdr014.dds", sphereMapPath))
+		if (!SearchFilePathW(m_SkyTexturePath, sphereMapPath))
 		{
 			ELOG("Error : File Not Found.");
 			return false;

@@ -17,7 +17,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp" />
-    <ClCompile Include="..\src\ModelLoader.cpp" />
     <ClCompile Include="..\src\SampleApp.cpp" />
     <ClCompile Include="..\src\Shaders.cpp" />
     <ClCompile Include="..\src\ToneMap.cpp" />
@@ -26,7 +25,6 @@
     <ClInclude Include="..\include\CommonBufferManager.h" />
     <ClInclude Include="..\include\CommonRTVManager.h" />
     <ClInclude Include="..\include\Materials.h" />
-    <ClInclude Include="..\include\ModelLoader.h" />
     <ClInclude Include="..\include\SampleApp.h" />
     <ClInclude Include="..\include\Shaders.h" />
     <ClInclude Include="..\include\ToneMap.h" />

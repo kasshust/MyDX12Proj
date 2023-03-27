@@ -6,7 +6,7 @@
 #include <RootSignature.h>
 #include <IBLBaker.h>
 #include <CommonBufferManager.h>
-#include "../../Sample/include/ModelLoader.h"
+#include <ModelLoader.h>
 
 class Model;
 

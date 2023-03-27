@@ -9,14 +9,14 @@ bool AppResourceManager::CheckFilePath(const wchar_t* path) {
 	std::wstring findPath;
 	if (!SearchFilePathW(path, findPath))
 	{
-		ELOG("Error : File Path is not exist");
+		ELOG("Error : File Path is not exist  = %ls", findPath.c_str());
 		return false;
 	}
 
 	// ファイル名であることをチェック.
 	if (PathIsDirectoryW(findPath.c_str()) != FALSE)
 	{
-		ELOG("Error : This is not FilePath");
+		ELOG("Error : This is not FilePath  = %ls", findPath.c_str());
 		return false;
 	}
 }
@@ -31,7 +31,10 @@ bool AppResourceManager::LoadTexture(const wchar_t* path,
 	if (m_Textures.count(path) > 0) return true;
 
 	// ファイルパスが存在するかチェックします.
-	if (!CheckFilePath(path)) return false;
+	if (!CheckFilePath(path)) {
+		ELOG("Error : Load Texture Failed. filepath = %ls", path);
+		return false;
+	}
 
 	// テクスチャを読み込んで登録
 	Texture* pTexture = new (std::nothrow) Texture();

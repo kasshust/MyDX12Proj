@@ -193,7 +193,11 @@ bool Material::SetTexture
 	Texture* pTexture
 )
 {
-	if (pTexture == nullptr)return false;
+	if (pTexture == nullptr)
+	{
+		ELOG("Error : Texture Setting Error");
+		return false;
+	}
 
 	// 範囲内であるかチェック.
 	if (index >= GetCount())
