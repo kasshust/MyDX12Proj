@@ -182,6 +182,21 @@ void Material::Term()
 	}
 }
 
+bool Material::SetShaderPtr(Shader* pShader) {
+	if (pShader == nullptr) return false;
+
+	m_pShader = pShader;
+	return true;
+}
+
+bool Material::SetMaterial(ID3D12GraphicsCommandList* pCmd, int frameindex, Material& mat, int id, const ConstantBuffer* meshCB, const CommonBufferManager& commonbufmanager, const IBLBaker& baker) {
+	if (m_pShader == nullptr)return false;
+
+	m_pShader->SetShader(pCmd, frameindex, mat, id, meshCB, commonbufmanager, baker);
+
+	return true;
+}
+
 //-----------------------------------------------------------------------------
 //      既に生成されているテクスチャを登録します.
 //-----------------------------------------------------------------------------

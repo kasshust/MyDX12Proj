@@ -8,19 +8,18 @@
 #include <CommonBufferManager.h>
 #include <IBLBaker.h>
 #include <Shader.h>
-#include <ModelLoader.h>
 
 class BasicShader : public Shader {
 public:
-	virtual void SetShader(
+	void SetShader(
 		ID3D12GraphicsCommandList* pCmd,
-		int frameindex,
-		Material& mat,
-		int id,
-		const Model* model,
+		int frameindex, 
+		Material& mat, 
+		int id, 
+		const ConstantBuffer* meshCB,
 		const CommonBufferManager& commonbufmanager,
 		const IBLBaker& baker
-	);
+	) override;
 
 protected:
 
@@ -29,4 +28,5 @@ protected:
 
 	bool CreateRootSig(ComPtr<ID3D12Device> pDevice) override;
 	bool CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat) override;
+	
 };

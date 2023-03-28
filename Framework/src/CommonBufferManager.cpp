@@ -123,12 +123,12 @@ void CommonBufferManager::SetLightProperty(int frameindex, CommonCb::CbLight& pr
 	ptr = &prop;
 }
 
-void CommonBufferManager::UpdateLightBuffer(int frameindex, float texSize, float mipCount) {
+void CommonBufferManager::UpdateLightBuffer(int frameindex, float texSize, float mipCount, Vector3 direction, float intensity) {
 	auto ptr = m_LightCB[frameindex].GetPtr<CommonCb::CbLight>();
 	ptr->TextureSize	= texSize;
 	ptr->MipCount		= mipCount;
-	ptr->LightDirection = Vector3(0.0f, -1.0f, 0.0f);
-	ptr->LightIntensity = 1.0f;
+	ptr->LightDirection = direction;
+	ptr->LightIntensity = intensity;
 }
 
 void CommonBufferManager::UpdateCameraBuffer(int frameindex, Vector3 pos) {

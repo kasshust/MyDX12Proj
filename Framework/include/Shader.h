@@ -1,4 +1,5 @@
 #pragma once
+
 #include "DirectXHelpers.h"
 #include "Logger.h"
 #include <App.h>
@@ -6,9 +7,10 @@
 #include <RootSignature.h>
 #include <IBLBaker.h>
 #include <CommonBufferManager.h>
-#include <ModelLoader.h>
+#include <Material.h>
 
-class Model;
+class Material;
+class CommonBufferManager;
 
 class Shader {
 public:
@@ -16,12 +18,13 @@ public:
 	void Term();
 	virtual void SetShader(
 		ID3D12GraphicsCommandList* pCmd,
-		int frameindex, 
+		int frameindex,
 		Material& mat,
 		int id,
-		const Model* model,
+		const ConstantBuffer* meshCB,
 		const CommonBufferManager& commonbufmanager,
-		const IBLBaker& baker) = 0;
+		const IBLBaker& baker
+	)  = 0;
 
 protected:
 	ComPtr<ID3D12PipelineState>     m_pPSO;                    //!< シーン用パイプラインステートです.

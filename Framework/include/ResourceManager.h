@@ -70,7 +70,16 @@ public:
 
 	const std::unordered_map<const wchar_t*, std::vector<ResMaterial>> GetResMaterialsMap();
 
+	void AddShader(
+		std::wstring path,
+		Shader* shader
+	);
+
+	Shader* GetShader(std::wstring key);
+		
+
 private:
+	std::unordered_map<std::wstring, Shader*>                                    m_pShaders{};
 	std::unordered_map<const wchar_t*, Texture*>                                 m_Textures{};
 
 	std::unordered_map<const wchar_t*, std::vector<Mesh*>>                       m_pMeshs{};

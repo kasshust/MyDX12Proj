@@ -1,8 +1,31 @@
 #include <ResourceManager.h>
 
-void AppResourceManager::Init() {}
+void AppResourceManager::Init() {
+
+}
 
 void AppResourceManager::Release() {
+}
+
+void AppResourceManager::AddShader(
+	std::wstring			path,
+	Shader*					shader
+)
+{
+	if (shader == nullptr) return ;
+	m_pShaders[path] = shader;
+}
+
+Shader* AppResourceManager::GetShader(
+	std::wstring path
+)
+{
+	if (m_pShaders.empty()) return nullptr;
+	auto it = m_pShaders.find(path);
+	if (it != m_pShaders.end()) {
+		return it->second;
+	}
+	return nullptr;
 }
 
 bool AppResourceManager::CheckFilePath(const wchar_t* path) {

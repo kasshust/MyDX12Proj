@@ -215,6 +215,19 @@ namespace {
 	//-----------------------------------------------------------------------------
 	void MeshLoader::ParseMaterial(ResMaterial& dstMaterial, const aiMaterial* pSrcMaterial)
 	{
+		// シェーダー(ヘイトマップのキーを代替して使用)
+		{
+			aiString path;
+			if (pSrcMaterial->Get(AI_MATKEY_TEXTURE_HEIGHT(0), path) == AI_SUCCESS)
+			{
+				dstMaterial.ShaderKey = Convert(path);
+			}
+			else
+			{
+				dstMaterial.ShaderKey.clear();
+			}
+		}
+
 		// 拡散反射成分.
 		{
 			aiColor3D color(0.0f, 0.0f, 0.0f);

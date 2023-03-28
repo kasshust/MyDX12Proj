@@ -13,17 +13,11 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="ヘッダー ファイル\CommonBuffer">
-      <UniqueIdentifier>{24f02f98-33a4-4aef-9b39-f817fafadcc2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ソース ファイル\PostProcess">
       <UniqueIdentifier>{da848004-08cd-4520-bd55-757d364be5ae}</UniqueIdentifier>
     </Filter>
     <Filter Include="ヘッダー ファイル\PostProcess">
       <UniqueIdentifier>{3603d9bc-9d2b-4b95-bee8-df839f916f2a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ソース ファイル\Shader">
-      <UniqueIdentifier>{ca523f52-67ca-4077-9cdd-e137eee16c9c}</UniqueIdentifier>
     </Filter>
     <Filter Include="リソース ファイル\Basic">
       <UniqueIdentifier>{59430246-2505-4bc7-8f36-95c72647b053}</UniqueIdentifier>
@@ -37,9 +31,6 @@
     <Filter Include="リソース ファイル\Tonemap">
       <UniqueIdentifier>{c8d32c73-47ae-4d78-b82c-a0dee7b9e365}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダー ファイル\Shaders">
-      <UniqueIdentifier>{38db1f8f-12a1-43e2-b432-b4dcb5d824f2}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp">
@@ -52,16 +43,10 @@
       <Filter>ソース ファイル\PostProcess</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Shaders.cpp">
-      <Filter>ソース ファイル\Shader</Filter>
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\CommonBufferManager.h">
-      <Filter>ヘッダー ファイル\CommonBuffer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\CommonRTVManager.h">
-      <Filter>ヘッダー ファイル\CommonBuffer</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\ToneMap.h">
       <Filter>ヘッダー ファイル\PostProcess</Filter>
     </ClInclude>
@@ -72,7 +57,7 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="..\include\Shaders.h">
-      <Filter>ヘッダー ファイル\Shaders</Filter>
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

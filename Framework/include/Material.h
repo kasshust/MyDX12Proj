@@ -13,6 +13,11 @@
 #include <Texture.h>
 #include <ConstantBuffer.h>
 #include <map>
+#include <Shader.h>
+#include <CommonBufferManager.h>
+
+class Shader;
+class CommonBufferManager;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Material class
@@ -89,10 +94,13 @@ public:
 	//-------------------------------------------------------------------------
 	void Term();
 
+	bool SetShaderPtr(Shader* pShader);
+	bool SetMaterial(ID3D12GraphicsCommandList* pCmd, int frameindex, Material& mat, int id, const ConstantBuffer* meshCB, const CommonBufferManager& commonbufmanager, const IBLBaker& baker);
+
 	//-------------------------------------------------------------------------
 	//! @brief      テクスチャを設定します.
 	//-------------------------------------------------------------------------
-	bool Material::SetTexture(
+	bool SetTexture(
 		size_t                          index,
 		TEXTURE_USAGE                   usage,
 		const							std::wstring& path,
@@ -180,7 +188,7 @@ private:
 	///////////////////////////////////////////////////////////////////////////
 	struct Subset
 	{
-		ConstantBuffer* pCostantBuffer;                     //!< 定数バッファです.
+		ConstantBuffer*					pCostantBuffer;                     //!< 定数バッファです.
 		D3D12_GPU_DESCRIPTOR_HANDLE     TextureHandle[TEXTURE_USAGE_COUNT]; //!< テクスチャハンドルです.
 	};
 
@@ -189,6 +197,7 @@ private:
 	//=========================================================================
 	std::map<std::wstring, Texture*>    m_pTexture;     //!< テクスチャです.
 	std::vector<Subset>                 m_Subset;       //!< サブセットです.
+	Shader*								m_pShader;
 	ID3D12Device* m_pDevice;      //!< デバイスです.
 	DescriptorPool* m_pPool;        //!< ディスクリプタプールです(CBV_UAV_SRV).
 

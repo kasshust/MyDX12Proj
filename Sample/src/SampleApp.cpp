@@ -53,17 +53,19 @@ bool SampleApp::OnInit()
 	if (!m_CommonBufferManager.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], m_Width, m_Height))                                                return false;
 	if (!m_CommonRTManager.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_pPool[POOL_TYPE_DSV], m_Width, m_Height))    return false;
 
-	// メッシュ用シェーダー初期化.
-	if (!m_BasicShader.Init(m_pDevice,
-		m_CommonRTManager.m_SceneColorTarget.GetRTVDesc().Format,
-		m_CommonRTManager.m_SceneDepthTarget.GetDSVDesc().Format))      return false;
-
 	// スカイテクスチャーの初期化/IBLのベイク
 	if (!m_SkyTextureManager.Init(m_pDevice, m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
 	if (!m_SkyTextureManager.IBLBake(m_pDevice, m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_CommandList, m_pQueue, m_Fence)) return false;
 
 	// ポストプロセス初期化
 	if (!m_ToneMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format))    return false;
+
+
+	AppResourceManager& manager = AppResourceManager::GetInstance();
+	
+	Shader* ptr = new BasicShader();
+	ptr->Init(m_pDevice, m_CommonRTManager.m_SceneColorTarget.GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format);
+	manager.AddShader(L"basic", ptr);
 
 	const wchar_t path[][OFS_MAXPATHNAME] = {
 		L"../res/matball/matball.obj",
@@ -93,7 +95,7 @@ void SampleApp::OnTerm()
 	}
 	m_GameObjects.clear();
 
-	m_BasicShader.Term();
+	// m_BasicShader.Term();
 	m_ToneMap.Term();
 	m_CommonBufferManager.Term();
 	m_CommonRTManager.Term();
@@ -103,10 +105,7 @@ void SampleApp::OnTerm()
 void SampleApp::OnRenderIMGUI() {
 	ImGui::Begin("Setting");
 
-	// Camera Rest
-	if (ImGui::Button("Camera Reset")) {
-		m_Camera.Reset();
-	}
+
 
 	// HDR/SDRの選択
 	if (ImGui::Button("HDR")) {
@@ -117,19 +116,39 @@ void SampleApp::OnRenderIMGUI() {
 		ChangeDisplayMode(false);
 	}
 
+	ImGui::PushID("Camera");
+	if (ImGui::TreeNode("Camera")) {
+
+		Vector3 pos		= m_Camera.GetPosition();
+		Vector3 target	= m_Camera.GetTarget();
+
+		float* posArray = new float[] { pos.x, pos.y, pos.z};
+		ImGui::InputFloat3("Camera Position", posArray);
+		m_Camera.SetPosition(Vector3(posArray));
+
+		float* targetArray = new float[] { target.x, target.y, target.z};
+		ImGui::InputFloat3("Target Position", targetArray);
+		m_Camera.SetTarget(Vector3(targetArray));
+
+		// Camera Rest
+		if (ImGui::Button("Camera Reset")) {
+			m_Camera.Reset();
+		}
+		ImGui::TreePop();
+	}
+	ImGui::PopID();
+
 	if (ImGui::TreeNode("CommonBuffer")) {
 		if (ImGui::TreeNode("Light")) {
 
 			CommonCb::CbLight* prop = m_CommonBufferManager.GetLightProperty(m_FrameIndex);;
-			ImGui::InputFloat("LightIntensity",  &prop->LightIntensity);
+			ImGui::InputFloat("LightIntensity",  &m_LightIntensity);
 
 			Vector3 direction = prop->LightDirection;
 			float* dirArray = new float[] { direction.x, direction.y, direction.z};
 			ImGui::InputFloat3("LightDirection", dirArray);
-
-			Vector3 returnV = Vector3(dirArray);
-			// returnV.Normalize();
-			prop->LightDirection = returnV;
+			m_LightDirection = Vector3(dirArray);
+			prop->LightDirection = m_LightDirection;
 
 			ImGui::TreePop();
 		}
@@ -255,7 +274,6 @@ void SampleApp::OnRenderIMGUI() {
 						ptr->Param07 = Vector4(p07);
 						ptr->Param08 = Vector4(p08);
 						ptr->Param09 = Vector4(p09);
-						
 					}
 
 					ImGui::TreePop();
@@ -369,14 +387,14 @@ void SampleApp::RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& color
 void SampleApp::DrawScene(ID3D12GraphicsCommandList* pCmd)
 {
 	// 定数バッファの更新.
-	// m_CommonBufferManager.UpdateLightBuffer(m_FrameIndex, m_SkyTextureManager.m_IBLBaker.LDTextureSize, m_SkyTextureManager.m_IBLBaker.MipCount);
+	m_CommonBufferManager.UpdateLightBuffer(m_FrameIndex, m_SkyTextureManager.m_IBLBaker.LDTextureSize, m_SkyTextureManager.m_IBLBaker.MipCount,m_LightDirection, m_LightIntensity);
 	m_CommonBufferManager.UpdateCameraBuffer(m_FrameIndex, m_Camera.GetPosition());
 	m_CommonBufferManager.UpdateViewProjMatrix(m_FrameIndex, m_View, m_Proj);
 
 	for (size_t i = 0; i < m_GameObjects.size(); i++) {
 		GameObject* g = m_GameObjects[i];
 		g->m_Model.UpdateWorldMatrix(m_FrameIndex, g->Transform().GetTransform());
-		g->m_Model.DrawModel(pCmd, m_FrameIndex, m_CommonBufferManager, m_SkyTextureManager.m_IBLBaker, m_BasicShader);
+		g->m_Model.DrawModel(pCmd, m_FrameIndex, m_CommonBufferManager, m_SkyTextureManager.m_IBLBaker);
 	}
 }
 

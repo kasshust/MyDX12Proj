@@ -29,11 +29,15 @@ bool Model::LoadModel(const wchar_t* filePath, ComPtr<ID3D12Device> pDevice, Des
 		// マテリアルの定数バッファ値を読み取る
 		// auto ptr = reinterpret_cast<CommonCb::CbMaterial*>(mat[i]->GetBufferPtr(0));
 		// ptr->Param00 = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
-		// ptr->Param01 = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
-		// ptr->Param02 = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
-		// ptr->Param03 = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
-		// ptr->Param04 = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
-		// ptr->Param05 = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+
+		std::wstring shaderKey = res[i].ShaderKey;
+
+		Shader* p = manager.GetShader(shaderKey.c_str());
+		if (p == nullptr) {
+			ELOG("Error : Shader Loading Failed = %ls ", shaderKey.c_str());
+			// return false;
+		}
+		mat[i]->SetShaderPtr(p);
 
 		// テクスチャの読み込み
 		const wchar_t* normal		= res[i].NormalMap.c_str();
@@ -78,7 +82,7 @@ void Model::SetTexture(
 	if (wcslen(path) != 0) mat->SetTexture(0, usage, path, manager.LoadGetTexture(path, pDevice, resPool, isSRGB, batch));
 }
 
-void Model::DrawModel(ID3D12GraphicsCommandList* pCmd, int frameIndex, CommonBufferManager& commonBufferManager, const IBLBaker& baker, Shader& shader)
+void Model::DrawModel(ID3D12GraphicsCommandList* pCmd, int frameIndex, CommonBufferManager& commonBufferManager, const IBLBaker& baker)
 {
 	AppResourceManager& manager = AppResourceManager::GetInstance();
 	const std::vector<Mesh*>		meshs = manager.GetMesh(m_FilePath);
@@ -86,11 +90,9 @@ void Model::DrawModel(ID3D12GraphicsCommandList* pCmd, int frameIndex, CommonBuf
 
 	for (size_t i = 0; i < meshs.size(); ++i)
 	{
-		// マテリアルIDを取得.
+		// マテリアルを設定
 		auto id = meshs[i]->GetMaterialId();
-
-		// mat[id]->SetProperty();
-		shader.SetShader(pCmd, frameIndex, *mat[id], i, this, commonBufferManager, baker);
+		mat[i]->SetMaterial(pCmd, frameIndex, *mat[id], id, m_MeshCB, commonBufferManager, baker);
 
 		// メッシュを描画.
 		meshs[i]->Draw(pCmd);

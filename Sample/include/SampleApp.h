@@ -65,7 +65,7 @@ private:
 	CommonBufferManager             m_CommonBufferManager;
 	SkyTextureManager               m_SkyTextureManager;
 	ToneMap                         m_ToneMap;
-	BasicShader                     m_BasicShader;
+	// BasicShader                     m_BasicShader;
 	Camera                          m_Camera;
 
 	float                           m_Exposure;                     //!< 露光値.
@@ -75,6 +75,9 @@ private:
 
 	int                             m_PrevCursorX;                  //!< 前回のカーソル位置X.
 	int                             m_PrevCursorY;                  //!< 前回のカーソル位置Y.
+
+	Vector3							m_LightDirection = Vector3(1.0f,1.0f,0.0f);
+	float							m_LightIntensity = 1.0f;
 
 	//=========================================================================
 	// private methods.

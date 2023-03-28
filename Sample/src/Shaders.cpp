@@ -118,7 +118,7 @@ bool BasicShader::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT 
 
 	return true;
 }
-void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Material& mat, int id, const Model* model, const CommonBufferManager& commonbufmanager, const IBLBaker& baker)
+void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Material& mat, int id, const ConstantBuffer* meshCB, const CommonBufferManager& commonbufmanager, const IBLBaker& baker)
 {
 	//　マテリアル共通のバッファ
 	{
@@ -136,8 +136,7 @@ void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Mat
 		pCmd->SetGraphicsRootDescriptorTable(7, baker.GetHandleGPU_SpecularLD());
 	}
 
-
-	pCmd->SetGraphicsRootDescriptorTable(1, model->m_MeshCB[frameindex].GetHandleGPU());
+	pCmd->SetGraphicsRootDescriptorTable(1, meshCB[frameindex].GetHandleGPU());
 
 	//  マテリアルから定数バッファを取り出す
 	pCmd->SetGraphicsRootDescriptorTable(4, mat.GetBufferHandle(id));

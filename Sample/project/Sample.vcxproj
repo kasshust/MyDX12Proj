@@ -22,8 +22,6 @@
     <ClCompile Include="..\src\ToneMap.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\CommonBufferManager.h" />
-    <ClInclude Include="..\include\CommonRTVManager.h" />
     <ClInclude Include="..\include\Materials.h" />
     <ClInclude Include="..\include\SampleApp.h" />
     <ClInclude Include="..\include\Shaders.h" />

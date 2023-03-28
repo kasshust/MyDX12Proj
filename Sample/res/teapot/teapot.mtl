@@ -1,6 +1,7 @@
 # Created by Metasequoia
 
 newmtl default
+map_bump basic
 Ka 0.60000 0.60000 0.60000
 Kd 0.80000 0.80000 0.80000
 Ks 0.80000 0.80000 0.80000

@@ -74,7 +74,7 @@ class CommonBufferManager {
 public:
 	bool Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, float width, float height);
 
-	void CommonBufferManager::UpdateLightBuffer(int frameindex, float texSize, float mipCount);
+	void CommonBufferManager::UpdateLightBuffer(int frameindex, float texSize, float mipCount, Vector3 direction, float intensity);
 	void CommonBufferManager::UpdateCameraBuffer(int frameindex, Vector3 pos);
 	void CommonBufferManager::UpdateViewProjMatrix(int frameindex, Matrix& view, Matrix& proj);
 	void CommonBufferManager::UpdateWorldMatrix(int frameindex, Matrix& modelMat);
@@ -88,6 +88,8 @@ public:
 	ConstantBuffer      m_CameraCB[App::FrameCount];         //!< カメラバッファです.
 	ConstantBuffer      m_TransformCB[App::FrameCount];      //!< 変換用バッファです.
 	ConstantBuffer		m_MeshCB[App::FrameCount];           //!< メッシュ用バッファです.
+
+
 
 private:
 	//=========================================================================

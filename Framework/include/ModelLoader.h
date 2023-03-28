@@ -18,7 +18,7 @@ public:
 	bool LoadModel(const wchar_t* filePath, ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool, ComPtr<ID3D12CommandQueue> commandQueue);
 	std::vector<Material*> GetMaterials();
 	void SetTexture(Material* mat, Material::TEXTURE_USAGE usage, const wchar_t* path, ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool, bool isSRGB, DirectX::ResourceUploadBatch& batch, AppResourceManager& manager);
-	void DrawModel(ID3D12GraphicsCommandList* pCmd, int frameIndex, CommonBufferManager& commonBufferManager, const IBLBaker& baker, Shader& shader);
+	void DrawModel(ID3D12GraphicsCommandList* pCmd, int frameIndex, CommonBufferManager& commonBufferManager, const IBLBaker& baker);
 	void Release();
 
 	bool CreateMeshBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool);
