@@ -4,8 +4,9 @@
 #include <App.h>
 #include <ConstantBuffer.h>
 #include <RootSignature.h>
+#include <PostEffect.h>
 
-class ToneMap {
+class ToneMap : PostEffect {
 public:
 	///////////////////////////////////////////////////////////////////////////////
 	// COLOR_SPACE_TYPE enum
@@ -46,14 +47,11 @@ public:
 	}
 
 public:
-	bool Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format);
+	bool Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format) override;
 
-	ToneMap();
-	~ToneMap();
-	void Term();
+	void Term() override;
 	void DrawTonemap(ID3D12GraphicsCommandList* pCmd, int frameindex, ColorTarget& colorDest, DepthTarget& depthDest, ColorTarget& colorSource, D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, VertexBuffer& vb);
 	void SetLuminance(float base, float max);
-	void SetToneMapType(TONEMAP_TYPE t);
 	int                             m_TonemapType;              //!< トーンマップタイプ.
 
 private:
@@ -62,11 +60,7 @@ private:
 	float                           m_BaseLuminance;                //!< 基準輝度値.
 	float                           m_MaxLuminance;                 //!< 最大輝度値.
 
-	ConstantBuffer                  m_TonemapCB[App::FrameCount];	//!< 定数バッファです.
-	ComPtr<ID3D12PipelineState>     m_pTonemapPSO;                  //!< トーンマップ用パイプラインステートです.
-	RootSignature                   m_TonemapRootSig;               //!< トーンマップ用ルートシグニチャです.
-
-	bool CreateToneMapRootSig(ComPtr<ID3D12Device> pDevice);
-	bool CreateToneMapPipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format);
-	bool CreateToneMapConstantBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool);
+	bool CreateRootSig(ComPtr<ID3D12Device> pDevice) override;
+	bool CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format)  override;
+	bool CreateConstantBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool)  override;
 };

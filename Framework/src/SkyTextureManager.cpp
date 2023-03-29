@@ -6,17 +6,15 @@
 #include "DirectXHelpers.h"
 #include "SimpleMath.h"
 
-bool SkyTextureManager::Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* rtvPool, DescriptorPool* resPool, ComPtr<ID3D12CommandQueue> commandQueue) {
-	
-	
-	if (!InitSphereMapTexture(pDevice, resPool, commandQueue)) return false;
+bool SkyManager::Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* rtvPool, DescriptorPool* resPool, ComPtr<ID3D12CommandQueue> commandQueue, std::wstring path) {
+	if (!InitSphereMapTexture(pDevice, resPool, commandQueue, path)) return false;
 	if (!InitSphereMapConverter(pDevice, rtvPool, resPool)) return false;
 	if (!InitSkyBox(pDevice, resPool)) return false;
 
 	return true;
 }
 
-bool SkyTextureManager::InitSphereMapTexture(ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool, ComPtr<ID3D12CommandQueue> commandQueue)
+bool SkyManager::InitSphereMapTexture(ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool, ComPtr<ID3D12CommandQueue> commandQueue, std::wstring path)
 {
 	DirectX::ResourceUploadBatch batch(pDevice.Get());
 
@@ -26,11 +24,13 @@ bool SkyTextureManager::InitSphereMapTexture(ComPtr<ID3D12Device> pDevice, Descr
 	// スフィアマップ読み込み.
 	{
 		std::wstring sphereMapPath;
-		if (!SearchFilePathW(m_SkyTexturePath, sphereMapPath))
+		if (!SearchFilePathW(path.c_str(), sphereMapPath))
 		{
 			ELOG("Error : File Not Found.");
 			return false;
 		}
+
+		m_SkyTexturePath = path;
 
 		// テクスチャ初期化.
 		if (!m_SphereMap.Init(
@@ -52,7 +52,7 @@ bool SkyTextureManager::InitSphereMapTexture(ComPtr<ID3D12Device> pDevice, Descr
 
 	return true;
 }
-bool SkyTextureManager::InitSphereMapConverter(ComPtr<ID3D12Device> pDevice, DescriptorPool* rtvPool, DescriptorPool* resPool) {
+bool SkyManager::InitSphereMapConverter(ComPtr<ID3D12Device> pDevice, DescriptorPool* rtvPool, DescriptorPool* resPool) {
 	if (!m_SphereMapConverter.Init(
 		pDevice.Get(),
 		rtvPool,
@@ -65,7 +65,7 @@ bool SkyTextureManager::InitSphereMapConverter(ComPtr<ID3D12Device> pDevice, Des
 
 	return true;
 }
-bool SkyTextureManager::InitSkyBox(ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool) {
+bool SkyManager::InitSkyBox(ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool) {
 	if (!m_SkyBox.Init(
 		pDevice.Get(),
 		resPool,
@@ -80,7 +80,7 @@ bool SkyTextureManager::InitSkyBox(ComPtr<ID3D12Device> pDevice, DescriptorPool*
 }
 
 // 引数が多すぎる
-bool SkyTextureManager::IBLBake(ComPtr<ID3D12Device> pDevice, DescriptorPool* rtvPool, DescriptorPool* resPool, CommandList& commandList, ComPtr<ID3D12CommandQueue> commandQueue, Fence& fence) {
+bool SkyManager::IBLBake(ComPtr<ID3D12Device> pDevice, DescriptorPool* rtvPool, DescriptorPool* resPool, CommandList& commandList, ComPtr<ID3D12CommandQueue> commandQueue, Fence& fence) {
 	if (!m_IBLBaker.Init(pDevice.Get(), resPool, rtvPool))
 	{
 		ELOG("Error : IBLBaker::Init() Failed.");
@@ -121,7 +121,7 @@ bool SkyTextureManager::IBLBake(ComPtr<ID3D12Device> pDevice, DescriptorPool* rt
 	return true;
 }
 
-void SkyTextureManager::Term()
+void SkyManager::Term()
 {
 	m_IBLBaker.Term();
 	m_SphereMapConverter.Term();

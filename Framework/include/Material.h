@@ -15,6 +15,7 @@
 #include <map>
 #include <Shader.h>
 #include <CommonBufferManager.h>
+#include <SkyTextureManager.h>
 
 class Shader;
 class CommonBufferManager;
@@ -95,7 +96,7 @@ public:
 	void Term();
 
 	bool SetShaderPtr(Shader* pShader);
-	bool SetMaterial(ID3D12GraphicsCommandList* pCmd, int frameindex, Material& mat, int id, const ConstantBuffer* meshCB, const CommonBufferManager& commonbufmanager, const IBLBaker& baker);
+	bool SetMaterial(ID3D12GraphicsCommandList* pCmd, int frameindex, Material& mat, int id, const ConstantBuffer* meshCB, const CommonBufferManager& commonbufmanager, const SkyManager& skyManager);
 
 	//-------------------------------------------------------------------------
 	//! @brief      テクスチャを設定します.

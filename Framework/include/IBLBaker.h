@@ -133,14 +133,14 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource>      m_TexDFG;                               //!< DFGテクスチャです.
 	Microsoft::WRL::ComPtr<ID3D12Resource>      m_TexDiffuseLD;                         //!< DiffuseLDテクスチャです.
 	Microsoft::WRL::ComPtr<ID3D12Resource>      m_TexSpecularLD;                        //!< SpecularLDテクスチャです.
-	DescriptorPool* m_pPoolRes;                             //!< リソース用ディスクリプタプールです.
-	DescriptorPool* m_pPoolRTV;                             //!< レンダーターゲット用ディスクリプタプールです.
-	DescriptorHandle* m_pHandleRTV_DFG;                       //!< DFGレンダーターゲットビューです.
-	DescriptorHandle* m_pHandleRTV_DiffuseLD[6];              //!< DiffuseLDレンダーターゲットビューです.
-	DescriptorHandle* m_pHandleRTV_SpecularLD[MipCount * 6];  //!< SpecularLDレンダーターゲットビューです.
-	DescriptorHandle* m_pHandleSRV_DFG;                       //!< DFGシェーダリソースビューです.
-	DescriptorHandle* m_pHandleSRV_DiffuseLD;                 //!< DiffuseLDシェーダリソースビューです.
-	DescriptorHandle* m_pHandleSRV_SpecularLD;                //!< SpecularLDシェーダリソースビューです.
+	DescriptorPool* m_pPoolRes;															//!< リソース用ディスクリプタプールです.
+	DescriptorPool* m_pPoolRTV;															//!< レンダーターゲット用ディスクリプタプールです.
+	DescriptorHandle* m_pHandleRTV_DFG;													//!< DFGレンダーターゲットビューです.
+	DescriptorHandle* m_pHandleRTV_DiffuseLD[6];										//!< DiffuseLDレンダーターゲットビューです.
+	DescriptorHandle* m_pHandleRTV_SpecularLD[MipCount * 6];							//!< SpecularLDレンダーターゲットビューです.
+	DescriptorHandle* m_pHandleSRV_DFG;													//!< DFGシェーダリソースビューです.
+	DescriptorHandle* m_pHandleSRV_DiffuseLD;											//!< DiffuseLDシェーダリソースビューです.
+	DescriptorHandle* m_pHandleSRV_SpecularLD;											//!< SpecularLDシェーダリソースビューです.
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pDFG_PSO;                             //!< DFGパイプラインステートです.
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pDiffuseLD_PSO;                       //!< DiffuseLDパイプラインステートです.
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pSpecularLD_PSO;                      //!< SpecularLDパイプラインステートです.

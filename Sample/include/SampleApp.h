@@ -63,9 +63,8 @@ private:
 	std::vector<GameObject*>		m_GameObjects;
 	CommonRTManager                 m_CommonRTManager;
 	CommonBufferManager             m_CommonBufferManager;
-	SkyTextureManager               m_SkyTextureManager;
+	SkyManager						m_SkyManager;
 	ToneMap                         m_ToneMap;
-	// BasicShader                     m_BasicShader;
 	Camera                          m_Camera;
 
 	float                           m_Exposure;                     //!< 露光値.
@@ -90,6 +89,7 @@ private:
 	//! @retval false   初期化に失敗.
 	//-------------------------------------------------------------------------
 	bool OnInit() override;
+	bool CommonInit();
 
 	//-------------------------------------------------------------------------
 	//! @brief      終了時の処理です.
@@ -118,7 +118,7 @@ private:
 	//! @brief      シーンを描画します.
 	//-------------------------------------------------------------------------
 	void DrawScene(ID3D12GraphicsCommandList* pCmdList);
-	void RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& colorSource, DepthTarget& depthSource, SkyBox* skyBox);
+	void RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& colorSource, DepthTarget& depthSource, SkyManager& manager);
 	void RenderPostProcess(ID3D12GraphicsCommandList* pCmd);
 	void RenderImGui(ID3D12GraphicsCommandList* pCmd);
 	void UpdateCamera();

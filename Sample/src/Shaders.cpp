@@ -118,7 +118,7 @@ bool BasicShader::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT 
 
 	return true;
 }
-void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Material& mat, int id, const ConstantBuffer* meshCB, const CommonBufferManager& commonbufmanager, const IBLBaker& baker)
+void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Material& mat, int id, const ConstantBuffer* meshCB, const CommonBufferManager& commonbufmanager, const SkyManager& manager)
 {
 	//　マテリアル共通のバッファ
 	{
@@ -131,9 +131,9 @@ void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Mat
 			pCmd->SetGraphicsRootDescriptorTable(3, commonbufmanager.m_CameraCB[frameindex].GetHandleGPU());
 		}
 
-		pCmd->SetGraphicsRootDescriptorTable(5, baker.GetHandleGPU_DFG());
-		pCmd->SetGraphicsRootDescriptorTable(6, baker.GetHandleGPU_DiffuseLD());
-		pCmd->SetGraphicsRootDescriptorTable(7, baker.GetHandleGPU_SpecularLD());
+		pCmd->SetGraphicsRootDescriptorTable(5, manager.m_IBLBaker.GetHandleGPU_DFG());
+		pCmd->SetGraphicsRootDescriptorTable(6, manager.m_IBLBaker.GetHandleGPU_DiffuseLD());
+		pCmd->SetGraphicsRootDescriptorTable(7, manager.m_IBLBaker.GetHandleGPU_SpecularLD());
 	}
 
 	pCmd->SetGraphicsRootDescriptorTable(1, meshCB[frameindex].GetHandleGPU());

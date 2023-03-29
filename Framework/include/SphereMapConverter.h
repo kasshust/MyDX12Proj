@@ -101,12 +101,12 @@ private:
 	//=========================================================================
 	// private variables.
 	//=========================================================================
-	DescriptorPool* m_pPoolRes;         //!< リソース用ディスクリプタプール.
-	DescriptorPool* m_pPoolRTV;         //!< レンダーターゲット用ディスクリプタプール.
+	DescriptorPool*					m_pPoolRes;         //!< リソース用ディスクリプタプール.
+	DescriptorPool*					m_pPoolRTV;         //!< レンダーターゲット用ディスクリプタプール.
 	ComPtr<ID3D12RootSignature>     m_pRootSig;         //!< ルートシグニチャです.
 	ComPtr<ID3D12PipelineState>     m_pPSO;             //!< パイプラインステートです.
 	ComPtr<ID3D12Resource>          m_pCubeTex;         //!< キューブマップテクスチャです.
-	DescriptorHandle* m_pCubeSRV;         //!< シェーダリソースビューです.
+	DescriptorHandle*				m_pCubeSRV;         //!< シェーダリソースビューです.
 	std::vector<DescriptorHandle*>  m_pCubeRTV;         //!< レンダーターゲットビューです.
 	ConstantBuffer                  m_TransformCB[6];   //!< 変換バッファです.
 	uint32_t                        m_MipCount;         //!< ミップレベル数です.

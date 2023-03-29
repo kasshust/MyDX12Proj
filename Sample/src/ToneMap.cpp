@@ -8,36 +8,19 @@
 
 bool ToneMap::Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format)
 {
-	if (!CreateToneMapRootSig(pDevice))                                             return false;
-	if (!CreateToneMapPipeLineState(pDevice, rtv_format, dsv_format))               return false;
-	if (!CreateToneMapConstantBuffer(pDevice, pool))                                return false;
+	if (!CreateRootSig(pDevice))                                             return false;
+	if (!CreatePipeLineState(pDevice, rtv_format, dsv_format))               return false;
+	if (!CreateConstantBuffer(pDevice, pool))                                return false;
+
+	m_TonemapType   = (TONEMAP_GT);
+	m_ColorSpace    = (COLOR_SPACE_BT709);
+	m_BaseLuminance = (100.0f);
+	m_MaxLuminance  = (100.0f);
 
 	return true;
 }
 
-ToneMap::ToneMap()
-{
-	m_TonemapType = (TONEMAP_GT);
-	m_ColorSpace = (COLOR_SPACE_BT709);
-	m_BaseLuminance = (100.0f);
-	m_MaxLuminance = (100.0f);
-}
-
-ToneMap::~ToneMap()
-{
-}
-
-void ToneMap::Term()
-{
-	for (auto i = 0; i < App::FrameCount; ++i)
-	{
-		m_TonemapCB[i].Term();
-	}
-	m_pTonemapPSO.Reset();
-	m_TonemapRootSig.Term();
-}
-
-bool ToneMap::CreateToneMapRootSig(ComPtr<ID3D12Device> pDevice) {
+bool ToneMap::CreateRootSig(ComPtr<ID3D12Device> pDevice) {
 	RootSignature::Desc desc;
 	desc.Begin(2)
 		.SetCBV(ShaderStage::PS, 0, 0)
@@ -46,7 +29,7 @@ bool ToneMap::CreateToneMapRootSig(ComPtr<ID3D12Device> pDevice) {
 		.AllowIL()
 		.End();
 
-	if (!m_TonemapRootSig.Init(pDevice.Get(), desc.GetDesc()))
+	if (!m_RootSig.Init(pDevice.Get(), desc.GetDesc()))
 	{
 		ELOG("Error : RootSignature::Init() Failed.");
 		return false;
@@ -54,7 +37,7 @@ bool ToneMap::CreateToneMapRootSig(ComPtr<ID3D12Device> pDevice) {
 	return true;
 }
 
-bool ToneMap::CreateToneMapPipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format) {
+bool ToneMap::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format) {
 	std::wstring vsPath;
 	std::wstring psPath;
 
@@ -99,7 +82,7 @@ bool ToneMap::CreateToneMapPipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORM
 	// グラフィックスパイプラインステートを設定.
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
 	desc.InputLayout = { elements, 2 };
-	desc.pRootSignature = m_TonemapRootSig.GetPtr();
+	desc.pRootSignature = m_RootSig.GetPtr();
 	desc.VS = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
 	desc.PS = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
 	desc.RasterizerState = DirectX::CommonStates::CullNone;
@@ -114,7 +97,7 @@ bool ToneMap::CreateToneMapPipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORM
 	desc.SampleDesc.Quality = 0;
 
 	// パイプラインステートを生成.
-	hr = pDevice->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(m_pTonemapPSO.GetAddressOf()));
+	hr = pDevice->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(m_pPSO.GetAddressOf()));
 	if (FAILED(hr))
 	{
 		ELOG("Error : ID3D12Device::CreateGraphicsPipelineState() Failed. retcode = 0x%x", hr);
@@ -124,17 +107,29 @@ bool ToneMap::CreateToneMapPipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORM
 	return true;
 }
 
-bool ToneMap::CreateToneMapConstantBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool) {
+bool ToneMap::CreateConstantBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool) {
 	//
 	for (auto i = 0; i < App::FrameCount; ++i)
 	{
-		if (!m_TonemapCB[i].Init(pDevice.Get(), pool, sizeof(CbTonemap)))
+		if (!m_CB[i].Init(pDevice.Get(), pool, sizeof(CbTonemap)))
 		{
 			ELOG("Error : ConstantBuffer::Init() Failed.");
 			return false;
 		}
 	}
 }
+
+
+void ToneMap::Term()
+{
+	for (auto i = 0; i < App::FrameCount; ++i)
+	{
+		m_CB[i].Term();
+	}
+	m_pPSO.Reset();
+	m_RootSig.Term();
+}
+
 
 void ToneMap::DrawTonemap(ID3D12GraphicsCommandList* pCmd, int frameindex, ColorTarget& colorDest, DepthTarget& depthDest, ColorTarget& colorSource, D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, VertexBuffer& vb)
 {
@@ -157,18 +152,18 @@ void ToneMap::DrawTonemap(ID3D12GraphicsCommandList* pCmd, int frameindex, Color
 
 	// 定数バッファ更新
 	{
-		auto ptr = m_TonemapCB[frameindex].GetPtr<CbTonemap>();
+		auto ptr = m_CB[frameindex].GetPtr<CbTonemap>();
 		ptr->Type = m_TonemapType;
 		ptr->ColorSpace = m_ColorSpace;
 		ptr->BaseLuminance = m_BaseLuminance;
 		ptr->MaxLuminance = m_MaxLuminance;
 	}
 
-	pCmd->SetGraphicsRootSignature(m_TonemapRootSig.GetPtr());
-	pCmd->SetGraphicsRootDescriptorTable(0, m_TonemapCB[frameindex].GetHandleGPU());
+	pCmd->SetGraphicsRootSignature(m_RootSig.GetPtr());
+	pCmd->SetGraphicsRootDescriptorTable(0, m_CB[frameindex].GetHandleGPU());
 	pCmd->SetGraphicsRootDescriptorTable(1, colorSource.GetHandleSRV()->HandleGPU);
 
-	pCmd->SetPipelineState(m_pTonemapPSO.Get());
+	pCmd->SetPipelineState(m_pPSO.Get());
 	pCmd->RSSetViewports(1, viewport);
 	pCmd->RSSetScissorRects(1, scissor);
 
@@ -190,9 +185,3 @@ void ToneMap::SetLuminance(float base, float max)
 	m_MaxLuminance = max;
 }
 
-/*
-void ToneMap::SetToneMapType(TONEMAP_TYPE t)
-{
-	m_TonemapType = t;
-}
-*/

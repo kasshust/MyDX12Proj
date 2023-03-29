@@ -49,21 +49,16 @@ SampleApp::~SampleApp()
 //-----------------------------------------------------------------------------
 bool SampleApp::OnInit()
 {
-	// 共通定数バッファ/レンダーターゲット
-	if (!m_CommonBufferManager.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], m_Width, m_Height))                                                return false;
-	if (!m_CommonRTManager.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_pPool[POOL_TYPE_DSV], m_Width, m_Height))    return false;
 
-	// スカイテクスチャーの初期化/IBLのベイク
-	if (!m_SkyTextureManager.Init(m_pDevice, m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
-	if (!m_SkyTextureManager.IBLBake(m_pDevice, m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_CommandList, m_pQueue, m_Fence)) return false;
+	if (!CommonInit()) return false;
 
 	// ポストプロセス初期化
 	if (!m_ToneMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format))    return false;
+	if (!m_SkyManager.IBLBake(m_pDevice, m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_CommandList, m_pQueue, m_Fence)) return false;
 
-
+	// GameObject/Model
 	AppResourceManager& manager = AppResourceManager::GetInstance();
-	
-	Shader* ptr = new BasicShader();
+	Shader* ptr                 = new BasicShader();
 	ptr->Init(m_pDevice, m_CommonRTManager.m_SceneColorTarget.GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format);
 	manager.AddShader(L"basic", ptr);
 
@@ -84,6 +79,15 @@ bool SampleApp::OnInit()
 	return true;
 }
 
+bool SampleApp::CommonInit() {
+
+	const std::wstring skyPath = L"../res/texture/hdr014.dds";
+	
+	if (!m_CommonBufferManager.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], m_Width, m_Height))                                                return false;
+	if (!m_CommonRTManager.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_pPool[POOL_TYPE_DSV], m_Width, m_Height))    return false;
+	if (!m_SkyManager.Init(m_pDevice, m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_pQueue, skyPath)) return false;
+}
+
 //-----------------------------------------------------------------------------
 //      終了時の処理です.
 //-----------------------------------------------------------------------------
@@ -95,17 +99,14 @@ void SampleApp::OnTerm()
 	}
 	m_GameObjects.clear();
 
-	// m_BasicShader.Term();
 	m_ToneMap.Term();
 	m_CommonBufferManager.Term();
 	m_CommonRTManager.Term();
-	m_SkyTextureManager.Term();
+	m_SkyManager.Term();
 }
 
 void SampleApp::OnRenderIMGUI() {
 	ImGui::Begin("Setting");
-
-
 
 	// HDR/SDRの選択
 	if (ImGui::Button("HDR")) {
@@ -122,15 +123,15 @@ void SampleApp::OnRenderIMGUI() {
 		Vector3 pos		= m_Camera.GetPosition();
 		Vector3 target	= m_Camera.GetTarget();
 
-		float* posArray = new float[] { pos.x, pos.y, pos.z};
-		ImGui::InputFloat3("Camera Position", posArray);
-		m_Camera.SetPosition(Vector3(posArray));
+		float* posArray = new float[]		{ pos.x, pos.y, pos.z};
+		float* targetArray = new float[]	{ target.x, target.y, target.z};
 
-		float* targetArray = new float[] { target.x, target.y, target.z};
+		ImGui::InputFloat3("Camera Position", posArray);
 		ImGui::InputFloat3("Target Position", targetArray);
+	
+		m_Camera.SetPosition(Vector3(posArray));
 		m_Camera.SetTarget(Vector3(targetArray));
 
-		// Camera Rest
 		if (ImGui::Button("Camera Reset")) {
 			m_Camera.Reset();
 		}
@@ -312,7 +313,7 @@ void SampleApp::OnRender()
 	};
 	pCmd->SetDescriptorHeaps(1, pHeaps);
 	{
-		RenderOpaque(pCmd, m_CommonRTManager.m_SceneColorTarget, m_CommonRTManager.m_SceneDepthTarget, m_SkyTextureManager.GetSkyBox());
+		RenderOpaque(pCmd, m_CommonRTManager.m_SceneColorTarget, m_CommonRTManager.m_SceneDepthTarget, m_SkyManager);
 		RenderPostProcess(pCmd);
 	}
 	pCmd->Close();
@@ -345,7 +346,7 @@ void SampleApp::UpdateCamera() {
 	m_Proj = Matrix::CreatePerspectiveFieldOfView(fovY, aspect, 0.1f, 1000.0f);
 }
 
-void SampleApp::RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& colorDest, DepthTarget& depthDest, SkyBox* skyBox = nullptr)
+void SampleApp::RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& colorDest, DepthTarget& depthDest,SkyManager& skyManager)
 {
 	// 書き込み用リソースバリア設定.
 	DirectX::TransitionResource(pCmd,
@@ -369,7 +370,8 @@ void SampleApp::RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& color
 	pCmd->RSSetScissorRects(1, &m_Scissor);
 
 	// 背景描画.
-	if (skyBox != nullptr) skyBox->Draw(pCmd, m_SkyTextureManager.GetCubeMapHandleGPU(), m_View, m_Proj, 300.0f);
+	SkyBox* ptr = skyManager.GetSkyBox();
+	if (ptr != nullptr) ptr->Draw(pCmd, skyManager.GetCubeMapHandleGPU(), m_View, m_Proj, 300.0f);
 
 	// シーンの描画.
 	DrawScene(pCmd);
@@ -387,14 +389,14 @@ void SampleApp::RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& color
 void SampleApp::DrawScene(ID3D12GraphicsCommandList* pCmd)
 {
 	// 定数バッファの更新.
-	m_CommonBufferManager.UpdateLightBuffer(m_FrameIndex, m_SkyTextureManager.m_IBLBaker.LDTextureSize, m_SkyTextureManager.m_IBLBaker.MipCount,m_LightDirection, m_LightIntensity);
+	m_CommonBufferManager.UpdateLightBuffer(m_FrameIndex, m_SkyManager.m_IBLBaker.LDTextureSize, m_SkyManager.m_IBLBaker.MipCount,m_LightDirection, m_LightIntensity);
 	m_CommonBufferManager.UpdateCameraBuffer(m_FrameIndex, m_Camera.GetPosition());
 	m_CommonBufferManager.UpdateViewProjMatrix(m_FrameIndex, m_View, m_Proj);
 
 	for (size_t i = 0; i < m_GameObjects.size(); i++) {
 		GameObject* g = m_GameObjects[i];
 		g->m_Model.UpdateWorldMatrix(m_FrameIndex, g->Transform().GetTransform());
-		g->m_Model.DrawModel(pCmd, m_FrameIndex, m_CommonBufferManager, m_SkyTextureManager.m_IBLBaker);
+		g->m_Model.DrawModel(pCmd, m_FrameIndex, m_CommonBufferManager, m_SkyManager);
 	}
 }
 

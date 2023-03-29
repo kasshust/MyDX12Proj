@@ -9,17 +9,17 @@
 
 bool Model::LoadModel(const wchar_t* filePath, ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool, ComPtr<ID3D12CommandQueue> commandQueue)
 {
-	wcscpy_s(m_FilePath, OFS_MAXPATHNAME, filePath);
+	wcscpy_s(m_ModelPath, OFS_MAXPATHNAME, filePath);
 	AppResourceManager& manager = AppResourceManager::GetInstance();
 
 	if (!CreateMeshBuffer(pDevice, resPool)) return false;
 
-	if (!manager.LoadResModel(m_FilePath))															return false;
-	if (!manager.CreateMesh(pDevice,	 m_FilePath, manager.GetResMesh(m_FilePath)))				return false;
-	if (!manager.CreateMaterial(pDevice, m_FilePath, manager.GetResMaterial(m_FilePath), resPool))	return false;
+	if (!manager.LoadResModel(m_ModelPath))															return false;
+	if (!manager.CreateMesh(pDevice,	 m_ModelPath, manager.GetResMesh(m_ModelPath)))				return false;
+	if (!manager.CreateMaterial(pDevice, m_ModelPath, manager.GetResMaterial(m_ModelPath), resPool))	return false;
 
-	std::vector<Material*>&		mat = manager.GetMaterial(m_FilePath);
-	std::vector<ResMaterial>	res = manager.GetResMaterial(m_FilePath);
+	std::vector<Material*>&		mat = manager.GetMaterial(m_ModelPath);
+	std::vector<ResMaterial>	res = manager.GetResMaterial(m_ModelPath);
 
 	DirectX::ResourceUploadBatch batch(pDevice.Get());
 	batch.Begin(); // バッチ開始.
@@ -66,7 +66,7 @@ bool Model::LoadModel(const wchar_t* filePath, ComPtr<ID3D12Device> pDevice, Des
 }
 
 std::vector<Material*> Model::GetMaterials() {
-	return  AppResourceManager::GetInstance().GetMaterial(m_FilePath);
+	return  AppResourceManager::GetInstance().GetMaterial(m_ModelPath);
 }
 
 void Model::SetTexture(
@@ -82,17 +82,17 @@ void Model::SetTexture(
 	if (wcslen(path) != 0) mat->SetTexture(0, usage, path, manager.LoadGetTexture(path, pDevice, resPool, isSRGB, batch));
 }
 
-void Model::DrawModel(ID3D12GraphicsCommandList* pCmd, int frameIndex, CommonBufferManager& commonBufferManager, const IBLBaker& baker)
+void Model::DrawModel(ID3D12GraphicsCommandList* pCmd, int frameIndex, CommonBufferManager& commonBufferManager, const SkyManager& skyManager)
 {
-	AppResourceManager& manager = AppResourceManager::GetInstance();
-	const std::vector<Mesh*>		meshs = manager.GetMesh(m_FilePath);
-	const std::vector<Material*>	mat = manager.GetMaterial(m_FilePath);
+	AppResourceManager&				manager	= AppResourceManager::GetInstance();
+	const std::vector<Mesh*>		meshs	= manager.GetMesh(m_ModelPath);
+	const std::vector<Material*>	mat		= manager.GetMaterial(m_ModelPath);
 
 	for (size_t i = 0; i < meshs.size(); ++i)
 	{
 		// マテリアルを設定
 		auto id = meshs[i]->GetMaterialId();
-		mat[i]->SetMaterial(pCmd, frameIndex, *mat[id], id, m_MeshCB, commonBufferManager, baker);
+		mat[i]->SetMaterial(pCmd, frameIndex, *mat[id], id, m_MeshCB, commonBufferManager, skyManager);
 
 		// メッシュを描画.
 		meshs[i]->Draw(pCmd);

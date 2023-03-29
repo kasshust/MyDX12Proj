@@ -18,7 +18,7 @@ public:
 		int id, 
 		const ConstantBuffer* meshCB,
 		const CommonBufferManager& commonbufmanager,
-		const IBLBaker& baker
+		const SkyManager& skyManager
 	) override;
 
 protected:

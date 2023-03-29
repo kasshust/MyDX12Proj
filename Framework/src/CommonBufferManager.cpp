@@ -12,10 +12,10 @@ using namespace DirectX::SimpleMath;
 
 bool CommonBufferManager::Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool, float width, float height)
 {
-	if (!CreateLightBuffer(pDevice.Get(), resPool))  return false;
-	if (!CreateCameraBuffer(pDevice.Get(), resPool)) return false;
-	if (!CreateMeshBuffer(pDevice.Get(), resPool))   return false;
-	if (!CreateVertexBuffer(pDevice.Get()))          return false;
+	if (!CreateLightBuffer(	pDevice.Get(),	resPool))	return false;
+	if (!CreateCameraBuffer(pDevice.Get(),	resPool))	return false;
+	if (!CreateMeshBuffer(	pDevice.Get(),	resPool))   return false;
+	if (!CreateVertexBuffer(pDevice.Get()))				return false;
 	if (!CreateMatrixConstantBuffer(pDevice.Get(), resPool, width, height)) return false;
 
 	return true;

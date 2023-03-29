@@ -8,6 +8,7 @@
 #include <IBLBaker.h>
 #include <CommonBufferManager.h>
 #include <Material.h>
+#include <SkyTextureManager.h>
 
 class Material;
 class CommonBufferManager;
@@ -23,7 +24,7 @@ public:
 		int id,
 		const ConstantBuffer* meshCB,
 		const CommonBufferManager& commonbufmanager,
-		const IBLBaker& baker
+		const SkyManager& manager
 	)  = 0;
 
 protected:
