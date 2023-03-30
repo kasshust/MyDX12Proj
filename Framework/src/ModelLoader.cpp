@@ -7,9 +7,9 @@
 #include <App.h>
 #include <ResourceManager.h>
 
-bool Model::LoadModel(const wchar_t* filePath, ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool, ComPtr<ID3D12CommandQueue> commandQueue)
+bool Model::LoadModel(std::wstring filePath, ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool, ComPtr<ID3D12CommandQueue> commandQueue)
 {
-	wcscpy_s(m_ModelPath, OFS_MAXPATHNAME, filePath);
+	m_ModelPath = filePath;
 	AppResourceManager& manager = AppResourceManager::GetInstance();
 
 	if (!CreateMeshBuffer(pDevice, resPool)) return false;
@@ -39,24 +39,14 @@ bool Model::LoadModel(const wchar_t* filePath, ComPtr<ID3D12Device> pDevice, Des
 		}
 		mat[i]->SetShaderPtr(p);
 
-		// テクスチャの読み込み
-		const wchar_t* normal		= res[i].NormalMap.c_str();
-		const wchar_t* albedo		= res[i].DiffuseMap.c_str();
-		const wchar_t* specular		= res[i].SpecularMap.c_str();
-		const wchar_t* shininess	= res[i].ShininessMap.c_str();
-		const wchar_t* ambient		= res[i].AmbientMap.c_str();
-		const wchar_t* opacity		= res[i].OpacityMap.c_str();
-		const wchar_t* emissive		= res[i].EmissiveMap.c_str();
-		const wchar_t* displace		= res[i].DisplacementMap.c_str();
-
-		SetTexture(mat[i], Material::TEXTURE_USAGE_03, normal,		pDevice, resPool, true, batch, manager);
-		SetTexture(mat[i], Material::TEXTURE_USAGE_04, albedo,		pDevice, resPool, false, batch, manager);
-		SetTexture(mat[i], Material::TEXTURE_USAGE_05, specular,	pDevice, resPool, false, batch, manager);
-		SetTexture(mat[i], Material::TEXTURE_USAGE_06, shininess,	pDevice, resPool, false, batch, manager);
-		SetTexture(mat[i], Material::TEXTURE_USAGE_07, ambient,		pDevice, resPool, false, batch, manager);
-		SetTexture(mat[i], Material::TEXTURE_USAGE_08, opacity,		pDevice, resPool, false, batch, manager);
-		SetTexture(mat[i], Material::TEXTURE_USAGE_09, emissive,	pDevice, resPool, false, batch, manager);
-		SetTexture(mat[i], Material::TEXTURE_USAGE_10, displace,	pDevice, resPool, false, batch, manager);
+		SetTexture(mat[i], Material::TEXTURE_USAGE_03, res[i].NormalMap,		pDevice, resPool, true, batch, manager);
+		SetTexture(mat[i], Material::TEXTURE_USAGE_04, res[i].DiffuseMap,		pDevice, resPool, false, batch, manager);
+		SetTexture(mat[i], Material::TEXTURE_USAGE_05, res[i].SpecularMap,		pDevice, resPool, false, batch, manager);
+		SetTexture(mat[i], Material::TEXTURE_USAGE_06, res[i].ShininessMap,		pDevice, resPool, false, batch, manager);
+		SetTexture(mat[i], Material::TEXTURE_USAGE_07, res[i].AmbientMap,		pDevice, resPool, false, batch, manager);
+		SetTexture(mat[i], Material::TEXTURE_USAGE_08, res[i].OpacityMap,		pDevice, resPool, false, batch, manager);
+		SetTexture(mat[i], Material::TEXTURE_USAGE_09, res[i].EmissiveMap,		pDevice, resPool, false, batch, manager);
+		SetTexture(mat[i], Material::TEXTURE_USAGE_10, res[i].DisplacementMap,	pDevice, resPool, false, batch, manager);
 	}
 	
 	auto future = batch.End(commandQueue.Get()); // バッチ終了.
@@ -72,14 +62,25 @@ std::vector<Material*> Model::GetMaterials() {
 void Model::SetTexture(
 	Material* mat, 
 	Material::TEXTURE_USAGE usage, 
-	const wchar_t* path, 
+	const std::wstring path,
 	ComPtr<ID3D12Device> pDevice, 
 	DescriptorPool* resPool, 
 	bool isSRGB, 
 	DirectX::ResourceUploadBatch& batch,
 	AppResourceManager& manager
 ) {
-	if (wcslen(path) != 0) mat->SetTexture(0, usage, path, manager.LoadGetTexture(path, pDevice, resPool, isSRGB, batch));
+	if (wcslen(path.c_str()) != 0) mat->SetTexture(0, usage, path, manager.LoadGetTexture(path, pDevice, resPool, isSRGB, batch));
+}
+
+void Model::DrawModelRaw(ID3D12GraphicsCommandList* pCmd, int frameIndex) {
+	AppResourceManager&			manager     = AppResourceManager::GetInstance();
+	const std::vector<Mesh*>	meshs		= manager.GetMesh(m_ModelPath);
+
+	for (size_t i = 0; i < meshs.size(); ++i)
+	{
+		// メッシュを描画.
+		meshs[i]->Draw(pCmd);
+	}
 }
 
 void Model::DrawModel(ID3D12GraphicsCommandList* pCmd, int frameIndex, CommonBufferManager& commonBufferManager, const SkyManager& skyManager)

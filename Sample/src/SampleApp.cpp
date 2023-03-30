@@ -62,14 +62,13 @@ bool SampleApp::OnInit()
 	ptr->Init(m_pDevice, m_CommonRTManager.m_SceneColorTarget.GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format);
 	manager.AddShader(L"basic", ptr);
 
-	const wchar_t path[][OFS_MAXPATHNAME] = {
+	const std::vector<std::wstring> path= {
 		L"../res/matball/matball.obj",
 		L"../res/teapot/teapot.obj",
 		L"../res/cube/cube.obj",
 	};
 		
-	int size = sizeof(path) / sizeof(path[0]);
-	for (size_t i = 0; i < size; i++)
+	for (size_t i = 0; i < path.size(); i++)
 	{
 		GameObject* g = new GameObject();
 		if (!g->m_Model.LoadModel(path[i] , m_pDevice, m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
@@ -170,7 +169,7 @@ void SampleApp::OnRenderIMGUI() {
 		if (ImGui::TreeNode("Texture")) {
 			const auto m = AppResourceManager::GetInstance().GetTexturesMap();
 			for (auto itr = m.begin(); itr != m.end(); ++itr) {
-				ImGui::Text("%ls", itr->first);
+				ImGui::Text("%ls", itr->first.c_str());
 			}
 			ImGui::TreePop();
 		}
@@ -178,7 +177,7 @@ void SampleApp::OnRenderIMGUI() {
 		if (ImGui::TreeNode("ResMesh")) {
 			const auto m = AppResourceManager::GetInstance().GetResMeshesMap();
 			for (auto itr = m.begin(); itr != m.end(); ++itr) {
-				ImGui::Text("%ls", itr->first);
+				ImGui::Text("%ls", itr->first.c_str());
 			}
 			ImGui::TreePop();
 		}
@@ -190,7 +189,7 @@ void SampleApp::OnRenderIMGUI() {
 			for (auto itr = m.begin(); itr != m.end(); ++itr) {
 				
 
-				ImGui::Text("%ls", itr->first);
+				ImGui::Text("%ls", itr->first.c_str());
 			}
 			ImGui::TreePop();
 		}
@@ -308,11 +307,14 @@ void SampleApp::OnRender()
 
 	// レンダリングエンジン描画
 	auto pCmd = m_CommandList.Reset();
+	if (pCmd == nullptr) { return; }
+
 	ID3D12DescriptorHeap* const pHeaps[] = {
 		m_pPool[POOL_TYPE_RES]->GetHeap(),
 	};
 	pCmd->SetDescriptorHeaps(1, pHeaps);
 	{
+		RenderShadowMap(pCmd, m_CommonRTManager.m_SceneShadowTarget);
 		RenderOpaque(pCmd, m_CommonRTManager.m_SceneColorTarget, m_CommonRTManager.m_SceneDepthTarget, m_SkyManager);
 		RenderPostProcess(pCmd);
 	}
@@ -344,6 +346,49 @@ void SampleApp::UpdateCamera() {
 
 	m_View = m_Camera.GetView();
 	m_Proj = Matrix::CreatePerspectiveFieldOfView(fovY, aspect, 0.1f, 1000.0f);
+}
+
+void SampleApp::RenderShadowMap(ID3D12GraphicsCommandList* pCmd, DepthTarget& depthDest) {
+	// 書き込み用リソースバリア設定. 同じなのでリソースバリアは設定されない。
+	/*
+	DirectX::TransitionResource(pCmd,
+		depthDest.GetResource(),
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	*/
+	
+	// ディスクリプタ取得.
+	auto handleDSV = depthDest.GetHandleDSV();
+
+	// レンダーターゲットを設定.
+	pCmd->OMSetRenderTargets(0, 0, FALSE, &handleDSV->HandleCPU);
+
+	// レンダーターゲットをクリア.
+	depthDest.ClearView(pCmd);
+
+	// ビューポート設定.
+	pCmd->RSSetViewports(1,		&m_Viewport);
+	pCmd->RSSetScissorRects(1,	&m_Scissor);
+
+
+	//　ここにSetShadowMapShaderのセッティング
+
+	// シーンの描画.
+	for (size_t i = 0; i < m_GameObjects.size(); i++) {
+		GameObject* g = m_GameObjects[i];
+		g->m_Model.UpdateWorldMatrix(m_FrameIndex, g->Transform().GetTransform());
+		g->m_Model.DrawModel(pCmd, m_FrameIndex, m_CommonBufferManager, m_SkyManager);
+		// g->m_Model.DrawModelRaw(pCmd, m_FrameIndex);
+	}
+
+	// 読み込み用リソースバリア設定.
+	
+	/*
+	DirectX::TransitionResource(pCmd,
+		depthDest.GetResource(),
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	*/
 }
 
 void SampleApp::RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& colorDest, DepthTarget& depthDest,SkyManager& skyManager)

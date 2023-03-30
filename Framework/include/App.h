@@ -111,7 +111,7 @@ protected:
 	D3D12_RECT                  m_Scissor;                   // シザー矩形です.
 	DXGI_FORMAT                 m_BackBufferFormat;          // バックバッファフォーマットです.
 
-	ID3D12DescriptorHeap* m_ImGuiDescriptorHeap;		 // ImGui用のディスクリプタヒープ
+	ID3D12DescriptorHeap*		m_ImGuiDescriptorHeap;		 // ImGui用のディスクリプタヒープ
 	CommandList                 m_ImGuiCommandList;          // ImGui用のコマンドリストです.
 
 	//=========================================================================

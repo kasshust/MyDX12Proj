@@ -8,7 +8,7 @@ void AppResourceManager::Release() {
 }
 
 void AppResourceManager::AddShader(
-	std::wstring			path,
+	const std::wstring			path,
 	Shader*					shader
 )
 {
@@ -17,7 +17,7 @@ void AppResourceManager::AddShader(
 }
 
 Shader* AppResourceManager::GetShader(
-	std::wstring path
+	const std::wstring& path
 )
 {
 	if (m_pShaders.empty()) return nullptr;
@@ -28,9 +28,9 @@ Shader* AppResourceManager::GetShader(
 	return nullptr;
 }
 
-bool AppResourceManager::CheckFilePath(const wchar_t* path) {
+bool AppResourceManager::CheckFilePath(const std::wstring& path) {
 	std::wstring findPath;
-	if (!SearchFilePathW(path, findPath))
+	if (!SearchFilePathW(path.c_str(), findPath))
 	{
 		ELOG("Error : File Path is not exist  = %ls", findPath.c_str());
 		return false;
@@ -45,7 +45,7 @@ bool AppResourceManager::CheckFilePath(const wchar_t* path) {
 }
 
 // Textureを読み込んでunordered_mapに登録する
-bool AppResourceManager::LoadTexture(const wchar_t* path,
+bool AppResourceManager::LoadTexture(const std::wstring path,
 	ComPtr<ID3D12Device> pDevice,
 	DescriptorPool* pPool,
 	bool isSRGB,
@@ -69,24 +69,24 @@ bool AppResourceManager::LoadTexture(const wchar_t* path,
 	}
 
 	// 初期化.
-	if (!pTexture->Init(pDevice.Get(), pPool, path, isSRGB, batch))
+	if (!pTexture->Init(pDevice.Get(), pPool, path.c_str(), isSRGB, batch))
 	{
 		ELOG("Error : Texture::Init() Failed.");
 		pTexture->Term();
 		return false;
 	}
 
-	m_Textures[path] = pTexture;
+	m_Textures.insert(std::make_pair(path, pTexture));
 }
 
 // Modelを読み込んでunordered_mapに登録する
-bool AppResourceManager::LoadResModel(const wchar_t* path) {
+bool AppResourceManager::LoadResModel(const std::wstring path) {
 	if (m_ResMeshes.count(path) == 0 || m_ResMaterials.count(path) == 0) {
 		std::vector<ResMesh>        resMesh = std::vector<ResMesh>();
 		std::vector<ResMaterial>    resMaterial = std::vector<ResMaterial>();
 
 		// メッシュリソースをロード.
-		if (!Res::LoadMesh(path, resMesh, resMaterial))
+		if (!Res::LoadMesh(path.c_str(), resMesh, resMaterial))
 		{
 			ELOG("Error : Load Mesh Failed. filepath = %ls", path);
 			return false;
@@ -99,7 +99,7 @@ bool AppResourceManager::LoadResModel(const wchar_t* path) {
 }
 
 // ResMeshからMeshを作成する
-bool AppResourceManager::CreateMesh(ComPtr<ID3D12Device> pDevice, const wchar_t* key, std::vector<ResMesh> resMesh) {
+bool AppResourceManager::CreateMesh(ComPtr<ID3D12Device> pDevice, const std::wstring key, std::vector<ResMesh> resMesh) {
 
 	if (m_pMeshs.count(key) > 0) return true;
 
@@ -141,7 +141,7 @@ bool AppResourceManager::CreateMesh(ComPtr<ID3D12Device> pDevice, const wchar_t*
 	return true;
 }
 
-bool AppResourceManager::CreateMaterial(ComPtr<ID3D12Device> pDevice, const wchar_t* key, std::vector<ResMaterial> resMaterial, DescriptorPool* resPool) {
+bool AppResourceManager::CreateMaterial(ComPtr<ID3D12Device> pDevice, const std::wstring key, std::vector<ResMaterial> resMaterial, DescriptorPool* resPool) {
 	// メモリを予約.
 	std::vector<Material*> pMaterial = std::vector<Material*>();
 	pMaterial.reserve(resMaterial.size());
@@ -182,7 +182,7 @@ bool AppResourceManager::CreateMaterial(ComPtr<ID3D12Device> pDevice, const wcha
 }
 
 // テクスチャを取得する
-Texture* AppResourceManager::GetTexture(const wchar_t* path) {
+Texture* AppResourceManager::GetTexture(const std::wstring& path) {
 	auto it = m_Textures.find(path);
 	if (it != m_Textures.end()) {
 		return it->second;
@@ -191,7 +191,7 @@ Texture* AppResourceManager::GetTexture(const wchar_t* path) {
 }
 
 // テクスチャに対するロードとゲットを同時に行う
-Texture* AppResourceManager::LoadGetTexture(const wchar_t* path,
+Texture* AppResourceManager::LoadGetTexture(const std::wstring path,
 	ComPtr<ID3D12Device> pDevice,
 	DescriptorPool* pPool,
 	bool isSRGB,
@@ -206,7 +206,7 @@ Texture* AppResourceManager::LoadGetTexture(const wchar_t* path,
 }
 
 // リソースメッシュを取得する
-std::vector<ResMesh> AppResourceManager::GetResMesh(const wchar_t* path) {
+std::vector<ResMesh> AppResourceManager::GetResMesh(const std::wstring& path) {
 	auto it = m_ResMeshes.find(path);
 	if (it != m_ResMeshes.end()) {
 		return it->second;
@@ -215,7 +215,7 @@ std::vector<ResMesh> AppResourceManager::GetResMesh(const wchar_t* path) {
 }
 
 // リソースマテリアルを取得する
-std::vector<ResMaterial> AppResourceManager::GetResMaterial(const wchar_t* path) {
+std::vector<ResMaterial> AppResourceManager::GetResMaterial(const std::wstring& path) {
 	auto it = m_ResMaterials.find(path);
 	if (it != m_ResMaterials.end()) {
 		return it->second;
@@ -225,7 +225,7 @@ std::vector<ResMaterial> AppResourceManager::GetResMaterial(const wchar_t* path)
 
 // メッシュを取得する
 
-std::vector<Mesh*> AppResourceManager::GetMesh(const wchar_t* path) {
+std::vector<Mesh*> AppResourceManager::GetMesh(const std::wstring& path) {
 	auto it = m_pMeshs.find(path);
 	if (it != m_pMeshs.end()) {
 		return it->second;
@@ -234,7 +234,7 @@ std::vector<Mesh*> AppResourceManager::GetMesh(const wchar_t* path) {
 }
 
 // マテリアルを取得する
-std::vector<Material*> AppResourceManager::GetMaterial(const wchar_t* path) {
+std::vector<Material*> AppResourceManager::GetMaterial(const std::wstring& path) {
 	auto it = m_pMaterials.find(path);
 	if (it != m_pMaterials.end()) {
 		return it->second;
@@ -242,14 +242,14 @@ std::vector<Material*> AppResourceManager::GetMaterial(const wchar_t* path) {
 	return std::vector<Material*>();
 }
 
-const std::unordered_map<const wchar_t*, Texture*> AppResourceManager::GetTexturesMap() {
+const std::unordered_map<std::wstring, Texture*> AppResourceManager::GetTexturesMap() {
 	return m_Textures;
 }
 
-const std::unordered_map<const wchar_t*, std::vector<ResMesh>>     AppResourceManager::GetResMeshesMap() {
+const std::unordered_map<std::wstring, std::vector<ResMesh>>     AppResourceManager::GetResMeshesMap() {
 	return m_ResMeshes;
 }
 
-const std::unordered_map<const wchar_t*, std::vector<ResMaterial>> AppResourceManager::GetResMaterialsMap() {
+const std::unordered_map<std::wstring, std::vector<ResMaterial>> AppResourceManager::GetResMaterialsMap() {
 	return m_ResMaterials;
 }

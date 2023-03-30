@@ -146,10 +146,10 @@ private:
 	// private variables.
 	//=========================================================================
 	ComPtr<ID3D12Resource>          m_pTarget;          //!< リソースです.
-	DescriptorHandle* m_pHandleRTV;       //!< ディスクリプタハンドル(RTV用)です.
-	DescriptorHandle* m_pHandleSRV;       //!< ディスクリプタハンドル(SRV用)です.
-	DescriptorPool* m_pPoolRTV;         //!< ディスクリプタプール(RTV用)です.
-	DescriptorPool* m_pPoolSRV;         //!< ディスクリプタプール(SRV用)です.
+	DescriptorHandle*				m_pHandleRTV;       //!< ディスクリプタハンドル(RTV用)です.
+	DescriptorHandle*				m_pHandleSRV;       //!< ディスクリプタハンドル(SRV用)です.
+	DescriptorPool*					m_pPoolRTV;         //!< ディスクリプタプール(RTV用)です.
+	DescriptorPool*					m_pPoolSRV;         //!< ディスクリプタプール(SRV用)です.
 	D3D12_RENDER_TARGET_VIEW_DESC   m_RTVDesc;          //!< レンダーターゲットビューの構成です.
 	D3D12_SHADER_RESOURCE_VIEW_DESC m_SRVDesc;          //!< シェーダリソースビューの構成.
 	float                           m_ClearColor[4];    //!< クリアカラー.

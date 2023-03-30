@@ -27,6 +27,7 @@ struct VSOutput
 struct PSOutput
 {
     float4  Color : SV_TARGET0;     // èoóÕÉJÉâÅ[Ç≈Ç∑.
+    // float   Depth : SV_Depth;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -178,6 +179,8 @@ PSOutput main(VSOutput input)
     
     output.Color.rgb = lit * LightIntensity + TestLit;
     output.Color.a   = 1.0f;
+    
+    // output.Depth = length(input.WorldPos.xyz - CameraPosition.xyz);
     
     return output;
 }

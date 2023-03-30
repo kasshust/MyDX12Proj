@@ -277,22 +277,22 @@ bool App::InitD3D()
 		}
 
 		// スワップチェインの設定.
-		DXGI_SWAP_CHAIN_DESC desc = {};
-		desc.BufferDesc.Width = m_Width;
-		desc.BufferDesc.Height = m_Height;
-		desc.BufferDesc.RefreshRate.Numerator = 60;
+		DXGI_SWAP_CHAIN_DESC desc               = {};
+		desc.BufferDesc.Width                   = m_Width;
+		desc.BufferDesc.Height                  = m_Height;
+		desc.BufferDesc.RefreshRate.Numerator   = 60;
 		desc.BufferDesc.RefreshRate.Denominator = 1;
-		desc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-		desc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-		desc.BufferDesc.Format = m_BackBufferFormat;
-		desc.SampleDesc.Count = 1;
-		desc.SampleDesc.Quality = 0;
-		desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		desc.BufferCount = FrameCount;
-		desc.OutputWindow = m_hWnd;
-		desc.Windowed = TRUE;
-		desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-		desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+		desc.BufferDesc.ScanlineOrdering        = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+		desc.BufferDesc.Scaling                 = DXGI_MODE_SCALING_UNSPECIFIED;
+		desc.BufferDesc.Format                  = m_BackBufferFormat;
+		desc.SampleDesc.Count                   = 1;
+		desc.SampleDesc.Quality                 = 0;
+		desc.BufferUsage                        = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		desc.BufferCount                        = FrameCount;
+		desc.OutputWindow                       = m_hWnd;
+		desc.Windowed                           = TRUE;
+		desc.SwapEffect                         = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+		desc.Flags                              = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 		// スワップチェインの生成.
 		ComPtr<IDXGISwapChain> pSwapChain;
@@ -322,7 +322,7 @@ bool App::InitD3D()
 
 		desc.NodeMask = 1;
 		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		desc.NumDescriptors = 512;
+		desc.NumDescriptors = 1024;
 		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		if (!DescriptorPool::Create(m_pDevice.Get(), &desc, &m_pPool[POOL_TYPE_RES]))
 		{
@@ -330,7 +330,7 @@ bool App::InitD3D()
 		}
 
 		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-		desc.NumDescriptors = 256;
+		desc.NumDescriptors = 512;
 		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		if (!DescriptorPool::Create(m_pDevice.Get(), &desc, &m_pPool[POOL_TYPE_SMP]))
 		{
@@ -338,7 +338,7 @@ bool App::InitD3D()
 		}
 
 		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-		desc.NumDescriptors = 512;
+		desc.NumDescriptors = 1024;
 		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 		if (!DescriptorPool::Create(m_pDevice.Get(), &desc, &m_pPool[POOL_TYPE_RTV]))
 		{
@@ -346,7 +346,7 @@ bool App::InitD3D()
 		}
 
 		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-		desc.NumDescriptors = 512;
+		desc.NumDescriptors = 1024;
 		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 		if (!DescriptorPool::Create(m_pDevice.Get(), &desc, &m_pPool[POOL_TYPE_DSV]))
 		{
@@ -436,11 +436,11 @@ bool App::InitD3D()
 bool App::InitIMGUI()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
-	desc.NumDescriptors = FrameCount;
-	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	desc.NodeMask = 0;
-	auto hr = m_pDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_ImGuiDescriptorHeap));
+	desc.NumDescriptors             = FrameCount;
+	desc.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	desc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	desc.NodeMask                   = 0;
+	auto hr                         = m_pDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_ImGuiDescriptorHeap));
 	if (FAILED(hr))
 	{
 		return false;
@@ -460,7 +460,6 @@ bool App::InitIMGUI()
 	int frameCount = FrameCount;
 	DXGI_FORMAT format = m_ColorTarget[0].GetRTVDesc().Format;
 
-	// プールからじゃなくて独自に作ったほうがよくない？
 	D3D12_CPU_DESCRIPTOR_HANDLE  chandle = m_ImGuiDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	D3D12_GPU_DESCRIPTOR_HANDLE  ghandle = m_ImGuiDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 

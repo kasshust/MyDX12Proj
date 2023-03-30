@@ -118,6 +118,7 @@ private:
 	//! @brief      シーンを描画します.
 	//-------------------------------------------------------------------------
 	void DrawScene(ID3D12GraphicsCommandList* pCmdList);
+	void RenderShadowMap(ID3D12GraphicsCommandList* pCmd, DepthTarget& depthDest);
 	void RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& colorSource, DepthTarget& depthSource, SkyManager& manager);
 	void RenderPostProcess(ID3D12GraphicsCommandList* pCmd);
 	void RenderImGui(ID3D12GraphicsCommandList* pCmd);

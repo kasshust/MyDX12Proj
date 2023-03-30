@@ -81,20 +81,20 @@ bool ToneMap::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtv_
 
 	// グラフィックスパイプラインステートを設定.
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
-	desc.InputLayout = { elements, 2 };
-	desc.pRootSignature = m_RootSig.GetPtr();
-	desc.VS = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
-	desc.PS = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
-	desc.RasterizerState = DirectX::CommonStates::CullNone;
-	desc.BlendState = DirectX::CommonStates::Opaque;
-	desc.DepthStencilState = DirectX::CommonStates::DepthDefault;
-	desc.SampleMask = UINT_MAX;
-	desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	desc.NumRenderTargets = 1;
-	desc.RTVFormats[0] = rtv_format;
-	desc.DSVFormat = dsv_format;
-	desc.SampleDesc.Count = 1;
-	desc.SampleDesc.Quality = 0;
+	desc.InputLayout                        = { elements, 2 };
+	desc.pRootSignature                     = m_RootSig.GetPtr();
+	desc.VS                                 = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
+	desc.PS                                 = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
+	desc.RasterizerState                    = DirectX::CommonStates::CullNone;
+	desc.BlendState                         = DirectX::CommonStates::Opaque;
+	desc.DepthStencilState                  = DirectX::CommonStates::DepthDefault;
+	desc.SampleMask                         = UINT_MAX;
+	desc.PrimitiveTopologyType              = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	desc.NumRenderTargets                   = 1;
+	desc.RTVFormats[0]                      = rtv_format;
+	desc.DSVFormat                          = dsv_format;
+	desc.SampleDesc.Count                   = 1;
+	desc.SampleDesc.Quality                 = 0;
 
 	// パイプラインステートを生成.
 	hr = pDevice->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(m_pPSO.GetAddressOf()));
@@ -152,17 +152,16 @@ void ToneMap::DrawTonemap(ID3D12GraphicsCommandList* pCmd, int frameindex, Color
 
 	// 定数バッファ更新
 	{
-		auto ptr = m_CB[frameindex].GetPtr<CbTonemap>();
-		ptr->Type = m_TonemapType;
-		ptr->ColorSpace = m_ColorSpace;
+		auto ptr           = m_CB[frameindex].GetPtr<CbTonemap>();
+		ptr->Type          = m_TonemapType;
+		ptr->ColorSpace    = m_ColorSpace;
 		ptr->BaseLuminance = m_BaseLuminance;
-		ptr->MaxLuminance = m_MaxLuminance;
+		ptr->MaxLuminance  = m_MaxLuminance;
 	}
 
 	pCmd->SetGraphicsRootSignature(m_RootSig.GetPtr());
 	pCmd->SetGraphicsRootDescriptorTable(0, m_CB[frameindex].GetHandleGPU());
 	pCmd->SetGraphicsRootDescriptorTable(1, colorSource.GetHandleSRV()->HandleGPU);
-
 	pCmd->SetPipelineState(m_pPSO.Get());
 	pCmd->RSSetViewports(1, viewport);
 	pCmd->RSSetScissorRects(1, scissor);

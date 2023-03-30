@@ -129,24 +129,24 @@ bool ColorTarget::Init
 	}
 
 	D3D12_HEAP_PROPERTIES prop = {};
-	prop.Type = D3D12_HEAP_TYPE_DEFAULT;
-	prop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	prop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-	prop.CreationNodeMask = 1;
-	prop.VisibleNodeMask = 1;
+	prop.Type                  = D3D12_HEAP_TYPE_DEFAULT;
+	prop.CPUPageProperty       = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	prop.MemoryPoolPreference  = D3D12_MEMORY_POOL_UNKNOWN;
+	prop.CreationNodeMask      = 1;
+	prop.VisibleNodeMask       = 1;
 
 	D3D12_RESOURCE_DESC desc = {};
-	desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	desc.Alignment = 0;
-	desc.Width = UINT64(width);
-	desc.Height = height;
-	desc.DepthOrArraySize = 1;
-	desc.MipLevels = 1;
-	desc.Format = format;
-	desc.SampleDesc.Count = 1;
-	desc.SampleDesc.Quality = 0;
-	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	desc.Dimension           = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	desc.Alignment           = 0;
+	desc.Width               = UINT64(width);
+	desc.Height              = height;
+	desc.DepthOrArraySize    = 1;
+	desc.MipLevels           = 1;
+	desc.Format              = format;
+	desc.SampleDesc.Count    = 1;
+	desc.SampleDesc.Quality  = 0;
+	desc.Layout              = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	desc.Flags               = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
 	m_ClearColor[0] = clearColor[0];
 	m_ClearColor[1] = clearColor[1];
@@ -172,21 +172,21 @@ bool ColorTarget::Init
 		return false;
 	}
 
-	m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-	m_RTVDesc.Format = format;
-	m_RTVDesc.Texture2D.MipSlice = 0;
+	m_RTVDesc.ViewDimension        = D3D12_RTV_DIMENSION_TEXTURE2D;
+	m_RTVDesc.Format               = format;
+	m_RTVDesc.Texture2D.MipSlice   = 0;
 	m_RTVDesc.Texture2D.PlaneSlice = 0;
 
 	pDevice->CreateRenderTargetView(m_pTarget.Get(), &m_RTVDesc, m_pHandleRTV->HandleCPU);
 
 	if (pPoolSRV != nullptr)
 	{
-		m_SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		m_SRVDesc.Format = format;
-		m_SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		m_SRVDesc.Texture2D.MostDetailedMip = 0;
-		m_SRVDesc.Texture2D.MipLevels = 1;
-		m_SRVDesc.Texture2D.PlaneSlice = 0;
+		m_SRVDesc.ViewDimension                 = D3D12_SRV_DIMENSION_TEXTURE2D;
+		m_SRVDesc.Format                        = format;
+		m_SRVDesc.Shader4ComponentMapping       = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		m_SRVDesc.Texture2D.MostDetailedMip     = 0;
+		m_SRVDesc.Texture2D.MipLevels           = 1;
+		m_SRVDesc.Texture2D.PlaneSlice          = 0;
 		m_SRVDesc.Texture2D.ResourceMinLODClamp = 0;
 
 		pDevice->CreateShaderResourceView(m_pTarget.Get(), &m_SRVDesc, m_pHandleSRV->HandleCPU);
@@ -239,9 +239,9 @@ bool ColorTarget::InitFromBackBuffer
 		format = ConvertToSRGB(format);
 	}
 
-	m_RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-	m_RTVDesc.Format = format;
-	m_RTVDesc.Texture2D.MipSlice = 0;
+	m_RTVDesc.ViewDimension        = D3D12_RTV_DIMENSION_TEXTURE2D;
+	m_RTVDesc.Format               = format;
+	m_RTVDesc.Texture2D.MipSlice   = 0;
 	m_RTVDesc.Texture2D.PlaneSlice = 0;
 
 	pDevice->CreateRenderTargetView(m_pTarget.Get(), &m_RTVDesc, m_pHandleRTV->HandleCPU);

@@ -128,10 +128,10 @@ private:
 	// private variables.
 	//=========================================================================
 	ComPtr<ID3D12Resource>          m_pTarget;          //!< リソースです.
-	DescriptorHandle* m_pHandleDSV;       //!< ディスクリプタハンドル(DSV用)です.
-	DescriptorHandle* m_pHandleSRV;       //!< ディスクリプタハンドル(SRV用)です.
-	DescriptorPool* m_pPoolDSV;         //!< ディスクリプタプール(DSV用)です.
-	DescriptorPool* m_pPoolSRV;         //!< ディスクリプタプール(SRV用)です.
+	DescriptorHandle*				m_pHandleDSV;       //!< ディスクリプタハンドル(DSV用)です.
+	DescriptorHandle*				m_pHandleSRV;       //!< ディスクリプタハンドル(SRV用)です.
+	DescriptorPool*					m_pPoolDSV;         //!< ディスクリプタプール(DSV用)です.
+	DescriptorPool*					m_pPoolSRV;         //!< ディスクリプタプール(SRV用)です.
 	D3D12_DEPTH_STENCIL_VIEW_DESC   m_DSVDesc;          //!< 深度ステンシルビューの設定です.
 	D3D12_SHADER_RESOURCE_VIEW_DESC m_SRVDesc;          //!< シェーダリソースビューの設定.
 	float                           m_ClearDepth;
