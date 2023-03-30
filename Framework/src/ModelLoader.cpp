@@ -32,7 +32,7 @@ bool Model::LoadModel(std::wstring filePath, ComPtr<ID3D12Device> pDevice, Descr
 
 		std::wstring shaderKey = res[i].ShaderKey;
 
-		Shader* p = manager.GetShader(shaderKey.c_str());
+		ModelShader* p = manager.GetShader(shaderKey.c_str());
 		if (p == nullptr) {
 			ELOG("Error : Shader Loading Failed = %ls ", shaderKey.c_str());
 			// return false;

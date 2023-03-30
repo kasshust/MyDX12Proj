@@ -15,12 +15,14 @@
 #include <SphereMapConverter.h>
 #include <Camera.h>
 #include <RootSignature.h>
-#include <ToneMap.h>
 #include <CommonBufferManager.h>
 #include <CommonRTVManager.h>
 #include <Shaders.h>
 #include <SkyTextureManager.h>
 #include <ModelLoader.h>
+
+#include <ToneMap.h>
+#include <ShadowMap.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // SampleApp class
@@ -64,6 +66,8 @@ private:
 	CommonRTManager                 m_CommonRTManager;
 	CommonBufferManager             m_CommonBufferManager;
 	SkyManager						m_SkyManager;
+
+	ShadowMap						m_ShadowMap;
 	ToneMap                         m_ToneMap;
 	Camera                          m_Camera;
 
@@ -126,5 +130,5 @@ private:
 	//-------------------------------------------------------------------------
 	//! @brief      モデルを描画します.
 	//-------------------------------------------------------------------------
-	void DrawModel(ID3D12GraphicsCommandList* pCmd, Model& loader, Shader& shader);
+	void DrawModel(ID3D12GraphicsCommandList* pCmd, Model& loader, ModelShader& shader);
 };

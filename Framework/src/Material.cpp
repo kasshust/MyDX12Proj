@@ -182,7 +182,7 @@ void Material::Term()
 	}
 }
 
-bool Material::SetShaderPtr(Shader* pShader) {
+bool Material::SetShaderPtr(ModelShader* pShader) {
 	if (pShader == nullptr) return false;
 
 	m_pShader = pShader;

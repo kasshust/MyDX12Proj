@@ -6,7 +6,7 @@
 #include <RootSignature.h>
 #include <PostEffect.h>
 
-class ToneMap : PostEffect {
+class ToneMap : public PostEffect {
 public:
 	///////////////////////////////////////////////////////////////////////////////
 	// COLOR_SPACE_TYPE enum
@@ -56,11 +56,13 @@ public:
 
 private:
 
+	const wchar_t* m_VSPath = L"QuadVS.cso";
+	const wchar_t* m_PSPath = L"TonemapPS.cso";
+
 	int                             m_ColorSpace;                   //!< 出力色空間
 	float                           m_BaseLuminance;                //!< 基準輝度値.
 	float                           m_MaxLuminance;                 //!< 最大輝度値.
 
 	bool CreateRootSig(ComPtr<ID3D12Device> pDevice) override;
 	bool CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format)  override;
-	bool CreateConstantBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool)  override;
 };

@@ -278,3 +278,4 @@ std::wstring GetDirectoryPathW(const wchar_t* filePath)
 
 	return std::wstring();
 }
+

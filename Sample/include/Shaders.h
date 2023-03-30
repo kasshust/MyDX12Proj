@@ -7,9 +7,9 @@
 #include <Material.h>
 #include <CommonBufferManager.h>
 #include <IBLBaker.h>
-#include <Shader.h>
+#include <ModelShader.h>
 
-class BasicShader : public Shader {
+class BasicShader : public ModelShader {
 public:
 	void SetShader(
 		ID3D12GraphicsCommandList* pCmd,

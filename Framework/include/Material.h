@@ -13,11 +13,11 @@
 #include <Texture.h>
 #include <ConstantBuffer.h>
 #include <map>
-#include <Shader.h>
+#include <ModelShader.h>
 #include <CommonBufferManager.h>
 #include <SkyTextureManager.h>
 
-class Shader;
+class ModelShader;
 class CommonBufferManager;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -95,7 +95,7 @@ public:
 	//-------------------------------------------------------------------------
 	void Term();
 
-	bool SetShaderPtr(Shader* pShader);
+	bool SetShaderPtr(ModelShader* pShader);
 	bool SetMaterial(ID3D12GraphicsCommandList* pCmd, int frameindex, Material& mat, int id, const ConstantBuffer* meshCB, const CommonBufferManager& commonbufmanager, const SkyManager& skyManager);
 
 	//-------------------------------------------------------------------------
@@ -198,7 +198,7 @@ private:
 	//=========================================================================
 	std::map<std::wstring, Texture*>    m_pTexture;     //!< テクスチャです.
 	std::vector<Subset>                 m_Subset;       //!< サブセットです.
-	Shader*								m_pShader;
+	ModelShader*								m_pShader;
 	ID3D12Device* m_pDevice;      //!< デバイスです.
 	DescriptorPool* m_pPool;        //!< ディスクリプタプールです(CBV_UAV_SRV).
 

@@ -9,11 +9,12 @@
 #include <CommonBufferManager.h>
 #include <Material.h>
 #include <SkyTextureManager.h>
+#include <Renderer.h>
 
 class Material;
 class CommonBufferManager;
 
-class Shader {
+class ModelShader : public Renderer {
 public:
 	bool Init(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat);
 	void Term();
@@ -26,10 +27,4 @@ public:
 		const CommonBufferManager& commonbufmanager,
 		const SkyManager& manager
 	)  = 0;
-
-protected:
-	ComPtr<ID3D12PipelineState>     m_pPSO;                    //!< シーン用パイプラインステートです.
-	RootSignature                   m_RootSig;                 //!< シーン用ルートシグニチャです.
-	virtual bool CreateRootSig(ComPtr<ID3D12Device> pDevice) { return false; };
-	virtual bool CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat) { return false; };
 };

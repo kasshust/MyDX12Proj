@@ -4,7 +4,7 @@
 #include <Material.h>
 #include <Mesh.h>
 #include <ConstantBuffer.h>
-#include <Shader.h>
+#include <ModelShader.h>
 #include <ResourceManager.h>
 #include <SkyTextureManager.h>
 

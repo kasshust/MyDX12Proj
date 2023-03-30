@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Material.h>
-#include <Shader.h>
+#include <ModelShader.h>
 
 class ShaderedMaterial {
 public:
@@ -14,10 +14,10 @@ public:
 		const IBLBaker& baker
 	);
 
-	bool Init(const Material* mat, const Shader* shader);
+	bool Init(const Material* mat, const ModelShader* shader);
 
 protected:
 
 	const Material* m_Material;
-	const Shader* m_Shader;
+	const ModelShader* m_Shader;
 };

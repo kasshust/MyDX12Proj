@@ -34,7 +34,7 @@ public:
 	bool CreateMesh(ComPtr<ID3D12Device> pDevice, const std::wstring key, std::vector<ResMesh> resMesh);
 	bool CreateMaterial(ComPtr<ID3D12Device> pDevice, const std::wstring key, std::vector<ResMaterial> resMaterial, DescriptorPool* resPool);
 
-	void AddShader(	const std::wstring path,Shader* shader	);
+	void AddShader(	const std::wstring path,ModelShader* shader	);
 
 
 
@@ -44,7 +44,7 @@ public:
 	std::vector<ResMaterial>	GetResMaterial(const std::wstring& path);
 	std::vector<Mesh*>			GetMesh(const std::wstring& path);
 	std::vector<Material*>		GetMaterial(const std::wstring& path);
-	Shader*						GetShader(const std::wstring& key);
+	ModelShader*						GetShader(const std::wstring& key);
 
 
 	const std::unordered_map<std::wstring, Texture*> GetTexturesMap();
@@ -63,7 +63,7 @@ public:
 
 
 private:
-	std::unordered_map<std::wstring, Shader*>									 m_pShaders{};
+	std::unordered_map<std::wstring, ModelShader*>									 m_pShaders{};
 	std::unordered_map<std::wstring, Texture*>                                 m_Textures{};
 
 	std::unordered_map<std::wstring, std::vector<Mesh*>>                       m_pMeshs{};

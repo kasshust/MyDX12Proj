@@ -1,27 +1,22 @@
-#include "ToneMap.h"
 #include "DirectXHelpers.h"
+#include <ShadowMap.h>
 #include "Logger.h"
-#include "App.h"
 #include <FileUtil.h>
-
 #include <CommonStates.h>
+#include <Renderer.h>
 
-bool ToneMap::Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format)
+bool ShadowMap::Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format)
 {
 	if (!CreateRootSig(pDevice))                                             return false;
 	if (!CreatePipeLineState(pDevice, rtv_format, dsv_format))               return false;
-	if (!CreateConstantBuffer(pDevice, pool, m_CB, sizeof(CbTonemap)))		 return false;
-
-	m_TonemapType   = (TONEMAP_GT);
-	m_ColorSpace    = (COLOR_SPACE_BT709);
-	m_BaseLuminance = (100.0f);
-	m_MaxLuminance  = (100.0f);
+	if (!CreateConstantBuffer(pDevice, pool, m_CB, sizeof(CbDepthShadowMap)))return false;
 
 	return true;
 }
 
-bool ToneMap::CreateRootSig(ComPtr<ID3D12Device> pDevice) {
+bool ShadowMap::CreateRootSig(ComPtr<ID3D12Device> pDevice) {
 	RootSignature::Desc desc;
+	
 	desc.Begin(2)
 		.SetCBV(ShaderStage::PS, 0, 0)
 		.SetSRV(ShaderStage::PS, 1, 0)
@@ -30,18 +25,16 @@ bool ToneMap::CreateRootSig(ComPtr<ID3D12Device> pDevice) {
 		.End();
 
 	if (!InitRootSignature(pDevice, desc, m_RootSig)) return false;
-
+	
 	return true;
 }
 
-bool ToneMap::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format) {
+bool ShadowMap::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format) {
+	
 	std::wstring vsPath;
-	std::wstring psPath;
 	ComPtr<ID3DBlob> pVSBlob;
-	ComPtr<ID3DBlob> pPSBlob;
 
 	if (!SearchAndLoadShader(m_VSPath, pVSBlob)) return false;
-	if (!SearchAndLoadShader(m_PSPath, pPSBlob)) return false;
 
 	D3D12_INPUT_ELEMENT_DESC elements[] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -53,7 +46,6 @@ bool ToneMap::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtv_
 	desc.InputLayout                        = { elements, 2 };
 	desc.pRootSignature                     = m_RootSig.GetPtr();
 	desc.VS                                 = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
-	desc.PS                                 = { pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize() };
 	desc.RasterizerState                    = DirectX::CommonStates::CullNone;
 	desc.BlendState                         = DirectX::CommonStates::Opaque;
 	desc.DepthStencilState                  = DirectX::CommonStates::DepthDefault;
@@ -72,7 +64,7 @@ bool ToneMap::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtv_
 }
 
 
-void ToneMap::Term()
+void ShadowMap::Term()
 {
 	for (auto i = 0; i < App::FrameCount; ++i)
 	{
@@ -83,56 +75,38 @@ void ToneMap::Term()
 }
 
 
-void ToneMap::DrawTonemap(ID3D12GraphicsCommandList* pCmd, int frameindex, ColorTarget& colorDest, DepthTarget& depthDest, ColorTarget& colorSource, D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, VertexBuffer& vb)
+void ShadowMap::DrawShadowMap(
+	ID3D12GraphicsCommandList*	pCmd, 
+	DepthTarget&				depthDest, 
+	D3D12_VIEWPORT*				viewport, 
+	D3D12_RECT*					scissor, 
+	VertexBuffer&				vb
+)
 {
-	// 書き込み用リソースバリア設定.
-	DirectX::TransitionResource(pCmd,
-		colorDest.GetResource(),
-		D3D12_RESOURCE_STATE_PRESENT,
-		D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	// ディスクリプタ取得.
-	auto handleRTV = colorDest.GetHandleRTV();
 	auto handleDSV = depthDest.GetHandleDSV();
 
 	// レンダーターゲットを設定.
-	pCmd->OMSetRenderTargets(1, &handleRTV->HandleCPU, FALSE, &handleDSV->HandleCPU);
+	pCmd->OMSetRenderTargets(0, 0, FALSE, &handleDSV->HandleCPU);
 
 	// レンダーターゲットをクリア.
-	colorDest.ClearView(pCmd);
 	depthDest.ClearView(pCmd);
 
-	// 定数バッファ更新
-	{
-		auto ptr           = m_CB[frameindex].GetPtr<CbTonemap>();
-		ptr->Type          = m_TonemapType;
-		ptr->ColorSpace    = m_ColorSpace;
-		ptr->BaseLuminance = m_BaseLuminance;
-		ptr->MaxLuminance  = m_MaxLuminance;
-	}
-
-	pCmd->SetGraphicsRootSignature(m_RootSig.GetPtr());
-	pCmd->SetGraphicsRootDescriptorTable(0, m_CB[frameindex].GetHandleGPU());
-	pCmd->SetGraphicsRootDescriptorTable(1, colorSource.GetHandleSRV()->HandleGPU);
-	pCmd->SetPipelineState(m_pPSO.Get());
+	// ビューポート設定.
 	pCmd->RSSetViewports(1, viewport);
 	pCmd->RSSetScissorRects(1, scissor);
 
-	pCmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pCmd->IASetVertexBuffers(0, 1, &vb.GetView());
 
-	pCmd->DrawInstanced(3, 1, 0, 0);
+	//　ここにSetShadowMapShaderのセッティング
 
-	// 表示用リソースバリア設定.
-	DirectX::TransitionResource(pCmd,
-		colorDest.GetResource(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET,
-		D3D12_RESOURCE_STATE_PRESENT);
+	// シーンの描画.
+	/*
+	for (size_t i = 0; i < m_GameObjects.size(); i++) {
+		GameObject* g = m_GameObjects[i];
+		g->m_Model.UpdateWorldMatrix(m_FrameIndex, g->Transform().GetTransform());
+		g->m_Model.DrawModel(pCmd, m_FrameIndex, m_CommonBufferManager, m_SkyManager);
+		// g->m_Model.DrawModelRaw(pCmd, m_FrameIndex);
+	}
+	*/
 }
-
-void ToneMap::SetLuminance(float base, float max)
-{
-	m_BaseLuminance = base;
-	m_MaxLuminance = max;
-}
-

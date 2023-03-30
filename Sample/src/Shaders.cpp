@@ -3,7 +3,9 @@
 #include <CommonStates.h>
 #include <FileUtil.h>
 #include <ModelLoader.h>
+#include <Renderer.h>
 #include "Shaders.h"
+
 
 // BasicShader
 bool BasicShader::CreateRootSig(ComPtr<ID3D12Device> pDevice) {
@@ -38,50 +40,18 @@ bool BasicShader::CreateRootSig(ComPtr<ID3D12Device> pDevice) {
 		.AllowIL()
 		.End();
 
-	if (!m_RootSig.Init(pDevice.Get(), desc.GetDesc()))
-	{
-		ELOG("Error : RootSignature::Init() Failed.");
-		return false;
-	}
+	if (!InitRootSignature(pDevice, desc, m_RootSig)) return false;
 
 	return true;
 }
 bool BasicShader::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat) {
 	std::wstring vsPath;
 	std::wstring psPath;
-
-	// 頂点シェーダを検索.
-	if (!SearchFilePath(m_VSPath, vsPath))
-	{
-		ELOG("Error : Vertex Shader Not Found.");
-		return false;
-	}
-
-	// ピクセルシェーダを検索.
-	if (!SearchFilePath(m_PSPath, psPath))
-	{
-		ELOG("Error : Pixel Shader Node Found.");
-		return false;
-	}
-
 	ComPtr<ID3DBlob> pVSBlob;
 	ComPtr<ID3DBlob> pPSBlob;
 
-	// 頂点シェーダを読み込む.
-	auto hr = D3DReadFileToBlob(vsPath.c_str(), pVSBlob.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ELOG("Error : D3DReadFiledToBlob() Failed. path = %ls", vsPath.c_str());
-		return false;
-	}
-
-	// ピクセルシェーダを読み込む.
-	hr = D3DReadFileToBlob(psPath.c_str(), pPSBlob.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ELOG("Error : D3DReadFileToBlob() Failed. path = %ls", psPath.c_str());
-		return false;
-	}
+	if (!SearchAndLoadShader(m_VSPath, pVSBlob)) return false;
+	if (!SearchAndLoadShader(m_PSPath, pPSBlob)) return false;
 
 	D3D12_INPUT_ELEMENT_DESC elements[] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -109,12 +79,7 @@ bool BasicShader::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT 
 	desc.SampleDesc.Quality = 0;
 
 	// パイプラインステートを生成.
-	hr = pDevice->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(m_pPSO.GetAddressOf()));
-	if (FAILED(hr))
-	{
-		ELOG("Error : ID3D12Device::CreateGraphicsPipelineState() Failed. retcode = 0x%x", hr);
-		return false;
-	}
+	if (!CreateGraphicsPipelineState(pDevice, desc, m_pPSO))return false;
 
 	return true;
 }

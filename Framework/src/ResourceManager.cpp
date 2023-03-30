@@ -9,14 +9,14 @@ void AppResourceManager::Release() {
 
 void AppResourceManager::AddShader(
 	const std::wstring			path,
-	Shader*					shader
+	ModelShader*					shader
 )
 {
 	if (shader == nullptr) return ;
 	m_pShaders[path] = shader;
 }
 
-Shader* AppResourceManager::GetShader(
+ModelShader* AppResourceManager::GetShader(
 	const std::wstring& path
 )
 {

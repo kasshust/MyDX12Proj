@@ -52,13 +52,13 @@ bool SampleApp::OnInit()
 
 	if (!CommonInit()) return false;
 
-	// ポストプロセス初期化
+	// if (!m_ShadowMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format)) return false;
 	if (!m_ToneMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format))    return false;
 	if (!m_SkyManager.IBLBake(m_pDevice, m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_CommandList, m_pQueue, m_Fence)) return false;
 
 	// GameObject/Model
 	AppResourceManager& manager = AppResourceManager::GetInstance();
-	Shader* ptr                 = new BasicShader();
+	ModelShader* ptr                 = new BasicShader();
 	ptr->Init(m_pDevice, m_CommonRTManager.m_SceneColorTarget.GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format);
 	manager.AddShader(L"basic", ptr);
 
@@ -99,6 +99,7 @@ void SampleApp::OnTerm()
 	m_GameObjects.clear();
 
 	m_ToneMap.Term();
+	m_ShadowMap.Term();
 	m_CommonBufferManager.Term();
 	m_CommonRTManager.Term();
 	m_SkyManager.Term();
@@ -349,46 +350,7 @@ void SampleApp::UpdateCamera() {
 }
 
 void SampleApp::RenderShadowMap(ID3D12GraphicsCommandList* pCmd, DepthTarget& depthDest) {
-	// 書き込み用リソースバリア設定. 同じなのでリソースバリアは設定されない。
-	/*
-	DirectX::TransitionResource(pCmd,
-		depthDest.GetResource(),
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	*/
-	
-	// ディスクリプタ取得.
-	auto handleDSV = depthDest.GetHandleDSV();
-
-	// レンダーターゲットを設定.
-	pCmd->OMSetRenderTargets(0, 0, FALSE, &handleDSV->HandleCPU);
-
-	// レンダーターゲットをクリア.
-	depthDest.ClearView(pCmd);
-
-	// ビューポート設定.
-	pCmd->RSSetViewports(1,		&m_Viewport);
-	pCmd->RSSetScissorRects(1,	&m_Scissor);
-
-
-	//　ここにSetShadowMapShaderのセッティング
-
-	// シーンの描画.
-	for (size_t i = 0; i < m_GameObjects.size(); i++) {
-		GameObject* g = m_GameObjects[i];
-		g->m_Model.UpdateWorldMatrix(m_FrameIndex, g->Transform().GetTransform());
-		g->m_Model.DrawModel(pCmd, m_FrameIndex, m_CommonBufferManager, m_SkyManager);
-		// g->m_Model.DrawModelRaw(pCmd, m_FrameIndex);
-	}
-
-	// 読み込み用リソースバリア設定.
-	
-	/*
-	DirectX::TransitionResource(pCmd,
-		depthDest.GetResource(),
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	*/
+	// m_ShadowMap.DrawShadowMap(pCmd, depthDest, &m_Viewport, &m_Scissor);
 }
 
 void SampleApp::RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& colorDest, DepthTarget& depthDest,SkyManager& skyManager)

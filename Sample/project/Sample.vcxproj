@@ -115,6 +115,10 @@
       <VariableName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">QuadVS</VariableName>
       <HeaderFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)..\res\Compiled\QuadVS.inc</HeaderFileOutput>
     </FxCompile>
+    <FxCompile Include="DepthShadow.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A88A593E-C64E-4A4C-900E-FB039A6C17DD}</ProjectGuid>

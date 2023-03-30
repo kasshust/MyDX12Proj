@@ -31,6 +31,9 @@
     <Filter Include="リソース ファイル\Tonemap">
       <UniqueIdentifier>{c8d32c73-47ae-4d78-b82c-a0dee7b9e365}</UniqueIdentifier>
     </Filter>
+    <Filter Include="リソース ファイル\Shadow">
+      <UniqueIdentifier>{fecbafa5-7971-4e6f-8ecf-3718a52d777d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp">
@@ -102,6 +105,9 @@
     </FxCompile>
     <FxCompile Include="..\res\TonemapPS.hlsl">
       <Filter>リソース ファイル\Tonemap</Filter>
+    </FxCompile>
+    <FxCompile Include="DepthShadow.hlsl">
+      <Filter>リソース ファイル\Shadow</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>
