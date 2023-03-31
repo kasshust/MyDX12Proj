@@ -22,8 +22,8 @@ struct VS_INPUT
 float4 main(VS_INPUT input) : SV_POSITION
 {
     float4 Pos = float4(input.Position, 1.0f);
-    Pos = mul(Pos, World);
-    Pos = mul(Pos, LightVP);
+    Pos = mul(World, Pos);
+    Pos = mul(LightVP, Pos);
 
     return Pos;
 }

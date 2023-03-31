@@ -54,11 +54,13 @@ VSOutput main(VSInput input)
     // 基底変換行列の逆行列.
     output.InvTangentBasis = transpose(float3x3(T, B, N));
     
-    float4 LvpPos = mul(worldPos, LightVP);
-    LvpPos.xyz = LvpPos.xyz / LvpPos.w;
-    output.PosSM.x = (1.0f + LvpPos.x) / 2.0f;
-    output.PosSM.y = (1.0f - LvpPos.y) / 2.0f;
-    output.PosSM.z = LvpPos.z;
+    // シャドウの計算
+    // float4 _worldPos    = mul(World, localPos);
+    float4 LvpPos       = mul(LightVP, worldPos);
+    LvpPos.xyz          = LvpPos.xyz / LvpPos.w;
+    output.PosSM.x      = (1.0f + LvpPos.x) / 2.0f;
+    output.PosSM.y      = (1.0f - LvpPos.y) / 2.0f;
+    output.PosSM.z      = LvpPos.z;
 
     return output;
 }

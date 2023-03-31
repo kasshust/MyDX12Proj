@@ -162,10 +162,10 @@ PSOutput main(VSOutput input)
     lit += EvaluateIBLDiffuse(N) * Kd;
     lit += EvaluateIBLSpecular(NV, N, R, Ks, roughness, TextureSize, MipCount);
 
-    float3 TestLit = saturate(dot(N, normalize(LightDirection))) * float3(0.3f, 0.3f, 0.3f) * LightIntensity;
+    float3 TestLit = saturate(dot(N, normalize(LightDirection))) * TestCustomParam.xyz * LightIntensity;
     
     float sm = ShadowMap.Sample(ShadowSmp, input.PosSM.xy);
-    float sma = (input.PosSM.z - 0.005f < sm) ? 1.0f : 0.1f;
+    float sma = (input.PosSM.z - 0.005f < sm) ? 1.0f : 0.0f;
     
     output.Color.rgb = lit * LightIntensity * sma + TestLit;
     output.Color.a   = 1.0f;

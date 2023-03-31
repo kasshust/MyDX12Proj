@@ -39,7 +39,8 @@ void ShadowMap::UpdateConstantBuffer(int frameindex, Vector3 lighrDir) {
 	}
 		
 	// World→Lightに規定変換し、プロジェクションでぺちゃんこに
-	XMFLOAT3 lightPos = lighrDir*10.0f;
+	// XMFLOAT3 lightPos = lighrDir*10.0f;
+	XMFLOAT3 lightPos = { 2.0f, 6.5f, -1.0f };
 	XMFLOAT3 lightDest = { 0.0f, 0.0f, 0.0f };
 	XMMATRIX view = XMMatrixLookAtLH(
 		{ lightPos.x, lightPos.y, lightPos.z },
@@ -47,7 +48,9 @@ void ShadowMap::UpdateConstantBuffer(int frameindex, Vector3 lighrDir) {
 		{ 0.0f, 1.0f, 0.0f }
 	);
 
-	XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0f), 1.0f, 1.0f, 15.0f);
+	// XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0f), 1.0f, 1.0f, 15.0f);
+	XMMATRIX projection = XMMatrixOrthographicLH(1.0f,1.0f,0.1,100.0f);
+
 	XMFLOAT4X4 mat;
 	XMStoreFloat4x4(&mat, XMMatrixTranspose(view * projection));
 
@@ -72,7 +75,7 @@ bool ShadowMap::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rt
 	desc.InputLayout                        = { elements, _countof(elements) };
 	desc.pRootSignature                     = m_RootSig.GetPtr();
 	desc.VS                                 = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
-	desc.RasterizerState                    = DirectX::CommonStates::CullCounterClockwise;						//表のみ
+	desc.RasterizerState                    = DirectX::CommonStates::CullNone;						//表のみ
 	desc.BlendState                         = DirectX::CommonStates::Opaque;
 	desc.DepthStencilState                  = DirectX::CommonStates::DepthDefault;
 	desc.SampleMask                         = UINT_MAX;

@@ -141,19 +141,30 @@ void CommonBufferManager::UpdateLightBufferVP(int frameindex, Vector3 direction)
 		return;
 	}
 
-	XMFLOAT3 lightPos = -direction * 40.0f;
+	XMFLOAT3 lightPos = direction * 100.0f;
+
 	XMFLOAT3 lightDest = { 0.0f, 0.0f, 0.0f };
+	
 	XMMATRIX view = XMMatrixLookAtLH(
 		{ lightPos.x, lightPos.y, lightPos.z },
 		{ lightDest.x, lightDest.y, lightDest.z },
 		{ 0.0f, 1.0f, 0.0f }
 	);
+	
+	/*
+	XMMATRIX view = Matrix::CreateLookAt(
+		lightPos,
+		lightDest,
+		{ 0.0f, 1.0f, 0.0f }
+	);
+	*/
 
-	XMMATRIX projection = XMMatrixOrthographicLH(3.0f, 3.0f, 0.1f, 100.0f);
+	// XMMATRIX projection = Matrix::CreateOrthographic(10.0f, 10.0f, 0.1f, 100.0f);
+	XMMATRIX projection = XMMatrixOrthographicLH(10.0f, 10.0f, 0.1f, 200.0f);
 
 	// XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0f), 1.0f, 1.0f, 100.0f);
 	XMFLOAT4X4 mat;
-	XMStoreFloat4x4(&mat, XMMatrixTranspose(view * projection));
+	XMStoreFloat4x4(&mat, view * XMMatrixTranspose(projection) );
 
 	ptr->LightVP = mat;
 }

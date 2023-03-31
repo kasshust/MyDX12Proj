@@ -58,7 +58,7 @@ bool CommonRTManager::Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* rtvpool
 {
 	if (!CreateColorTarget(pDevice, rtvpool, respool, width, height))   return false;
 	if (!CreateDepthTarget(pDevice, dsvpool, respool, width, height))            return false;
-	if (!CreateShadowTarget(pDevice, dsvpool, respool, 1024	, 1024))			return false;
+	if (!CreateShadowTarget(pDevice, dsvpool, respool, width, height))			return false;
 
 	return true;
 }
