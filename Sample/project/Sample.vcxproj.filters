@@ -34,6 +34,9 @@
     <Filter Include="リソース ファイル\Shadow">
       <UniqueIdentifier>{fecbafa5-7971-4e6f-8ecf-3718a52d777d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="リソース ファイル\Common">
+      <UniqueIdentifier>{b07f2df8-6206-4c97-ad5f-ebecadb3d88b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp">
@@ -71,6 +74,15 @@
       <Filter>リソース ファイル</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="..\res\CameraBuffer.hlsli">
+      <Filter>リソース ファイル\Common</Filter>
+    </None>
+    <None Include="..\res\CommonLightBuffer.hlsli">
+      <Filter>リソース ファイル\Common</Filter>
+    </None>
+    <None Include="..\res\VSCommonBuffer.hlsli">
+      <Filter>リソース ファイル\Common</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\res\QuadVS.hlsl">
@@ -106,7 +118,7 @@
     <FxCompile Include="..\res\TonemapPS.hlsl">
       <Filter>リソース ファイル\Tonemap</Filter>
     </FxCompile>
-    <FxCompile Include="DepthShadow.hlsl">
+    <FxCompile Include="..\res\DepthShadow.hlsl">
       <Filter>リソース ファイル\Shadow</Filter>
     </FxCompile>
   </ItemGroup>

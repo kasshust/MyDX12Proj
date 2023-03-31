@@ -8,7 +8,8 @@
 // Includes
 //-----------------------------------------------------------------------------
 #include "BRDF.hlsli"
-
+#include "CameraBuffer.hlsli"
+#include "CommonLightBuffer.hlsli"
 
 ///////////////////////////////////////////////////////////////////////////////
 // VSOutput structure
@@ -16,6 +17,7 @@
 struct VSOutput
 {
     float4      Position        : SV_POSITION;          // 位置座標です.
+    float4      PosSM           : POSITION_SM;          // 
     float2      TexCoord        : TEXCOORD;             // テクスチャ座標です.
     float3      WorldPos        : WORLD_POS;            // ワールド空間の位置座標です.
     float3x3    InvTangentBasis : INV_TANGENT_BASIS;    // 接線空間への基底変換行列の逆行列です.
@@ -27,32 +29,13 @@ struct VSOutput
 struct PSOutput
 {
     float4  Color : SV_TARGET0;     // 出力カラーです.
-    // float   Depth : SV_Depth;
 };
 
-///////////////////////////////////////////////////////////////////////////////
-// Light constant buffer.
-///////////////////////////////////////////////////////////////////////////////
-cbuffer CbLight : register(b1)
-{
-    float   TextureSize     : packoffset(c0);   // テクスチャサイズです.
-    float   MipCount        : packoffset(c0.y); // ミップカウントです.
-    float   LightIntensity  : packoffset(c0.z); // ライト強度(スケール値).
-    float3  LightDirection  : packoffset(c1);   // ディレクショナルライトの方向.
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// Camera constant buffer.
-///////////////////////////////////////////////////////////////////////////////
-cbuffer CbCamera : register(b2)
-{
-    float3 CameraPosition : packoffset(c0);     // カメラ位置です.
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Custom constant buffer
 ///////////////////////////////////////////////////////////////////////////////
-cbuffer CbCustom : register(b3)
+cbuffer CbCustom : register(b4)
 {
     float4 TestCustomParam : packoffset(c0);
 };
@@ -87,6 +70,10 @@ SamplerState RoughnessSmp    : register(s5);
 // 法線マップ.
 Texture2D    NormalMap       : register(t6);
 SamplerState NormalSmp       : register(s6);
+
+// シャドウマップ
+Texture2D    ShadowMap      : register(t9);
+SamplerState ShadowSmp      : register(s9);
 
 
 //-----------------------------------------------------------------------------
@@ -175,12 +162,14 @@ PSOutput main(VSOutput input)
     lit += EvaluateIBLDiffuse(N) * Kd;
     lit += EvaluateIBLSpecular(NV, N, R, Ks, roughness, TextureSize, MipCount);
 
-    float3 TestLit = saturate(dot(N, normalize(LightDirection))) * TestCustomParam.xyz * LightIntensity;
+    float3 TestLit = saturate(dot(N, normalize(LightDirection))) * float3(0.3f, 0.3f, 0.3f) * LightIntensity;
     
-    output.Color.rgb = lit * LightIntensity + TestLit;
+    float sm = ShadowMap.Sample(ShadowSmp, input.PosSM.xy);
+    float sma = (input.PosSM.z - 0.005f < sm) ? 1.0f : 0.1f;
+    
+    output.Color.rgb = lit * LightIntensity * sma + TestLit;
     output.Color.a   = 1.0f;
     
-    // output.Depth = length(input.WorldPos.xyz - CameraPosition.xyz);
     
     return output;
 }

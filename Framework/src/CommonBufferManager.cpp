@@ -4,6 +4,7 @@
 #include "CommonStates.h"
 #include "DirectXHelpers.h"
 #include "SimpleMath.h"
+using namespace DirectX;
 
 //-----------------------------------------------------------------------------
 // Using Statements
@@ -129,6 +130,32 @@ void CommonBufferManager::UpdateLightBuffer(int frameindex, float texSize, float
 	ptr->MipCount		= mipCount;
 	ptr->LightDirection = direction;
 	ptr->LightIntensity = intensity;
+
+}
+
+void CommonBufferManager::UpdateLightBufferVP(int frameindex, Vector3 direction) {
+	auto ptr = m_LightCB[frameindex].GetPtr<CommonCb::CbLight>();
+	
+	// LVP‚ÌXV
+	if (direction.Length() == 0) {
+		return;
+	}
+
+	XMFLOAT3 lightPos = -direction * 40.0f;
+	XMFLOAT3 lightDest = { 0.0f, 0.0f, 0.0f };
+	XMMATRIX view = XMMatrixLookAtLH(
+		{ lightPos.x, lightPos.y, lightPos.z },
+		{ lightDest.x, lightDest.y, lightDest.z },
+		{ 0.0f, 1.0f, 0.0f }
+	);
+
+	XMMATRIX projection = XMMatrixOrthographicLH(3.0f, 3.0f, 0.1f, 100.0f);
+
+	// XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0f), 1.0f, 1.0f, 100.0f);
+	XMFLOAT4X4 mat;
+	XMStoreFloat4x4(&mat, XMMatrixTranspose(view * projection));
+
+	ptr->LightVP = mat;
 }
 
 void CommonBufferManager::UpdateCameraBuffer(int frameindex, Vector3 pos) {
@@ -159,3 +186,10 @@ void CommonBufferManager::Term()
 		m_TransformCB[i].Term();
 	}
 }
+
+void CommonBufferManager::SetRTManager(CommonRTManager* m) {
+	m_RTManager = m;
+};
+CommonRTManager* CommonBufferManager::GetRTManager() {
+	return m_RTManager;
+};

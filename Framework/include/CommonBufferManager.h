@@ -5,6 +5,8 @@
 #include <Material.h>
 #include <Camera.h>
 #include <RootSignature.h>
+#include <RootSignature.h>
+#include <CommonRTVManager.h>
 
 using namespace DirectX::SimpleMath;
 
@@ -31,11 +33,13 @@ namespace CommonCb {
 	///////////////////////////////////////////////////////////////////////////////
 	struct alignas(256) CbLight
 	{
-		float   TextureSize;      //!< キューブマップサイズです.
-		float   MipCount;         //!< ミップ数です.
-		float   LightIntensity;   //!< ライト強度です.
-		float   Padding0;         //!< パディング.
-		Vector3 LightDirection;   //!< ディレクショナルライトの方向.
+		float		TextureSize;		//!< キューブマップサイズです.
+		float		MipCount;			//!< ミップ数です.
+		float		LightIntensity;		//!< ライト強度です.
+		float		Padding0;			//!< パディング.
+		Vector3		LightDirection;		//!< ディレクショナルライトの方向.
+		float		Padding1;			//!< パディング.
+		Matrix		LightVP;			//!< ディレクショナルライトのViewProjection
 	};
 
 	///////////////////////////////////////////////////////////////////////////////
@@ -75,6 +79,7 @@ public:
 	bool Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, float width, float height);
 
 	void CommonBufferManager::UpdateLightBuffer(int frameindex, float texSize, float mipCount, Vector3 direction, float intensity);
+	void CommonBufferManager::UpdateLightBufferVP(int frameindex, Vector3 direction);
 	void CommonBufferManager::UpdateCameraBuffer(int frameindex, Vector3 pos);
 	void CommonBufferManager::UpdateViewProjMatrix(int frameindex, Matrix& view, Matrix& proj);
 	void CommonBufferManager::UpdateWorldMatrix(int frameindex, Matrix& modelMat);
@@ -88,9 +93,11 @@ public:
 	ConstantBuffer      m_CameraCB[App::FrameCount];         //!< カメラバッファです.
 	ConstantBuffer      m_TransformCB[App::FrameCount];      //!< 変換用バッファです.
 	ConstantBuffer		m_MeshCB[App::FrameCount];           //!< メッシュ用バッファです.
+	
+	CommonRTManager*	m_RTManager;
 
-
-
+	void SetRTManager(CommonRTManager* m);
+	CommonRTManager* GetRTManager();
 private:
 	//=========================================================================
 	// private variables.

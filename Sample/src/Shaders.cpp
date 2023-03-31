@@ -10,16 +10,19 @@
 // BasicShader
 bool BasicShader::CreateRootSig(ComPtr<ID3D12Device> pDevice) {
 	RootSignature::Desc desc;
-	desc.Begin(12)
+	desc.Begin(13)
 		
+		// 共通の定数バッファ
+		.SetCBV(ShaderStage::ALL, 2, 3)  // lightCB
+
+
 		//VSの定数バッファ
-		.SetCBV(ShaderStage::VS, 0, 0)
-		.SetCBV(ShaderStage::VS, 1, 1)
+		.SetCBV(ShaderStage::VS, 0, 0)	// VP
+		.SetCBV(ShaderStage::VS, 1, 1)	// meshCB
 
 		//PSの定数バッファ
-		.SetCBV(ShaderStage::PS, 2, 1)
-		.SetCBV(ShaderStage::PS, 3, 2)
-		.SetCBV(ShaderStage::PS, 4,3)
+		.SetCBV(ShaderStage::PS, 3, 2)  // CameraCB
+		.SetCBV(ShaderStage::PS, 4, 4)  // MaterialCB
 
 		// テクスチャ
 		.SetSRV(ShaderStage::PS, 5, 0)
@@ -29,6 +32,8 @@ bool BasicShader::CreateRootSig(ComPtr<ID3D12Device> pDevice) {
 		.SetSRV(ShaderStage::PS, 9, 4)
 		.SetSRV(ShaderStage::PS, 10, 5)
 		.SetSRV(ShaderStage::PS, 11, 6)
+		.SetSRV(ShaderStage::PS, 12, 9)	// ShadowMap
+
 
 		.AddStaticSmp(ShaderStage::PS, 0, SamplerState::LinearWrap)
 		.AddStaticSmp(ShaderStage::PS, 1, SamplerState::LinearWrap)
@@ -37,6 +42,7 @@ bool BasicShader::CreateRootSig(ComPtr<ID3D12Device> pDevice) {
 		.AddStaticSmp(ShaderStage::PS, 4, SamplerState::LinearWrap)
 		.AddStaticSmp(ShaderStage::PS, 5, SamplerState::LinearWrap)
 		.AddStaticSmp(ShaderStage::PS, 6, SamplerState::LinearWrap)
+		.AddStaticSmp(ShaderStage::PS, 9, SamplerState::LinearWrap)
 		.AllowIL()
 		.End();
 
@@ -83,7 +89,7 @@ bool BasicShader::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT 
 
 	return true;
 }
-void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Material& mat, int id, const ConstantBuffer* meshCB, const CommonBufferManager& commonbufmanager, const SkyManager& manager)
+void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Material& mat, int id, const ConstantBuffer* meshCB, const CommonBufferManager& commonbufmanager, const SkyManager& skyManager)
 {
 	//　マテリアル共通のバッファ
 	{
@@ -96,12 +102,22 @@ void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Mat
 			pCmd->SetGraphicsRootDescriptorTable(3, commonbufmanager.m_CameraCB[frameindex].GetHandleGPU());
 		}
 
-		pCmd->SetGraphicsRootDescriptorTable(5, manager.m_IBLBaker.GetHandleGPU_DFG());
-		pCmd->SetGraphicsRootDescriptorTable(6, manager.m_IBLBaker.GetHandleGPU_DiffuseLD());
-		pCmd->SetGraphicsRootDescriptorTable(7, manager.m_IBLBaker.GetHandleGPU_SpecularLD());
+		pCmd->SetGraphicsRootDescriptorTable(5, skyManager.m_IBLBaker.GetHandleGPU_DFG());
+		pCmd->SetGraphicsRootDescriptorTable(6, skyManager.m_IBLBaker.GetHandleGPU_DiffuseLD());
+		pCmd->SetGraphicsRootDescriptorTable(7, skyManager.m_IBLBaker.GetHandleGPU_SpecularLD());
 	}
-
+	
 	pCmd->SetGraphicsRootDescriptorTable(1, meshCB[frameindex].GetHandleGPU());
+
+	// シャドウマップ
+	if (commonbufmanager.m_RTManager != nullptr) {
+		auto handle = commonbufmanager.m_RTManager->m_SceneShadowTarget.GetHandleSRV()->HandleGPU;
+		pCmd->SetGraphicsRootDescriptorTable(12, handle);
+	}
+	else {
+		ELOG("Shadow Map Error");
+		return;
+	}
 
 	//  マテリアルから定数バッファを取り出す
 	pCmd->SetGraphicsRootDescriptorTable(4, mat.GetBufferHandle(id));
@@ -112,6 +128,8 @@ void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Mat
 		pCmd->SetGraphicsRootDescriptorTable(9,		mat.GetTextureHandle(id, Material::TEXTURE_USAGE_05));
 		pCmd->SetGraphicsRootDescriptorTable(10,	mat.GetTextureHandle(id, Material::TEXTURE_USAGE_06));
 		pCmd->SetGraphicsRootDescriptorTable(11,	mat.GetTextureHandle(id, Material::TEXTURE_USAGE_03));
+
+
 	}
 	pCmd->SetPipelineState(m_pPSO.Get());
 }

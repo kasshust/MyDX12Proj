@@ -13,6 +13,6 @@ public:
 	void Term();
 private:
 	bool CreateColorTarget(ComPtr<ID3D12Device> pDevice, DescriptorPool* rtvpool, DescriptorPool* respool, float width, float height);
-	bool CreateDepthTarget(ComPtr<ID3D12Device> pDevice, DescriptorPool* dsvpool, float width, float height);
-	bool CreateShadowTarget(ComPtr<ID3D12Device> pDevice, DescriptorPool* dsvpool, float width, float height);
+	bool CreateDepthTarget(ComPtr<ID3D12Device> pDevice, DescriptorPool* dsvpool, DescriptorPool* respool, float width, float height);
+	bool CreateShadowTarget(ComPtr<ID3D12Device> pDevice, DescriptorPool* dsvpool, DescriptorPool* respool, float width, float height);
 };

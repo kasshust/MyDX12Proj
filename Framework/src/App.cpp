@@ -92,17 +92,18 @@ bool App::InitApp()
 		return false;
 	}
 
+	// ImGuiの初期化
+	if (!InitIMGUI())
+	{
+		return false;
+	}
+
 	// アプリケーション固有の初期化.
 	if (!OnInit())
 	{
 		return false;
 	}
 
-	// ImGuiの初期化
-	if (!InitIMGUI())
-	{
-		return false;
-	}
 
 	// ウィンドウを表示.
 	ShowWindow(m_hWnd, SW_SHOWNORMAL);
@@ -125,11 +126,11 @@ void App::TermApp()
 	// アプリケーション固有の終了処理.
 	OnTerm();
 
-	// Imguiの処理
-	TermIMGUI();
-
 	// Direct3D 12の終了処理.
 	TermD3D();
+
+	// Imguiの処理
+	TermIMGUI();
 
 	// ウィンドウの終了処理.
 	TermWnd();
@@ -237,11 +238,18 @@ bool App::InitD3D()
 #if defined(DEBUG) || defined(_DEBUG)
 	{
 		ComPtr<ID3D12Debug> pDebug;
+		ComPtr<ID3D12Debug1> pDebug1;
 		auto hr = D3D12GetDebugInterface(IID_PPV_ARGS(pDebug.GetAddressOf()));
 		if (SUCCEEDED(hr))
 		{
 			pDebug->EnableDebugLayer();
+
+			hr = pDebug->QueryInterface(IID_PPV_ARGS(pDebug1.GetAddressOf()));
+			if (SUCCEEDED(hr)) {
+				pDebug1->SetEnableGPUBasedValidation(true);
+			}
 		}
+
 	}
 #endif
 

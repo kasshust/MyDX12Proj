@@ -16,6 +16,10 @@ bool SkyManager::Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* rtvPool, Des
 
 bool SkyManager::InitSphereMapTexture(ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool, ComPtr<ID3D12CommandQueue> commandQueue, std::wstring path)
 {
+
+	HRESULT result = pDevice->GetDeviceRemovedReason();
+	
+
 	DirectX::ResourceUploadBatch batch(pDevice.Get());
 
 	// バッチ開始.

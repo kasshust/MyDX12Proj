@@ -3,6 +3,8 @@
 // Desc : Vertex Shader.
 // Copyright(c) Pocol. All right reserved.
 //-----------------------------------------------------------------------------
+#include "VSCommonBuffer.hlsli"
+#include "CommonLightBuffer.hlsli"
 
 ///////////////////////////////////////////////////////////////////////////////
 // VSInput structure
@@ -21,28 +23,11 @@ struct VSInput
 struct VSOutput
 {
     float4      Position        : SV_POSITION;          // 位置座標です.
+    float4      PosSM           : POSITION_SM;          // 
     float2      TexCoord        : TEXCOORD;             // テクスチャ座標です.
     float3      WorldPos        : WORLD_POS;            // ワールド空間の位置座標です.
     float3x3    InvTangentBasis : INV_TANGENT_BASIS;    // 接線空間への基底変換行列の逆行列です.
 };
-
-///////////////////////////////////////////////////////////////////////////////
-// CbTransform constant buffer
-///////////////////////////////////////////////////////////////////////////////
-cbuffer CbTransform : register(b0)
-{
-    float4x4 View  : packoffset(c0); // ビュー行列です.
-    float4x4 Proj  : packoffset(c4); // 射影行列です.
-};
-
-///////////////////////////////////////////////////////////////////////////////
-// CbMesh constant buffer
-///////////////////////////////////////////////////////////////////////////////
-cbuffer CbMesh : register(b1)
-{
-    float4x4 World : packoffset(c0); // ワールド行列です.
-};
-
 
 
 //-----------------------------------------------------------------------------
@@ -68,6 +53,12 @@ VSOutput main(VSInput input)
 
     // 基底変換行列の逆行列.
     output.InvTangentBasis = transpose(float3x3(T, B, N));
+    
+    float4 LvpPos = mul(worldPos, LightVP);
+    LvpPos.xyz = LvpPos.xyz / LvpPos.w;
+    output.PosSM.x = (1.0f + LvpPos.x) / 2.0f;
+    output.PosSM.y = (1.0f - LvpPos.y) / 2.0f;
+    output.PosSM.z = LvpPos.z;
 
     return output;
 }

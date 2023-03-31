@@ -52,7 +52,7 @@ bool SampleApp::OnInit()
 
 	if (!CommonInit()) return false;
 
-	// if (!m_ShadowMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format)) return false;
+	if (!m_ShadowMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format)) return false;
 	if (!m_ToneMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format))    return false;
 	if (!m_SkyManager.IBLBake(m_pDevice, m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_CommandList, m_pQueue, m_Fence)) return false;
 
@@ -85,6 +85,8 @@ bool SampleApp::CommonInit() {
 	if (!m_CommonBufferManager.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RES], m_Width, m_Height))                                                return false;
 	if (!m_CommonRTManager.Init(m_pDevice.Get(), m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_pPool[POOL_TYPE_DSV], m_Width, m_Height))    return false;
 	if (!m_SkyManager.Init(m_pDevice, m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_pQueue, skyPath)) return false;
+
+	m_CommonBufferManager.SetRTManager(&m_CommonRTManager);
 }
 
 //-----------------------------------------------------------------------------
@@ -350,7 +352,7 @@ void SampleApp::UpdateCamera() {
 }
 
 void SampleApp::RenderShadowMap(ID3D12GraphicsCommandList* pCmd, DepthTarget& depthDest) {
-	// m_ShadowMap.DrawShadowMap(pCmd, depthDest, &m_Viewport, &m_Scissor);
+	m_ShadowMap.DrawShadowMap(pCmd, depthDest, &m_Viewport, &m_Scissor,m_FrameIndex, m_CommonBufferManager, m_GameObjects, m_LightDirection);
 }
 
 void SampleApp::RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& colorDest, DepthTarget& depthDest,SkyManager& skyManager)
@@ -397,6 +399,7 @@ void SampleApp::DrawScene(ID3D12GraphicsCommandList* pCmd)
 {
 	// 定数バッファの更新.
 	m_CommonBufferManager.UpdateLightBuffer(m_FrameIndex, m_SkyManager.m_IBLBaker.LDTextureSize, m_SkyManager.m_IBLBaker.MipCount,m_LightDirection, m_LightIntensity);
+	m_CommonBufferManager.UpdateLightBufferVP(m_FrameIndex, m_LightDirection);
 	m_CommonBufferManager.UpdateCameraBuffer(m_FrameIndex, m_Camera.GetPosition());
 	m_CommonBufferManager.UpdateViewProjMatrix(m_FrameIndex, m_View, m_Proj);
 

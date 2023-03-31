@@ -115,6 +115,7 @@ bool DepthTarget::Init
 		IID_PPV_ARGS(m_pTarget.GetAddressOf()));
 	if (FAILED(hr))
 	{
+		HRESULT result = pDevice->GetDeviceRemovedReason();
 		return false;
 	}
 
@@ -127,7 +128,7 @@ bool DepthTarget::Init
 
 	if (m_pHandleSRV != nullptr)
 	{
-		m_SRVDesc.Format                        = format;
+		m_SRVDesc.Format                        = DXGI_FORMAT_R32_FLOAT;
 		m_SRVDesc.ViewDimension                 = D3D12_SRV_DIMENSION_TEXTURE2D;
 		m_SRVDesc.Shader4ComponentMapping       = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 		m_SRVDesc.Texture2D.MipLevels           = 1;

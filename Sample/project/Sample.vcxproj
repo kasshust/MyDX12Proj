@@ -30,6 +30,9 @@
   <ItemGroup>
     <None Include="..\res\BakeUtil.hlsli" />
     <None Include="..\res\BRDF.hlsli" />
+    <None Include="..\res\CameraBuffer.hlsli" />
+    <None Include="..\res\CommonLightBuffer.hlsli" />
+    <None Include="..\res\VSCommonBuffer.hlsli" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -40,6 +43,10 @@
     <FxCompile Include="..\res\BasicPS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="..\res\DepthShadow.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="..\res\IntegrateDFG_PS.hlsl">
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
@@ -114,10 +121,6 @@
       <HeaderFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)..\res\Compiled\QuadVS.inc</HeaderFileOutput>
       <VariableName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">QuadVS</VariableName>
       <HeaderFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)..\res\Compiled\QuadVS.inc</HeaderFileOutput>
-    </FxCompile>
-    <FxCompile Include="DepthShadow.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">
