@@ -15,18 +15,16 @@ public:
 		Matrix	LightVP;
 	};
 
+	struct DrawSource {
+		DepthTarget&						DepthDest;
+		const CommonBufferManager&			Commonbufmanager;
+		const std::vector<GameObject*>&		GameObjects;
+		const Vector3&						LightDirection;
+	};
+
 	bool Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format);
 	void Term();
-	void DrawShadowMap(
-		ID3D12GraphicsCommandList* pCmd,
-		DepthTarget& depthDest,
-		D3D12_VIEWPORT* viewport,
-		D3D12_RECT* scissor,
-		int frameindex,
-		const CommonBufferManager& commonbufmanager,
-		const std::vector<GameObject*> gameObjects,
-		const Vector3				lightDirection
-	);
+	void DrawShadowMap(ID3D12GraphicsCommandList* pCmd,	int frameindex, DrawSource & s);
 	
 protected:
 

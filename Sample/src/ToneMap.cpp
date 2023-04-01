@@ -83,24 +83,24 @@ void ToneMap::Term()
 }
 
 
-void ToneMap::DrawTonemap(ID3D12GraphicsCommandList* pCmd, int frameindex, ColorTarget& colorDest, DepthTarget& depthDest, ColorTarget& colorSource, D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, VertexBuffer& vb)
+void ToneMap::DrawTonemap(ID3D12GraphicsCommandList* pCmd, int frameindex, DrawSource& s)
 {
 	// 書き込み用リソースバリア設定.
 	DirectX::TransitionResource(pCmd,
-		colorDest.GetResource(),
+		s.ColorDest.GetResource(),
 		D3D12_RESOURCE_STATE_PRESENT,
 		D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	// ディスクリプタ取得.
-	auto handleRTV = colorDest.GetHandleRTV();
-	auto handleDSV = depthDest.GetHandleDSV();
+	auto handleRTV = s.ColorDest.GetHandleRTV();
+	auto handleDSV = s.DepthDest.GetHandleDSV();
 
 	// レンダーターゲットを設定.
 	pCmd->OMSetRenderTargets(1, &handleRTV->HandleCPU, FALSE, &handleDSV->HandleCPU);
 
 	// レンダーターゲットをクリア.
-	colorDest.ClearView(pCmd);
-	depthDest.ClearView(pCmd);
+	s.ColorDest.ClearView(pCmd);
+	s.DepthDest.ClearView(pCmd);
 
 	// 定数バッファ更新
 	{
@@ -113,19 +113,17 @@ void ToneMap::DrawTonemap(ID3D12GraphicsCommandList* pCmd, int frameindex, Color
 
 	pCmd->SetGraphicsRootSignature(m_RootSig.GetPtr());
 	pCmd->SetGraphicsRootDescriptorTable(0, m_CB[frameindex].GetHandleGPU());
-	pCmd->SetGraphicsRootDescriptorTable(1, colorSource.GetHandleSRV()->HandleGPU);
+	pCmd->SetGraphicsRootDescriptorTable(1, s.ColorSource.GetHandleSRV()->HandleGPU);
 	pCmd->SetPipelineState(m_pPSO.Get());
-	pCmd->RSSetViewports(1, viewport);
-	pCmd->RSSetScissorRects(1, scissor);
 
 	pCmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	pCmd->IASetVertexBuffers(0, 1, &vb.GetView());
+	pCmd->IASetVertexBuffers(0, 1, &s.VertexBuffer.GetView());
 
 	pCmd->DrawInstanced(3, 1, 0, 0);
 
 	// 表示用リソースバリア設定.
 	DirectX::TransitionResource(pCmd,
-		colorDest.GetResource(),
+		s.ColorDest.GetResource(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_PRESENT);
 }

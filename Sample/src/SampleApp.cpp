@@ -84,7 +84,7 @@ bool SampleApp::OnInit()
 	g = new GameObject();
 	if (!g->m_Model.LoadModel(path[2], m_pDevice, m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
 	g->Transform().SetPosition({0.0f,-0.4f,0.0f});
-	g->Transform().SetScale({ 5.0f,0.1f,5.0f });
+	g->Transform().SetScale({ 20.0f,0.1f,20.0f });
 	m_GameObjects.push_back(g);
 
 
@@ -157,16 +157,19 @@ void SampleApp::OnRenderIMGUI() {
 	if (ImGui::TreeNode("CommonBuffer")) {
 		if (ImGui::TreeNode("Light")) {
 
-			CommonCb::CbLight* prop = m_CommonBufferManager.GetLightProperty(m_FrameIndex);;
 			ImGui::InputFloat("LightIntensity",  &m_LightIntensity);
 
-			Vector3 direction = prop->LightDirection;
-			float* dirArray = new float[] { direction.x, direction.y, direction.z};
+			float* dirArray = new float[] { m_LightDirection.x, m_LightDirection.y, m_LightDirection.z};
 			ImGui::InputFloat3("LightDirection", dirArray);
 			m_LightDirection = Vector3(dirArray);
 
 			ImGui::InputFloat("ShadowBias",		&m_ShadowBias);
 			ImGui::InputFloat("ShadowStrength", &m_ShadowStrength);
+			ImGui::InputFloat("ShadowLightPosDistance", &m_ShadowLightPosDistance);
+
+			float* orthoArray = new float[] { m_OrthoGraphParam.x, m_OrthoGraphParam.y, m_OrthoGraphParam.z, m_OrthoGraphParam.w};
+			ImGui::InputFloat4("OrthoGraphParam", orthoArray);
+			m_OrthoGraphParam = Vector4(orthoArray);
 
 			ImGui::TreePop();
 		}
@@ -337,6 +340,7 @@ void SampleApp::OnRender()
 {
 	// カメラ更新.
 	UpdateCamera();
+	UpdateBuffer();
 
 	// レンダリングエンジン描画
 	auto pCmd = m_CommandList.Reset();
@@ -347,11 +351,17 @@ void SampleApp::OnRender()
 	};
 	pCmd->SetDescriptorHeaps(1, pHeaps);
 	{
+		// ビューポート設定.
+		pCmd->RSSetViewports(1,    &m_Viewport);
+		pCmd->RSSetScissorRects(1, &m_Scissor);
+
 		RenderShadowMap(pCmd, m_CommonRTManager.m_SceneShadowTarget);
 		RenderOpaque(pCmd, m_CommonRTManager.m_SceneColorTarget, m_CommonRTManager.m_SceneDepthTarget, m_SkyManager);
 		RenderPostProcess(pCmd);
 	}
 	pCmd->Close();
+
+
 
 	// ImGui描画
 	OnRenderIMGUICommonProcess();
@@ -381,32 +391,51 @@ void SampleApp::UpdateCamera() {
 	m_Proj = Matrix::CreatePerspectiveFieldOfView(fovY, aspect, 0.1f, 1000.0f);
 }
 
-void SampleApp::RenderShadowMap(ID3D12GraphicsCommandList* pCmd, DepthTarget& depthDest) {
-	m_ShadowMap.DrawShadowMap(pCmd, depthDest, &m_Viewport, &m_Scissor,m_FrameIndex, m_CommonBufferManager, m_GameObjects, m_LightDirection);
+void SampleApp::UpdateBuffer() {
+	CommonCb::CbCommon common;
+	common.CameraPosition = m_Camera.GetPosition();
+	common.FogArea        = m_FogArea;
+	common.FogColor       = m_FogColor;
+
+	// ライトシャドウバッファ
+	CommonCb::CbLight cbl;
+	cbl.TextureSize    = m_SkyManager.m_IBLBaker.LDTextureSize;
+	cbl.MipCount       = m_SkyManager.m_IBLBaker.MipCount;
+	cbl.LightDirection = m_LightDirection;
+	cbl.LightIntensity = m_LightIntensity;
+	cbl.ShadowBias     = m_ShadowBias;
+	cbl.ShadowStrength = m_ShadowStrength;
+
+
+	// ビュープロジェクションバッファ
+	CommonCb::CbTransform cbt;
+	cbt.Proj = m_Proj;
+	cbt.View = m_View;
+
+	m_CommonBufferManager.UpdateCommonBuffer(m_FrameIndex, common);
+	m_CommonBufferManager.UpdateLightBuffer(m_FrameIndex, cbl);
+	m_CommonBufferManager.UpdateShadowBuffer(m_FrameIndex, m_LightDirection, m_ShadowLightPosDistance, m_OrthoGraphParam);
+	m_CommonBufferManager.UpdateViewProjMatrix(m_FrameIndex, cbt);
 }
 
-void SampleApp::RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& colorDest, DepthTarget& depthDest,SkyManager& skyManager)
+void SampleApp::RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& ColorDest, DepthTarget& DepthDest,SkyManager& skyManager)
 {
 	// 書き込み用リソースバリア設定.
 	DirectX::TransitionResource(pCmd,
-		colorDest.GetResource(),
+		ColorDest.GetResource(),
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
 		D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	// ディスクリプタ取得.
-	auto handleRTV = colorDest.GetHandleRTV();
-	auto handleDSV = depthDest.GetHandleDSV();
+	auto handleRTV = ColorDest.GetHandleRTV();
+	auto handleDSV = DepthDest.GetHandleDSV();
 
 	// レンダーターゲットを設定.
 	pCmd->OMSetRenderTargets(1, &handleRTV->HandleCPU, FALSE, &handleDSV->HandleCPU);
 
 	// レンダーターゲットをクリア.
-	colorDest.ClearView(pCmd);
-	depthDest.ClearView(pCmd);
-
-	// ビューポート設定.
-	pCmd->RSSetViewports(1, &m_Viewport);
-	pCmd->RSSetScissorRects(1, &m_Scissor);
+	ColorDest.ClearView(pCmd);
+	DepthDest.ClearView(pCmd);
 
 	// 背景描画.
 	SkyBox* ptr = skyManager.GetSkyBox();
@@ -417,7 +446,7 @@ void SampleApp::RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& color
 
 	// 読み込み用リソースバリア設定.
 	DirectX::TransitionResource(pCmd,
-		colorDest.GetResource(),
+		ColorDest.GetResource(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET,
 		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
@@ -427,36 +456,41 @@ void SampleApp::RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& color
 //-----------------------------------------------------------------------------
 void SampleApp::DrawScene(ID3D12GraphicsCommandList* pCmd)
 {
-	// 定数バッファの更新.
-	m_CommonBufferManager.UpdateLightBuffer(m_FrameIndex, m_SkyManager.m_IBLBaker.LDTextureSize, m_SkyManager.m_IBLBaker.MipCount,m_LightDirection, m_LightIntensity);
-	m_CommonBufferManager.UpdateLightBufferShadow(m_FrameIndex, m_LightDirection, m_ShadowBias, m_ShadowStrength);
-	m_CommonBufferManager.UpdateCommonBuffer(m_FrameIndex, m_Camera.GetPosition(), m_FogArea, m_FogColor);
-	m_CommonBufferManager.UpdateViewProjMatrix(m_FrameIndex, m_View, m_Proj);
 
+	// 非バッチ
 	for (size_t i = 0; i < m_GameObjects.size(); i++) {
 		GameObject* g = m_GameObjects[i];
-		g->m_Model.UpdateWorldMatrix(m_FrameIndex, g->Transform().GetTransform());
+
+		CommonCb::CbMesh cbm;
+		cbm.World = g->Transform().GetTransform();
+
+		g->m_Model.UpdateMeshBuffer(m_FrameIndex, cbm);
 		g->m_Model.DrawModel(pCmd, m_FrameIndex, m_CommonBufferManager, m_SkyManager);
 	}
 }
 
 //-----------------------------------------------------------------------------
-//      メッシュを描画します.
+//      プリ/ポストプロセス
 //-----------------------------------------------------------------------------
+void SampleApp::RenderShadowMap(ID3D12GraphicsCommandList* pCmd, DepthTarget& DepthDest) {
+	ShadowMap::DrawSource s{
+		DepthDest,
+		m_CommonBufferManager,
+		m_GameObjects,
+		m_LightDirection
+	};
+	m_ShadowMap.DrawShadowMap(pCmd, m_FrameIndex, s);
+}
 
-//-----------------------------------------------------------------------------
-//      ポストプロセス
-//-----------------------------------------------------------------------------
 void SampleApp::RenderPostProcess(ID3D12GraphicsCommandList* pCmd)
 {
-	m_ToneMap.DrawTonemap(pCmd,
-		m_FrameIndex,
+	ToneMap::DrawSource s{
 		m_ColorTarget[m_FrameIndex],
 		m_DepthTarget,
 		m_CommonRTManager.m_SceneColorTarget,
-		&m_Viewport,
-		&m_Scissor,
-		m_CommonBufferManager.m_QuadVB);
+		m_CommonBufferManager.m_QuadVB
+	};
+	m_ToneMap.DrawTonemap(pCmd, m_FrameIndex, s);
 }
 
 void SampleApp::RenderImGui(ID3D12GraphicsCommandList* pImGuiCmd)

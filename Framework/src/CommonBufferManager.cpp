@@ -44,7 +44,6 @@ bool CommonBufferManager::CreateCameraBuffer(ComPtr<ID3D12Device> pDevice, Descr
 	}
 	return true;
 }
-
 bool CommonBufferManager::CreateMeshBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool) {
 	for (auto i = 0; i < App::FrameCount; ++i)
 	{
@@ -114,18 +113,17 @@ bool CommonBufferManager::CreateMatrixConstantBuffer(ComPtr<ID3D12Device> pDevic
 	return true;
 }
 
-
-
-void CommonBufferManager::UpdateLightBuffer(int frameindex, float texSize, float mipCount, Vector3 direction, float intensity) {
+void CommonBufferManager::UpdateLightBuffer(int frameindex, CommonCb::CbLight& cb ) {
 	auto ptr = m_LightCB[frameindex].GetPtr<CommonCb::CbLight>();
-	ptr->TextureSize	= texSize;
-	ptr->MipCount		= mipCount;
-	ptr->LightDirection = direction;
-	ptr->LightIntensity = intensity;
-
+	memcpy(ptr, &cb, sizeof(CommonCb::CbLight));
 }
 
-void CommonBufferManager::UpdateLightBufferShadow(int frameindex, Vector3 direction, float shadowBias, float shadowStrength) {
+void CommonBufferManager::UpdateCommonBuffer(int frameindex, CommonCb::CbCommon& cb) {
+	auto ptr = m_CommonCB[frameindex].GetPtr<CommonCb::CbCommon>();
+	memcpy(ptr, &cb, sizeof(CommonCb::CbCommon));
+}
+
+void CommonBufferManager::UpdateShadowBuffer(int frameindex, Vector3 direction, float lightPosDistance, Vector4& OrthographParam) {
 	auto ptr = m_LightCB[frameindex].GetPtr<CommonCb::CbLight>();
 	
 	// LVP‚ÌXV
@@ -133,7 +131,8 @@ void CommonBufferManager::UpdateLightBufferShadow(int frameindex, Vector3 direct
 		return;
 	}
 
-	XMFLOAT3 lightPos = direction * 100.0f;
+	if (lightPosDistance == 0.0f) lightPosDistance = 0.0001f;
+	XMFLOAT3 lightPos = direction * (lightPosDistance);
 
 	XMFLOAT3 lightDest = { 0.0f, 0.0f, 0.0f };
 	
@@ -142,44 +141,27 @@ void CommonBufferManager::UpdateLightBufferShadow(int frameindex, Vector3 direct
 		{ lightDest.x, lightDest.y, lightDest.z },
 		{ 0.0f, 1.0f, 0.0f }
 	);
-	
-	/*
-	XMMATRIX view = Matrix::CreateLookAt(
-		lightPos,
-		lightDest,
-		{ 0.0f, 1.0f, 0.0f }
-	);
-	*/
 
-	// XMMATRIX projection = Matrix::CreateOrthographic(10.0f, 10.0f, 0.1f, 100.0f);
-	XMMATRIX projection = XMMatrixOrthographicLH(10.0f, 10.0f, 0.1f, 200.0f);
-
+	XMMATRIX projection = XMMatrixOrthographicLH(OrthographParam.x, OrthographParam.y, OrthographParam.z, OrthographParam.w);
 	// XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0f), 1.0f, 1.0f, 100.0f);
+
+
 	XMFLOAT4X4 mat;
 	XMStoreFloat4x4(&mat, view * XMMatrixTranspose(projection) );
 
 	ptr->LightVP = mat;
-	ptr->ShadowBias		= shadowBias;
-	ptr->ShadowStrength = shadowStrength;
 }
 
-void CommonBufferManager::UpdateCommonBuffer(int frameindex, Vector3 pos, Vector2 fogArea, Vector3 fogColor) {
-	auto ptr = m_CommonCB[frameindex].GetPtr<CommonCb::CbCommon>();
-	ptr->CameraPosition = pos;
-	ptr->FogArea		= fogArea;
-	ptr->FogColor		= fogColor;
-}
 
-void CommonBufferManager::UpdateViewProjMatrix(int frameindex, Matrix& view, Matrix& proj) {
+void CommonBufferManager::UpdateViewProjMatrix(int frameindex, CommonCb::CbTransform& cb) {
 	auto ptr = m_TransformCB[frameindex].GetPtr<CommonCb::CbTransform>();
-	ptr->View = view;
-	ptr->Proj = proj;
+	memcpy(ptr, &cb, sizeof(CommonCb::CbTransform));
 }
 
-void CommonBufferManager::UpdateWorldMatrix(int frameindex, Matrix& modelMatrix)
+void CommonBufferManager::UpdateMeshBuffer(int frameindex, CommonCb::CbMesh& cb)
 {
 	auto ptr = m_MeshCB[frameindex].GetPtr<CommonCb::CbMesh>();
-	ptr->World = modelMatrix;
+	memcpy(ptr, &cb, sizeof(CommonCb::CbMesh));
 }
 
 void CommonBufferManager::Term()

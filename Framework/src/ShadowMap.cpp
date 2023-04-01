@@ -31,34 +31,6 @@ bool ShadowMap::CreateRootSig(ComPtr<ID3D12Device> pDevice) {
 	return true;
 }
 
-/*
-void ShadowMap::UpdateConstantBuffer(int frameindex, Vector3 lighrDir) {
-	auto ptr = m_CB[frameindex].GetPtr<CbDepthShadowMap>();
-
-	if (lighrDir.Length() == 0) {
-		return;
-	}
-		
-	// World→Lightに規定変換し、プロジェクションでぺちゃんこに
-	// XMFLOAT3 lightPos = lighrDir*10.0f;
-	XMFLOAT3 lightPos = { 2.0f, 6.5f, -1.0f };
-	XMFLOAT3 lightDest = { 0.0f, 0.0f, 0.0f };
-	XMMATRIX view = XMMatrixLookAtLH(
-		{ lightPos.x, lightPos.y, lightPos.z },
-		{ lightDest.x, lightDest.y, lightDest.z },
-		{ 0.0f, 1.0f, 0.0f }
-	);
-
-	// XMMATRIX projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0f), 1.0f, 1.0f, 15.0f);
-	XMMATRIX projection = XMMatrixOrthographicLH(1.0f,1.0f,0.1,100.0f);
-
-	XMFLOAT4X4 mat;
-	XMStoreFloat4x4(&mat, XMMatrixTranspose(view * projection));
-
-	ptr->LightVP = mat;
-}
-*/
-
 bool ShadowMap::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format) {
 	
 	std::wstring		vsPath;
@@ -109,53 +81,41 @@ void ShadowMap::Term()
 
 void ShadowMap::DrawShadowMap(
 	ID3D12GraphicsCommandList*	pCmd, 
-	DepthTarget&				depthDest, 
-	D3D12_VIEWPORT*				viewport, 
-	D3D12_RECT*					scissor, 
 	int 						frameindex,
-	const CommonBufferManager&	commonbufmanager,
-	const std::vector<GameObject*> gameObjects,
-	const Vector3				lightDirection
+	DrawSource&					s
 )
 {
 	
 	DirectX::TransitionResource(pCmd,
-		depthDest.GetResource(),
+		s.DepthDest.GetResource(),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		D3D12_RESOURCE_STATE_DEPTH_WRITE
 	);
 
 	// ディスクリプタ取得.
-	auto handleDSV = depthDest.GetHandleDSV();
+	auto handleDSV = s.DepthDest.GetHandleDSV();
 
 	// レンダーターゲットを設定.
 	pCmd->OMSetRenderTargets(0, nullptr, FALSE, &handleDSV->HandleCPU);
 
 	// レンダーターゲットをクリア.
-	depthDest.ClearView(pCmd);
+	s.DepthDest.ClearView(pCmd);
 
 	pCmd->SetGraphicsRootSignature(m_RootSig.GetPtr());
 	pCmd->SetPipelineState(m_pPSO.Get());
 
-	// ビューポート設定.
-	pCmd->RSSetViewports(1, viewport);
-	pCmd->RSSetScissorRects(1, scissor);
-
-	pCmd->SetGraphicsRootDescriptorTable(0, commonbufmanager.m_TransformCB[frameindex].GetHandleGPU());
-	pCmd->SetGraphicsRootDescriptorTable(2, commonbufmanager.m_LightCB[frameindex].GetHandleGPU());
+	pCmd->SetGraphicsRootDescriptorTable(0, s.Commonbufmanager.m_TransformCB[frameindex].GetHandleGPU());
+	pCmd->SetGraphicsRootDescriptorTable(2, s.Commonbufmanager.m_LightCB[frameindex].GetHandleGPU());
 	// シーンの描画.
 	
-	for (size_t i = 0; i < gameObjects.size(); i++) {
-		GameObject* g = gameObjects[i];
-
-		g->m_Model.UpdateWorldMatrix(frameindex, g->Transform().GetTransform());
+	for (size_t i = 0; i < s.GameObjects.size(); i++) {
+		GameObject* g = s.GameObjects[i];
 		pCmd->SetGraphicsRootDescriptorTable(1, g->m_Model.m_MeshCB[frameindex].GetHandleGPU());
-
 		g->m_Model.DrawModelRaw(pCmd, frameindex);
 	}
 
 	DirectX::TransitionResource(pCmd,
-		depthDest.GetResource(),
+		s.DepthDest.GetResource(),
 		D3D12_RESOURCE_STATE_DEPTH_WRITE,
 		D3D12_RESOURCE_STATE_GENERIC_READ
 	);

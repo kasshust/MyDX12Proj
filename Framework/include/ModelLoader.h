@@ -24,7 +24,7 @@ public:
 	void SetTexture(Material* mat, Material::TEXTURE_USAGE usage, std::wstring path, ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool, bool isSRGB, DirectX::ResourceUploadBatch& batch, AppResourceManager& manager);
 	
 	bool CreateMeshBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* resPool);
-	void UpdateWorldMatrix(int frameindex, Matrix& modelMatrix);
+	void UpdateMeshBuffer(int frameindex, CommonCb::CbMesh& cb);
 	
 	void DrawModel(ID3D12GraphicsCommandList* pCmd, int frameIndex, CommonBufferManager& commonBufferManager, const SkyManager& manager);
 	void DrawModelRaw(ID3D12GraphicsCommandList* pCmd, int frameIndex);

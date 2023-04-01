@@ -46,11 +46,18 @@ public:
 		return UINT16(value * 50000);
 	}
 
+	struct DrawSource {
+		ColorTarget&	ColorDest;
+		DepthTarget&	DepthDest;
+		ColorTarget&	ColorSource;
+		VertexBuffer&	VertexBuffer;
+	};
+
 public:
 	bool Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format) override;
-
 	void Term() override;
-	void DrawTonemap(ID3D12GraphicsCommandList* pCmd, int frameindex, ColorTarget& colorDest, DepthTarget& depthDest, ColorTarget& colorSource, D3D12_VIEWPORT* viewport, D3D12_RECT* scissor, VertexBuffer& vb);
+	void DrawTonemap(ID3D12GraphicsCommandList*	pCmd, int frameindex, DrawSource& s);
+
 	void SetLuminance(float base, float max);
 	int                             m_TonemapType;              //!< トーンマップタイプ.
 

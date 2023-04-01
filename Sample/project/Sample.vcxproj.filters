@@ -28,14 +28,44 @@
     <Filter Include="リソース ファイル\SkyBox">
       <UniqueIdentifier>{0a95d80c-a288-4a33-92a6-5e70985f019d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="リソース ファイル\Tonemap">
-      <UniqueIdentifier>{c8d32c73-47ae-4d78-b82c-a0dee7b9e365}</UniqueIdentifier>
-    </Filter>
     <Filter Include="リソース ファイル\Shadow">
       <UniqueIdentifier>{fecbafa5-7971-4e6f-8ecf-3718a52d777d}</UniqueIdentifier>
     </Filter>
     <Filter Include="リソース ファイル\Common">
       <UniqueIdentifier>{b07f2df8-6206-4c97-ad5f-ebecadb3d88b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\PostProcess">
+      <UniqueIdentifier>{e8c5d3f2-0df5-4dd3-8fe0-65b749a42e66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\PostProcess\Tonemap">
+      <UniqueIdentifier>{c8d32c73-47ae-4d78-b82c-a0dee7b9e365}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\PostProcess\Bloom">
+      <UniqueIdentifier>{10b2b9ce-ec59-4447-b861-c4859f0b4c8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\PostProcess\Bloom\ExtractHighIntensity">
+      <UniqueIdentifier>{4d53b9f1-6820-468a-b2b7-3c17bf0fa390}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\PostProcess\Bloom\GaussianFilter">
+      <UniqueIdentifier>{ca31d837-917f-40fc-b6c9-c666ed40aaee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\PostProcess\Bloom\BloomComposition">
+      <UniqueIdentifier>{9efd6b4d-9133-47d2-b357-c9485f71c5a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\PostProcess\Bloom">
+      <UniqueIdentifier>{51dd194d-e053-4335-9a4e-9ac41cc6ab39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\PostProcess\ToneMap">
+      <UniqueIdentifier>{295c999e-533e-4295-96b2-c5b3e7bfd76f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\PostProcess\Bloom\ExtractHighIntensity">
+      <UniqueIdentifier>{326c9e8d-fa15-4ce8-968f-f114380ad521}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\PostProcess\Bloom\GaussianFilter">
+      <UniqueIdentifier>{3b54baaf-2ccd-4ceb-913f-1d1a8e6a2ae6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\PostProcess\Bloom\BloomComposition">
+      <UniqueIdentifier>{d1fabb13-9753-49a1-8a16-d20d5271df23}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -53,9 +83,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\ToneMap.h">
-      <Filter>ヘッダー ファイル\PostProcess</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\SampleApp.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -64,6 +91,9 @@
     </ClInclude>
     <ClInclude Include="..\include\Shaders.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ToneMap.h">
+      <Filter>ヘッダー ファイル\PostProcess\ToneMap</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -116,7 +146,7 @@
       <Filter>リソース ファイル\SkyBox</Filter>
     </FxCompile>
     <FxCompile Include="..\res\TonemapPS.hlsl">
-      <Filter>リソース ファイル\Tonemap</Filter>
+      <Filter>リソース ファイル\PostProcess\Tonemap</Filter>
     </FxCompile>
     <FxCompile Include="..\res\DepthShadow.hlsl">
       <Filter>リソース ファイル\Shadow</Filter>

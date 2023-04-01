@@ -115,10 +115,10 @@ bool Model::CreateMeshBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* resPo
 	return true;
 }
 
-void Model::UpdateWorldMatrix(int frameindex, Matrix& modelMatrix)
+void Model::UpdateMeshBuffer(int frameindex, CommonCb::CbMesh& cb)
 {
 	auto ptr = m_MeshCB[frameindex].GetPtr<CommonCb::CbMesh>();
-	ptr->World = modelMatrix;
+	memcpy(ptr, &cb, sizeof(CommonCb::CbMesh));;
 }
 
 void Model::Release()

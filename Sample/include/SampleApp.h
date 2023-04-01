@@ -83,8 +83,10 @@ private:
 	float							m_LightIntensity	= 1.0f;
 	float							m_ShadowBias		= 0.0005f;
 	float							m_ShadowStrength	= 0.5f;
+	float							m_ShadowLightPosDistance = 50.0f;
+	Vector4							m_OrthoGraphParam	= Vector4(6.0f, 6.0f, 0.1f, 100.0f);
 
-	Vector2							m_FogArea			= Vector2(0.0f, 1.0f);
+	Vector2							m_FogArea			= Vector2(0.0f, 5.0f);
 	Vector3							m_FogColor			= Vector3(1.0f, 1.0f, 1.0f);
 	//=========================================================================
 	// private methods.
@@ -126,11 +128,12 @@ private:
 	//! @brief      シーンを描画します.
 	//-------------------------------------------------------------------------
 	void DrawScene(ID3D12GraphicsCommandList* pCmdList);
-	void RenderShadowMap(ID3D12GraphicsCommandList* pCmd, DepthTarget& depthDest);
-	void RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& colorSource, DepthTarget& depthSource, SkyManager& manager);
+	void RenderShadowMap(ID3D12GraphicsCommandList* pCmd, DepthTarget& DepthDest);
+	void RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& ColorSource, DepthTarget& depthSource, SkyManager& manager);
 	void RenderPostProcess(ID3D12GraphicsCommandList* pCmd);
 	void RenderImGui(ID3D12GraphicsCommandList* pCmd);
 	void UpdateCamera();
+	void UpdateBuffer();
 	//-------------------------------------------------------------------------
 	//! @brief      モデルを描画します.
 	//-------------------------------------------------------------------------

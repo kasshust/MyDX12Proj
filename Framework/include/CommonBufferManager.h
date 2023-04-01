@@ -85,11 +85,13 @@ class CommonBufferManager {
 public:
 	bool Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, float width, float height);
 
-	void CommonBufferManager::UpdateLightBuffer(int frameindex, float texSize, float mipCount, Vector3 direction, float intensity);
-	void UpdateLightBufferShadow(int frameindex, Vector3 direction, float shadowBias, float shadowStrength);
-	void UpdateCommonBuffer(int frameindex, Vector3 pos, Vector2 fogArea, Vector3 fogColor);
-	void CommonBufferManager::UpdateViewProjMatrix(int frameindex, Matrix& view, Matrix& proj);
-	void CommonBufferManager::UpdateWorldMatrix(int frameindex, Matrix& modelMat);
+	
+	void UpdateShadowBuffer(int frameindex, Vector3 direction,  float shadowLightPosDist, Vector4& OrthographParam);
+	void UpdateCommonBuffer(int frameindex, CommonCb::CbCommon& cb);
+	void UpdateLightBuffer(int frameindex, CommonCb::CbLight& cb);
+	void UpdateViewProjMatrix(int frameindex, CommonCb::CbTransform& cbt);
+	void UpdateMeshBuffer(int frameindex, CommonCb::CbMesh& cb);
+	
 	void Term();
 
 	CommonCb::CbLight* GetLightProperty(int frameindex);
