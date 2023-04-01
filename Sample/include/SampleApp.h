@@ -79,9 +79,13 @@ private:
 	int                             m_PrevCursorX;                  //!< 前回のカーソル位置X.
 	int                             m_PrevCursorY;                  //!< 前回のカーソル位置Y.
 
-	Vector3							m_LightDirection = Vector3(1.0f,1.0f,0.0f);
-	float							m_LightIntensity = 1.0f;
+	Vector3							m_LightDirection	= Vector3(1.0f,1.0f,0.0f);
+	float							m_LightIntensity	= 1.0f;
+	float							m_ShadowBias		= 0.0005f;
+	float							m_ShadowStrength	= 0.5f;
 
+	Vector2							m_FogArea			= Vector2(0.0f, 1.0f);
+	Vector3							m_FogColor			= Vector3(1.0f, 1.0f, 1.0f);
 	//=========================================================================
 	// private methods.
 	//=========================================================================

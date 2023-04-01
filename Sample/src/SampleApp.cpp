@@ -67,13 +67,26 @@ bool SampleApp::OnInit()
 		L"../res/teapot/teapot.obj",
 		L"../res/cube/cube.obj",
 	};
+	GameObject* g;
 		
-	for (size_t i = 0; i < path.size(); i++)
-	{
-		GameObject* g = new GameObject();
-		if (!g->m_Model.LoadModel(path[i] , m_pDevice, m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
-		m_GameObjects.push_back(g);
-	}
+	// matball
+	g = new GameObject();
+	if (!g->m_Model.LoadModel(path[0] , m_pDevice, m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
+	m_GameObjects.push_back(g);
+	
+	// teapot
+	g = new GameObject();
+	if (!g->m_Model.LoadModel(path[1], m_pDevice, m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
+	g->Transform().SetPosition({ 1.0f,0.0f,0.0f });
+	m_GameObjects.push_back(g);
+
+	// cube
+	g = new GameObject();
+	if (!g->m_Model.LoadModel(path[2], m_pDevice, m_pPool[POOL_TYPE_RES], m_pQueue)) return false;
+	g->Transform().SetPosition({0.0f,-0.4f,0.0f});
+	g->Transform().SetScale({ 5.0f,0.1f,5.0f });
+	m_GameObjects.push_back(g);
+
 
 	return true;
 }
@@ -151,10 +164,27 @@ void SampleApp::OnRenderIMGUI() {
 			float* dirArray = new float[] { direction.x, direction.y, direction.z};
 			ImGui::InputFloat3("LightDirection", dirArray);
 			m_LightDirection = Vector3(dirArray);
-			prop->LightDirection = m_LightDirection;
+
+			ImGui::InputFloat("ShadowBias",		&m_ShadowBias);
+			ImGui::InputFloat("ShadowStrength", &m_ShadowStrength);
 
 			ImGui::TreePop();
 		}
+
+		if (ImGui::TreeNode("Fog")) {
+
+			float* fogArray = new float[] { m_FogArea.x, m_FogArea.y };
+			ImGui::InputFloat2("FogArea", fogArray);
+			m_FogArea = Vector2(fogArray);
+
+			float* fogColor = new float[] { m_FogColor.x, m_FogColor.y, m_FogColor.z};
+			ImGui::InputFloat3("FogColor", fogColor);
+			m_FogColor = Vector3(fogColor);
+
+
+			ImGui::TreePop();
+		}
+
 		ImGui::TreePop();
 	}
 
@@ -399,8 +429,8 @@ void SampleApp::DrawScene(ID3D12GraphicsCommandList* pCmd)
 {
 	// 定数バッファの更新.
 	m_CommonBufferManager.UpdateLightBuffer(m_FrameIndex, m_SkyManager.m_IBLBaker.LDTextureSize, m_SkyManager.m_IBLBaker.MipCount,m_LightDirection, m_LightIntensity);
-	m_CommonBufferManager.UpdateLightBufferVP(m_FrameIndex, m_LightDirection);
-	m_CommonBufferManager.UpdateCameraBuffer(m_FrameIndex, m_Camera.GetPosition());
+	m_CommonBufferManager.UpdateLightBufferShadow(m_FrameIndex, m_LightDirection, m_ShadowBias, m_ShadowStrength);
+	m_CommonBufferManager.UpdateCommonBuffer(m_FrameIndex, m_Camera.GetPosition(), m_FogArea, m_FogColor);
 	m_CommonBufferManager.UpdateViewProjMatrix(m_FrameIndex, m_View, m_Proj);
 
 	for (size_t i = 0; i < m_GameObjects.size(); i++) {
@@ -482,14 +512,14 @@ void SampleApp::ChangeDisplayMode(bool hdr)
 		DXGI_HDR_METADATA_HDR10 metaData = {};
 
 		// ITU-R BT.2100の原刺激と白色点を設定.
-		metaData.RedPrimary[0] = ToneMap::GetChromaticityCoord(0.708);
-		metaData.RedPrimary[1] = ToneMap::GetChromaticityCoord(0.292);
-		metaData.BluePrimary[0] = ToneMap::GetChromaticityCoord(0.170);
-		metaData.BluePrimary[1] = ToneMap::GetChromaticityCoord(0.797);
+		metaData.RedPrimary[0]   = ToneMap::GetChromaticityCoord(0.708);
+		metaData.RedPrimary[1]   = ToneMap::GetChromaticityCoord(0.292);
+		metaData.BluePrimary[0]  = ToneMap::GetChromaticityCoord(0.170);
+		metaData.BluePrimary[1]  = ToneMap::GetChromaticityCoord(0.797);
 		metaData.GreenPrimary[0] = ToneMap::GetChromaticityCoord(0.131);
 		metaData.GreenPrimary[1] = ToneMap::GetChromaticityCoord(0.046);
-		metaData.WhitePoint[0] = ToneMap::GetChromaticityCoord(0.3127);
-		metaData.WhitePoint[1] = ToneMap::GetChromaticityCoord(0.3290);
+		metaData.WhitePoint[0]   = ToneMap::GetChromaticityCoord(0.3127);
+		metaData.WhitePoint[1]   = ToneMap::GetChromaticityCoord(0.3290);
 
 		// ディスプレイがサポートすると最大輝度値と最小輝度値を設定.
 		metaData.MaxMasteringLuminance = UINT(GetMaxLuminance() * 10000);

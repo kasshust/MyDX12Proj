@@ -8,7 +8,7 @@
 // Includes
 //-----------------------------------------------------------------------------
 #include "BRDF.hlsli"
-#include "CameraBuffer.hlsli"
+#include "CommonBuffer.hlsli"
 #include "CommonLightBuffer.hlsli"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -137,11 +137,16 @@ float3 EvaluateIBLSpecular
 }
 
 
+
 //-----------------------------------------------------------------------------
 //      ピクセルシェーダのメインエントリーポイントです.
 //-----------------------------------------------------------------------------
 PSOutput main(VSOutput input)
 {
+    const float near = 0.1;
+    const float far = 30.0;
+    const float linerDepth = 1.0 / (far - near);
+    
     PSOutput output = (PSOutput)0;
 
     float3 V = normalize(input.WorldPos.xyz - CameraPosition);
@@ -162,14 +167,23 @@ PSOutput main(VSOutput input)
     lit += EvaluateIBLDiffuse(N) * Kd;
     lit += EvaluateIBLSpecular(NV, N, R, Ks, roughness, TextureSize, MipCount);
 
+    // テスト用ライト
     float3 TestLit = saturate(dot(N, normalize(LightDirection))) * TestCustomParam.xyz * LightIntensity;
     
-    float sm = ShadowMap.Sample(ShadowSmp, input.PosSM.xy);
-    float sma = (input.PosSM.z - 0.005f < sm) ? 1.0f : 0.0f;
+    // Shadow
+    float lightDist     = ShadowMap.Sample(ShadowSmp, input.PosSM.xy);
+    float Shadow        = (input.PosSM.z - ShadowBias < lightDist) ? 1.0f : ShadowStrength;
     
-    output.Color.rgb = lit * LightIntensity * sma + TestLit;
+    float3 lastLit = lit * LightIntensity * Shadow + TestLit;
+    
+    // Fog
+    float linerPos  = length(CameraPosition - input.WorldPos) * linerDepth;
+    float fogFactor = clamp((FogArea.y - linerPos) / (FogArea.y - FogArea.x), 0.0, 1.0);
+    
+    float3 Out = lerp(FogColor, lastLit, fogFactor);
+    
+    output.Color.rgb = Out;
     output.Color.a   = 1.0f;
-    
     
     return output;
 }

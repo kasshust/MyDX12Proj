@@ -11,10 +11,10 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd ../res/texture/bronze_bc.dds
-map_Kn ../res/texture/bronze_n.dds
-map_Ks ../res/texture/bronze_m.dds
-map_ns ../res/texture/bronze_r.dds
+map_Kd ../res/texture/marble_bc.dds
+map_Kn ../res/texture/marble_n.dds
+map_Ks ../res/texture/marble_m.dds
+map_ns ../res/texture/marble_r.dds
 map_Ka 
 map_d 
 map_Ke 

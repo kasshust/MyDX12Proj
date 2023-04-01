@@ -13,6 +13,8 @@ cbuffer CbLight : register(b3)
     float       LightIntensity      : packoffset(c0.z);     // ライト強度(スケール値).
     float3      LightDirection      : packoffset(c1);       // ディレクショナルライトの方向.
     float4x4    LightVP             : packoffset(c2);       // ライトVP
+    float       ShadowBias          : packoffset(c6);       // bias
+    float       ShadowStrength      : packoffset(c6.y);     // 影の強さ
 };
 
 

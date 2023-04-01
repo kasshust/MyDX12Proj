@@ -36,7 +36,7 @@ bool CommonBufferManager::CreateLightBuffer(ComPtr<ID3D12Device> pDevice, Descri
 bool CommonBufferManager::CreateCameraBuffer(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool) {
 	for (auto i = 0; i < App::FrameCount; ++i)
 	{
-		if (!m_CameraCB[i].Init(pDevice.Get(), pool, sizeof(CommonCb::CbCamera)))
+		if (!m_CommonCB[i].Init(pDevice.Get(), pool, sizeof(CommonCb::CbCommon)))
 		{
 			ELOG("Error : ConstantBuffer::Init() Failed.");
 			return false;
@@ -114,15 +114,7 @@ bool CommonBufferManager::CreateMatrixConstantBuffer(ComPtr<ID3D12Device> pDevic
 	return true;
 }
 
-CommonCb::CbLight* CommonBufferManager::GetLightProperty(int frameindex) {
-	CommonCb::CbLight* ptr = m_LightCB[frameindex].GetPtr<CommonCb::CbLight>();
-	return ptr;
-}
 
-void CommonBufferManager::SetLightProperty(int frameindex, CommonCb::CbLight& prop) {
-	CommonCb::CbLight* ptr = m_LightCB[frameindex].GetPtr<CommonCb::CbLight>();
-	ptr = &prop;
-}
 
 void CommonBufferManager::UpdateLightBuffer(int frameindex, float texSize, float mipCount, Vector3 direction, float intensity) {
 	auto ptr = m_LightCB[frameindex].GetPtr<CommonCb::CbLight>();
@@ -133,7 +125,7 @@ void CommonBufferManager::UpdateLightBuffer(int frameindex, float texSize, float
 
 }
 
-void CommonBufferManager::UpdateLightBufferVP(int frameindex, Vector3 direction) {
+void CommonBufferManager::UpdateLightBufferShadow(int frameindex, Vector3 direction, float shadowBias, float shadowStrength) {
 	auto ptr = m_LightCB[frameindex].GetPtr<CommonCb::CbLight>();
 	
 	// LVP‚ÌXV
@@ -167,11 +159,15 @@ void CommonBufferManager::UpdateLightBufferVP(int frameindex, Vector3 direction)
 	XMStoreFloat4x4(&mat, view * XMMatrixTranspose(projection) );
 
 	ptr->LightVP = mat;
+	ptr->ShadowBias		= shadowBias;
+	ptr->ShadowStrength = shadowStrength;
 }
 
-void CommonBufferManager::UpdateCameraBuffer(int frameindex, Vector3 pos) {
-	auto ptr = m_CameraCB[frameindex].GetPtr<CommonCb::CbCamera>();
+void CommonBufferManager::UpdateCommonBuffer(int frameindex, Vector3 pos, Vector2 fogArea, Vector3 fogColor) {
+	auto ptr = m_CommonCB[frameindex].GetPtr<CommonCb::CbCommon>();
 	ptr->CameraPosition = pos;
+	ptr->FogArea		= fogArea;
+	ptr->FogColor		= fogColor;
 }
 
 void CommonBufferManager::UpdateViewProjMatrix(int frameindex, Matrix& view, Matrix& proj) {
@@ -192,7 +188,7 @@ void CommonBufferManager::Term()
 	for (auto i = 0; i < App::FrameCount; ++i)
 	{
 		m_LightCB[i].Term();
-		m_CameraCB[i].Term();
+		m_CommonCB[i].Term();
 		m_MeshCB[i].Term();
 		m_TransformCB[i].Term();
 	}
@@ -204,3 +200,24 @@ void CommonBufferManager::SetRTManager(CommonRTManager* m) {
 CommonRTManager* CommonBufferManager::GetRTManager() {
 	return m_RTManager;
 };
+
+
+CommonCb::CbLight* CommonBufferManager::GetLightProperty(int frameindex) {
+	CommonCb::CbLight* ptr = m_LightCB[frameindex].GetPtr<CommonCb::CbLight>();
+	return ptr;
+}
+
+void CommonBufferManager::SetLightProperty(int frameindex, CommonCb::CbLight& prop) {
+	CommonCb::CbLight* ptr = m_LightCB[frameindex].GetPtr<CommonCb::CbLight>();
+	ptr = &prop;
+}
+
+CommonCb::CbCommon* CommonBufferManager::GetCommonProperty(int frameindex) {
+	CommonCb::CbCommon* ptr = m_CommonCB[frameindex].GetPtr<CommonCb::CbCommon>();
+	return ptr;
+}
+
+void CommonBufferManager::SetCommonProperty(int frameindex, CommonCb::CbCommon& prop) {
+	CommonCb::CbCommon* ptr = m_CommonCB[frameindex].GetPtr<CommonCb::CbCommon>();
+	ptr = &prop;
+}

@@ -31,6 +31,7 @@ bool ShadowMap::CreateRootSig(ComPtr<ID3D12Device> pDevice) {
 	return true;
 }
 
+/*
 void ShadowMap::UpdateConstantBuffer(int frameindex, Vector3 lighrDir) {
 	auto ptr = m_CB[frameindex].GetPtr<CbDepthShadowMap>();
 
@@ -56,6 +57,7 @@ void ShadowMap::UpdateConstantBuffer(int frameindex, Vector3 lighrDir) {
 
 	ptr->LightVP = mat;
 }
+*/
 
 bool ShadowMap::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format) {
 	

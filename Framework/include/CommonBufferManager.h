@@ -40,14 +40,21 @@ namespace CommonCb {
 		Vector3		LightDirection;		//!< ディレクショナルライトの方向.
 		float		Padding1;			//!< パディング.
 		Matrix		LightVP;			//!< ディレクショナルライトのViewProjection
+		float		ShadowBias;			//!< Bias
+		float		ShadowStrength;		//!< Strength
 	};
 
 	///////////////////////////////////////////////////////////////////////////////
-	// CbCamera structure
+	// CbCommon structure
 	///////////////////////////////////////////////////////////////////////////////
-	struct alignas(256) CbCamera
+	struct alignas(256) CbCommon
 	{
 		Vector3  CameraPosition;    //!< カメラ位置です.
+		float	 Padding0;
+		Vector2  FogArea;
+		float	 Padding1;
+		float	 Padding2;
+		Vector3  FogColor;
 	};
 
 	///////////////////////////////////////////////////////////////////////////////
@@ -79,18 +86,20 @@ public:
 	bool Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* pool, float width, float height);
 
 	void CommonBufferManager::UpdateLightBuffer(int frameindex, float texSize, float mipCount, Vector3 direction, float intensity);
-	void CommonBufferManager::UpdateLightBufferVP(int frameindex, Vector3 direction);
-	void CommonBufferManager::UpdateCameraBuffer(int frameindex, Vector3 pos);
+	void UpdateLightBufferShadow(int frameindex, Vector3 direction, float shadowBias, float shadowStrength);
+	void UpdateCommonBuffer(int frameindex, Vector3 pos, Vector2 fogArea, Vector3 fogColor);
 	void CommonBufferManager::UpdateViewProjMatrix(int frameindex, Matrix& view, Matrix& proj);
 	void CommonBufferManager::UpdateWorldMatrix(int frameindex, Matrix& modelMat);
 	void Term();
+
 	CommonCb::CbLight* GetLightProperty(int frameindex);
 	void SetLightProperty(int frameindex, CommonCb::CbLight& prop);
-
+	CommonCb::CbCommon* GetCommonProperty(int frameindex);
+	void SetCommonProperty(int frameindex, CommonCb::CbCommon& prop);
 
 	VertexBuffer        m_QuadVB;                            //!< 頂点バッファです.
 	ConstantBuffer      m_LightCB[App::FrameCount];          //!< ライトバッファです.
-	ConstantBuffer      m_CameraCB[App::FrameCount];         //!< カメラバッファです.
+	ConstantBuffer      m_CommonCB[App::FrameCount];         //!< 一般バッファです.
 	ConstantBuffer      m_TransformCB[App::FrameCount];      //!< 変換用バッファです.
 	ConstantBuffer		m_MeshCB[App::FrameCount];           //!< メッシュ用バッファです.
 	

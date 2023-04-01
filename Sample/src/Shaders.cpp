@@ -42,7 +42,7 @@ bool BasicShader::CreateRootSig(ComPtr<ID3D12Device> pDevice) {
 		.AddStaticSmp(ShaderStage::PS, 4, SamplerState::LinearWrap)
 		.AddStaticSmp(ShaderStage::PS, 5, SamplerState::LinearWrap)
 		.AddStaticSmp(ShaderStage::PS, 6, SamplerState::LinearWrap)
-		.AddStaticSmp(ShaderStage::PS, 9, SamplerState::LinearWrap)
+		.AddStaticSmp(ShaderStage::PS, 9, SamplerState::LinearClamp)
 		.AllowIL()
 		.End();
 
@@ -99,7 +99,7 @@ void BasicShader::SetShader(ID3D12GraphicsCommandList* pCmd, int frameindex, Mat
 		{
 			pCmd->SetGraphicsRootDescriptorTable(0, commonbufmanager.m_TransformCB[frameindex].GetHandleGPU());
 			pCmd->SetGraphicsRootDescriptorTable(2, commonbufmanager.m_LightCB[frameindex].GetHandleGPU());
-			pCmd->SetGraphicsRootDescriptorTable(3, commonbufmanager.m_CameraCB[frameindex].GetHandleGPU());
+			pCmd->SetGraphicsRootDescriptorTable(3, commonbufmanager.m_CommonCB[frameindex].GetHandleGPU());
 		}
 
 		pCmd->SetGraphicsRootDescriptorTable(5, skyManager.m_IBLBaker.GetHandleGPU_DFG());

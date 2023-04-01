@@ -30,7 +30,7 @@
   <ItemGroup>
     <None Include="..\res\BakeUtil.hlsli" />
     <None Include="..\res\BRDF.hlsli" />
-    <None Include="..\res\CameraBuffer.hlsli" />
+    <None Include="..\res\CommonBuffer.hlsli" />
     <None Include="..\res\CommonLightBuffer.hlsli" />
     <None Include="..\res\VSCommonBuffer.hlsli" />
     <None Include="packages.config" />

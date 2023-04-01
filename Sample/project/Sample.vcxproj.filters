@@ -74,7 +74,7 @@
       <Filter>リソース ファイル</Filter>
     </None>
     <None Include="packages.config" />
-    <None Include="..\res\CameraBuffer.hlsli">
+    <None Include="..\res\CommonBuffer.hlsli">
       <Filter>リソース ファイル\Common</Filter>
     </None>
     <None Include="..\res\CommonLightBuffer.hlsli">
