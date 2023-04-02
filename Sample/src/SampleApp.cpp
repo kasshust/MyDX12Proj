@@ -325,6 +325,18 @@ void SampleApp::OnRenderIMGUI() {
 			ImGui::Image((ImTextureID)m_CommonRTManager.m_SceneShadowTarget.GetHandleSRV()->HandleGPU.ptr, ImVec2(160, 90));
 			ImGui::TreePop();
 		}
+		if (ImGui::TreeNode("BloomTarget")) {
+
+			int size = sizeof(m_CommonRTManager.m_BloomColorTarget) / sizeof(m_CommonRTManager.m_BloomColorTarget[0]);
+			for (size_t i = 0; i < size; i++)
+			{
+				ImGui::Image((ImTextureID)m_CommonRTManager.m_BloomColorTarget[i].GetHandleSRV()->HandleGPU.ptr, ImVec2(160, 90));
+			}
+
+			
+			ImGui::TreePop();
+		}
+
 
 		ImGui::TreePop();
 	}

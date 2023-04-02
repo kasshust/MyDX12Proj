@@ -49,6 +49,7 @@ public:
 	//-------------------------------------------------------------------------
 	~ColorTarget();
 
+
 	//-------------------------------------------------------------------------
 	//! @brief      初期化処理を行います.
 	//!
@@ -67,7 +68,9 @@ public:
 		uint32_t        width,
 		uint32_t        height,
 		DXGI_FORMAT     format,
-		float           clearValue[4]);
+		float           clearValue[4],
+		D3D12_RESOURCE_STATES InitialResourceState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+	);
 
 	//-------------------------------------------------------------------------
 	//! @brief      バックバッファから初期化処理を行います.

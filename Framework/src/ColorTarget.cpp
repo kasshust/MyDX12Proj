@@ -96,7 +96,8 @@ bool ColorTarget::Init
 	uint32_t        width,
 	uint32_t        height,
 	DXGI_FORMAT     format,
-	float           clearColor[4]
+	float           clearColor[4],
+	D3D12_RESOURCE_STATES InitialResourceState
 )
 {
 	if (pDevice == nullptr || pPoolRTV == nullptr || width == 0 || height == 0)
@@ -164,7 +165,7 @@ bool ColorTarget::Init
 		&prop,
 		D3D12_HEAP_FLAG_NONE,
 		&desc,
-		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		InitialResourceState,
 		&clearValue,
 		IID_PPV_ARGS(m_pTarget.GetAddressOf()));
 	if (FAILED(hr))
@@ -176,6 +177,8 @@ bool ColorTarget::Init
 	m_RTVDesc.Format               = format;
 	m_RTVDesc.Texture2D.MipSlice   = 0;
 	m_RTVDesc.Texture2D.PlaneSlice = 0;
+
+	auto ptr = m_pTarget.Get();
 
 	pDevice->CreateRenderTargetView(m_pTarget.Get(), &m_RTVDesc, m_pHandleRTV->HandleCPU);
 

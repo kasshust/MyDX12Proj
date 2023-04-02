@@ -67,7 +67,10 @@ public:
 		uint32_t        height,
 		DXGI_FORMAT     format,
 		float           clearDepth,
-		uint8_t         clearStencil);
+		uint8_t         clearStencil,
+		D3D12_RESOURCE_STATES initialResourceState = D3D12_RESOURCE_STATE_DEPTH_WRITE
+	
+	);
 
 	//-------------------------------------------------------------------------
 	//! @brief      終了処理を行います.

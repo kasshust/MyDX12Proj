@@ -46,7 +46,8 @@ bool DepthTarget::Init
 	uint32_t        height,
 	DXGI_FORMAT     format,
 	float           clearDepth,
-	uint8_t         clearStencil
+	uint8_t         clearStencil,
+	D3D12_RESOURCE_STATES initialResourceState
 )
 {
 	if (pDevice == nullptr || pPoolRTV == nullptr || width == 0 || height == 0)
@@ -110,7 +111,7 @@ bool DepthTarget::Init
 		&prop,
 		D3D12_HEAP_FLAG_NONE,
 		&desc,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		initialResourceState,
 		&clearValue,
 		IID_PPV_ARGS(m_pTarget.GetAddressOf()));
 	if (FAILED(hr))
