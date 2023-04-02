@@ -103,7 +103,7 @@ protected:
 	ComPtr<IDXGISwapChain4>     m_pSwapChain;                // スワップチェインです.
 	ColorTarget                 m_ColorTarget[FrameCount];   // カラーターゲットです.
 	DepthTarget                 m_DepthTarget;               // 深度ターゲットです.
-	DescriptorPool* m_pPool[POOL_COUNT];         // ディスクリプタプールです.
+	DescriptorPool*				m_pPool[POOL_COUNT];         // ディスクリプタプールです.
 	CommandList                 m_CommandList;               // コマンドリストです.
 	Fence                       m_Fence;                     // フェンスです.
 	uint32_t                    m_FrameIndex;                // フレーム番号です.
@@ -111,8 +111,9 @@ protected:
 	D3D12_RECT                  m_Scissor;                   // シザー矩形です.
 	DXGI_FORMAT                 m_BackBufferFormat;          // バックバッファフォーマットです.
 
-	ID3D12DescriptorHeap*		m_ImGuiDescriptorHeap;		 // ImGui用のディスクリプタヒープ
+	ComPtr<ID3D12DescriptorHeap>m_pImGuiDescriptorHeap;		 // ImGui用のディスクリプタヒープ
 	CommandList                 m_ImGuiCommandList;          // ImGui用のコマンドリストです.
+	DescriptorHandle*			m_ImGuiHandle;
 
 	//=========================================================================
 	// protected methods.

@@ -68,8 +68,8 @@ Texture2D    RoughnessMap    : register(t5);
 SamplerState RoughnessSmp    : register(s5);
 
 // 法線マップ.
-Texture2D    NormalMap       : register(t6);
-SamplerState NormalSmp       : register(s6);
+Texture2D     NormalMap       : register(t6);
+SamplerState  NormalSmp       : register(s6);
 
 // シャドウマップ
 Texture2D    ShadowMap      : register(t9);
@@ -154,6 +154,9 @@ PSOutput main(VSOutput input)
     N = mul(input.InvTangentBasis, N);
     float3 R = normalize(reflect(V, N));
 
+    
+    
+    
     float NV = saturate(dot(N, V));
 
     float3 baseColor = BaseColorMap.Sample(BaseColorSmp, input.TexCoord).rgb;

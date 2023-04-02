@@ -19,18 +19,6 @@
     <Filter Include="ヘッダー ファイル\PostProcess">
       <UniqueIdentifier>{3603d9bc-9d2b-4b95-bee8-df839f916f2a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="リソース ファイル\Basic">
-      <UniqueIdentifier>{59430246-2505-4bc7-8f36-95c72647b053}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="リソース ファイル\IBL">
-      <UniqueIdentifier>{6d6ef80f-87f6-4cad-9c38-b9355a1e4d32}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="リソース ファイル\SkyBox">
-      <UniqueIdentifier>{0a95d80c-a288-4a33-92a6-5e70985f019d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="リソース ファイル\Shadow">
-      <UniqueIdentifier>{fecbafa5-7971-4e6f-8ecf-3718a52d777d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="リソース ファイル\Common">
       <UniqueIdentifier>{b07f2df8-6206-4c97-ad5f-ebecadb3d88b}</UniqueIdentifier>
     </Filter>
@@ -67,6 +55,27 @@
     <Filter Include="ヘッダー ファイル\PostProcess\Bloom\BloomComposition">
       <UniqueIdentifier>{d1fabb13-9753-49a1-8a16-d20d5271df23}</UniqueIdentifier>
     </Filter>
+    <Filter Include="リソース ファイル\Bake">
+      <UniqueIdentifier>{7c20e1d6-48eb-4086-9495-bf21513068f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\Bake\IBL">
+      <UniqueIdentifier>{6d6ef80f-87f6-4cad-9c38-b9355a1e4d32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\PreProcess">
+      <UniqueIdentifier>{22520d3a-305f-4f8b-910f-ccde69e2f7d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\PreProcess\Shadow">
+      <UniqueIdentifier>{fecbafa5-7971-4e6f-8ecf-3718a52d777d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\Scene">
+      <UniqueIdentifier>{9d401e45-06c7-43d9-9af3-c613b04da9e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\Scene\Basic">
+      <UniqueIdentifier>{59430246-2505-4bc7-8f36-95c72647b053}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\Scene\SkyBox">
+      <UniqueIdentifier>{0a95d80c-a288-4a33-92a6-5e70985f019d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp">
@@ -97,12 +106,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\res\BRDF.hlsli">
-      <Filter>リソース ファイル</Filter>
-    </None>
-    <None Include="..\res\BakeUtil.hlsli">
-      <Filter>リソース ファイル</Filter>
-    </None>
     <None Include="packages.config" />
     <None Include="..\res\CommonBuffer.hlsli">
       <Filter>リソース ファイル\Common</Filter>
@@ -113,43 +116,49 @@
     <None Include="..\res\VSCommonBuffer.hlsli">
       <Filter>リソース ファイル\Common</Filter>
     </None>
+    <None Include="..\res\BRDF.hlsli">
+      <Filter>リソース ファイル\Scene</Filter>
+    </None>
+    <None Include="..\res\BakeUtil.hlsli">
+      <Filter>リソース ファイル\Bake</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\res\QuadVS.hlsl">
-      <Filter>リソース ファイル</Filter>
-    </FxCompile>
-    <FxCompile Include="..\res\SphereToCubePS.hlsl">
-      <Filter>リソース ファイル</Filter>
-    </FxCompile>
-    <FxCompile Include="..\res\SphereToCubeVS.hlsl">
-      <Filter>リソース ファイル</Filter>
-    </FxCompile>
     <FxCompile Include="..\res\BasicVS.hlsl">
-      <Filter>リソース ファイル\Basic</Filter>
+      <Filter>リソース ファイル\Scene\Basic</Filter>
     </FxCompile>
     <FxCompile Include="..\res\BasicPS.hlsl">
-      <Filter>リソース ファイル\Basic</Filter>
+      <Filter>リソース ファイル\Scene\Basic</Filter>
     </FxCompile>
     <FxCompile Include="..\res\IntegrateDFG_PS.hlsl">
-      <Filter>リソース ファイル\IBL</Filter>
+      <Filter>リソース ファイル\Bake\IBL</Filter>
     </FxCompile>
     <FxCompile Include="..\res\IntegrateDiffuseLD_PS.hlsl">
-      <Filter>リソース ファイル\IBL</Filter>
+      <Filter>リソース ファイル\Bake\IBL</Filter>
     </FxCompile>
     <FxCompile Include="..\res\IntegrateSpecularLD_PS.hlsl">
-      <Filter>リソース ファイル\IBL</Filter>
+      <Filter>リソース ファイル\Bake\IBL</Filter>
     </FxCompile>
     <FxCompile Include="..\res\SkyBoxPS.hlsl">
-      <Filter>リソース ファイル\SkyBox</Filter>
+      <Filter>リソース ファイル\Scene\SkyBox</Filter>
     </FxCompile>
     <FxCompile Include="..\res\SkyBoxVS.hlsl">
-      <Filter>リソース ファイル\SkyBox</Filter>
+      <Filter>リソース ファイル\Scene\SkyBox</Filter>
     </FxCompile>
     <FxCompile Include="..\res\TonemapPS.hlsl">
       <Filter>リソース ファイル\PostProcess\Tonemap</Filter>
     </FxCompile>
     <FxCompile Include="..\res\DepthShadow.hlsl">
-      <Filter>リソース ファイル\Shadow</Filter>
+      <Filter>リソース ファイル\PreProcess\Shadow</Filter>
+    </FxCompile>
+    <FxCompile Include="..\res\QuadVS.hlsl">
+      <Filter>リソース ファイル\PostProcess</Filter>
+    </FxCompile>
+    <FxCompile Include="..\res\SphereToCubePS.hlsl">
+      <Filter>リソース ファイル\Scene</Filter>
+    </FxCompile>
+    <FxCompile Include="..\res\SphereToCubeVS.hlsl">
+      <Filter>リソース ファイル\Scene</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

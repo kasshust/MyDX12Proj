@@ -388,7 +388,8 @@ D3D12_SHADER_RESOURCE_VIEW_DESC Texture::GetViewDesc(bool isCube)
 			}
 			else
 			{
-				if (desc.MipLevels > 1)
+				// if (desc.MipLevels > 1)
+				if(false)
 				{
 					viewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
 				}

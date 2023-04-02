@@ -149,8 +149,8 @@ private:
 	// private variables.
 	//=========================================================================
 	ComPtr<ID3D12Resource>  m_pTex;
-	DescriptorHandle* m_pHandle;
-	DescriptorPool* m_pPool;
+	DescriptorHandle*		m_pHandle;
+	DescriptorPool*			m_pPool;
 
 	//=========================================================================
 	// private methods.

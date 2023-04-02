@@ -444,11 +444,12 @@ bool App::InitD3D()
 bool App::InitIMGUI()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
-	desc.NumDescriptors             = FrameCount;
+	desc.NumDescriptors             = FrameCount * 2;
 	desc.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	desc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	desc.NodeMask                   = 0;
-	auto hr                         = m_pDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_ImGuiDescriptorHeap));
+
+	auto hr                         = m_pDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(m_pImGuiDescriptorHeap.GetAddressOf()));
 	if (FAILED(hr))
 	{
 		return false;
@@ -465,14 +466,15 @@ bool App::InitIMGUI()
 	if (!ImGui_ImplWin32_Init(m_hWnd))return false;
 
 	ID3D12Device* device = m_pDevice.Get();
-	int frameCount = FrameCount;
-	DXGI_FORMAT format = m_ColorTarget[0].GetRTVDesc().Format;
+	int frameCount       = FrameCount;
+	DXGI_FORMAT format   = m_ColorTarget[0].GetRTVDesc().Format;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE  chandle = m_ImGuiDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	D3D12_GPU_DESCRIPTOR_HANDLE  ghandle = m_ImGuiDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	m_ImGuiHandle = m_pPool[POOL_TYPE_RES]->AllocHandle();
+	D3D12_CPU_DESCRIPTOR_HANDLE  chandle = m_ImGuiHandle->HandleCPU;
+	D3D12_GPU_DESCRIPTOR_HANDLE  ghandle = m_ImGuiHandle->HandleGPU;
 
-	// return true;
-	return ImGui_ImplDX12_Init(device, frameCount, format, m_ImGuiDescriptorHeap, chandle, ghandle);
+	return ImGui_ImplDX12_Init(device, frameCount, format, m_pPool[POOL_TYPE_RES]->GetHeap(), chandle, ghandle);
+
 }
 
 //-----------------------------------------------------------------------------

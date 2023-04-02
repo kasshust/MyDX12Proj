@@ -11,7 +11,7 @@ bool CommonRTManager::CreateColorTarget(ComPtr<ID3D12Device> pDevice, Descriptor
 		respool,
 		width,
 		height,
-		DXGI_FORMAT_R16G16B16A16_UNORM,
+		DXGI_FORMAT_R10G10B10A2_UNORM,
 		clearColor))
 	{
 		ELOG("Error : ColorTarget::Init() Failed.");

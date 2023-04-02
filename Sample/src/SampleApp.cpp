@@ -52,9 +52,11 @@ bool SampleApp::OnInit()
 
 	if (!CommonInit()) return false;
 
-	if (!m_ShadowMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format)) return false;
+	if (!m_ShadowMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format))	return false;
 	if (!m_ToneMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format))    return false;
-	if (!m_SkyManager.IBLBake(m_pDevice, m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_CommandList, m_pQueue, m_Fence)) return false;
+	if (!m_SkyManager.IBLBake(m_pDevice, m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_CommandList, m_pQueue, m_Fence))				return false;
+
+	
 
 	// GameObject/Model
 	AppResourceManager& manager = AppResourceManager::GetInstance();
@@ -201,36 +203,7 @@ void SampleApp::OnRenderIMGUI() {
 		ImGui::TreePop();
 	}
 
-	if (ImGui::TreeNode("Resource")) {
-		if (ImGui::TreeNode("Texture")) {
-			const auto m = AppResourceManager::GetInstance().GetTexturesMap();
-			for (auto itr = m.begin(); itr != m.end(); ++itr) {
-				ImGui::Text("%ls", itr->first.c_str());
-			}
-			ImGui::TreePop();
-		}
 
-		if (ImGui::TreeNode("ResMesh")) {
-			const auto m = AppResourceManager::GetInstance().GetResMeshesMap();
-			for (auto itr = m.begin(); itr != m.end(); ++itr) {
-				ImGui::Text("%ls", itr->first.c_str());
-			}
-			ImGui::TreePop();
-		}
-
-
-		if (ImGui::TreeNode("ResMaterial")) {
-			const auto m = AppResourceManager::GetInstance().GetResMaterialsMap();
-			
-			for (auto itr = m.begin(); itr != m.end(); ++itr) {
-				
-
-				ImGui::Text("%ls", itr->first.c_str());
-			}
-			ImGui::TreePop();
-		}
-		ImGui::TreePop();
-	}
 
 	if (ImGui::TreeNode("GameObjects")) {
 
@@ -330,6 +303,62 @@ void SampleApp::OnRenderIMGUI() {
 		PostQuitMessage(0);
 	}
 
+	// ImGui::ShowMetricsWindow();
+
+	ImGui::End();
+
+	ImGui::Begin("Metrics");
+
+	if (ImGui::TreeNode("Target")) {
+
+		if (ImGui::TreeNode("ColorTarget")) {
+			ImGui::Image((ImTextureID)m_CommonRTManager.m_SceneColorTarget.GetHandleSRV()->HandleGPU.ptr, ImVec2(160, 90));
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("DepthTarget")) {
+			ImGui::Image((ImTextureID)m_CommonRTManager.m_SceneDepthTarget.GetHandleSRV()->HandleGPU.ptr, ImVec2(160, 90));
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("ShadowTarget")) {
+			ImGui::Image((ImTextureID)m_CommonRTManager.m_SceneShadowTarget.GetHandleSRV()->HandleGPU.ptr, ImVec2(160, 90));
+			ImGui::TreePop();
+		}
+
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Resource")) {
+		if (ImGui::TreeNode("Texture")) {
+			const auto m = AppResourceManager::GetInstance().GetTexturesMap();
+			for (auto itr = m.begin(); itr != m.end(); ++itr) {
+				ImGui::Text("%ls", itr->first.c_str());
+				ImGui::Image((ImTextureID)itr->second->GetHandleGPU().ptr, ImVec2(64, 64));
+			}
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("ResMesh")) {
+			const auto m = AppResourceManager::GetInstance().GetResMeshesMap();
+			for (auto itr = m.begin(); itr != m.end(); ++itr) {
+				ImGui::Text("%ls", itr->first.c_str());
+			}
+			ImGui::TreePop();
+		}
+
+
+		if (ImGui::TreeNode("ResMaterial")) {
+			const auto m = AppResourceManager::GetInstance().GetResMaterialsMap();
+
+			for (auto itr = m.begin(); itr != m.end(); ++itr) {
+				ImGui::Text("%ls", itr->first.c_str());
+			}
+			ImGui::TreePop();
+		}
+
+		ImGui::TreePop();
+	}
 	ImGui::End();
 }
 
@@ -366,7 +395,8 @@ void SampleApp::OnRender()
 	// ImGui描画
 	OnRenderIMGUICommonProcess();
 	ID3D12DescriptorHeap* const pImGuiHeaps[] = {
-		m_ImGuiDescriptorHeap,
+		m_pPool[POOL_TYPE_RES]->GetHeap(),
+		// m_pImGuiDescriptorHeap.Get(),
 	};
 	auto pImGuiCmd = m_ImGuiCommandList.Reset();
 	pImGuiCmd->SetDescriptorHeaps(1, pImGuiHeaps);
@@ -513,6 +543,92 @@ void SampleApp::RenderImGui(ID3D12GraphicsCommandList* pImGuiCmd)
 	}
 }
 
+
+
+//-----------------------------------------------------------------------------
+//      メッセージプロシージャです.
+//-----------------------------------------------------------------------------
+void SampleApp::OnMsgProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+	// 古いWM_MOUSEWHEELの定義.
+	const UINT OLD_WM_MOUSEWHEEL = 0x020A;
+
+	if ((msg == WM_LBUTTONDOWN)
+		|| (msg == WM_LBUTTONUP)
+		|| (msg == WM_LBUTTONDBLCLK)
+		|| (msg == WM_MBUTTONDOWN)
+		|| (msg == WM_MBUTTONUP)
+		|| (msg == WM_MBUTTONDBLCLK)
+		|| (msg == WM_RBUTTONDOWN)
+		|| (msg == WM_RBUTTONUP)
+		|| (msg == WM_RBUTTONDBLCLK)
+		|| (msg == WM_XBUTTONDOWN)
+		|| (msg == WM_XBUTTONUP)
+		|| (msg == WM_XBUTTONDBLCLK)
+		|| (msg == WM_MOUSEHWHEEL)             // このWM_MOUSEWHEELは0x020Eを想定.
+		|| (msg == WM_MOUSEMOVE)
+		|| (msg == OLD_WM_MOUSEWHEEL))
+	{
+		auto x = int(LOWORD(lp));
+		auto y = int(HIWORD(lp));
+
+		auto delta = 0;
+		if (msg == WM_MOUSEHWHEEL || msg == OLD_WM_MOUSEWHEEL)
+		{
+			POINT pt;
+			pt.x = x;
+			pt.y = y;
+
+			// クライアント座標系に変換.
+			ScreenToClient(hWnd, &pt);
+			x = pt.x;
+			y = pt.y;
+
+			delta += int(HIWORD(wp));
+		}
+
+		auto state = int(LOWORD(wp));
+		auto left = ((state & MK_LBUTTON) != 0);
+		auto right = ((state & MK_RBUTTON) != 0);
+		auto middle = ((state & MK_MBUTTON) != 0);
+
+		Camera::Event args = {};
+
+		if (left)
+		{
+			args.Type = Camera::EventRotate;
+			args.RotateH = DirectX::XMConvertToRadians(-0.5f * (x - m_PrevCursorX));
+			args.RotateV = DirectX::XMConvertToRadians(0.5f * (y - m_PrevCursorY));
+			m_Camera.UpdateByEvent(args);
+		}
+		else if (right)
+		{
+			args.Type = Camera::EventDolly;
+			args.Dolly = DirectX::XMConvertToRadians(0.5f * (y - m_PrevCursorY));
+			m_Camera.UpdateByEvent(args);
+		}
+		else if (middle)
+		{
+			args.Type = Camera::EventMove;
+			if (GetAsyncKeyState(VK_MENU) != 0)
+			{
+				args.MoveX = DirectX::XMConvertToRadians(0.5f * (x - m_PrevCursorX));
+				args.MoveZ = DirectX::XMConvertToRadians(0.5f * (y - m_PrevCursorY));
+			}
+			else
+			{
+				args.MoveX = DirectX::XMConvertToRadians(0.5f * (x - m_PrevCursorX));
+				args.MoveY = DirectX::XMConvertToRadians(0.5f * (y - m_PrevCursorY));
+			}
+			m_Camera.UpdateByEvent(args);
+		}
+
+		m_PrevCursorX = x;
+		m_PrevCursorY = y;
+	}
+}
+
+
 //-----------------------------------------------------------------------------
 //      ディスプレイモードを変更します.
 //-----------------------------------------------------------------------------
@@ -546,14 +662,14 @@ void SampleApp::ChangeDisplayMode(bool hdr)
 		DXGI_HDR_METADATA_HDR10 metaData = {};
 
 		// ITU-R BT.2100の原刺激と白色点を設定.
-		metaData.RedPrimary[0]   = ToneMap::GetChromaticityCoord(0.708);
-		metaData.RedPrimary[1]   = ToneMap::GetChromaticityCoord(0.292);
-		metaData.BluePrimary[0]  = ToneMap::GetChromaticityCoord(0.170);
-		metaData.BluePrimary[1]  = ToneMap::GetChromaticityCoord(0.797);
+		metaData.RedPrimary[0] = ToneMap::GetChromaticityCoord(0.708);
+		metaData.RedPrimary[1] = ToneMap::GetChromaticityCoord(0.292);
+		metaData.BluePrimary[0] = ToneMap::GetChromaticityCoord(0.170);
+		metaData.BluePrimary[1] = ToneMap::GetChromaticityCoord(0.797);
 		metaData.GreenPrimary[0] = ToneMap::GetChromaticityCoord(0.131);
 		metaData.GreenPrimary[1] = ToneMap::GetChromaticityCoord(0.046);
-		metaData.WhitePoint[0]   = ToneMap::GetChromaticityCoord(0.3127);
-		metaData.WhitePoint[1]   = ToneMap::GetChromaticityCoord(0.3290);
+		metaData.WhitePoint[0] = ToneMap::GetChromaticityCoord(0.3127);
+		metaData.WhitePoint[1] = ToneMap::GetChromaticityCoord(0.3290);
 
 		// ディスプレイがサポートすると最大輝度値と最小輝度値を設定.
 		metaData.MaxMasteringLuminance = UINT(GetMaxLuminance() * 10000);
@@ -641,88 +757,5 @@ void SampleApp::ChangeDisplayMode(bool hdr)
 			message.c_str(),
 			"SDR設定成功",
 			MB_OK | MB_ICONINFORMATION);
-	}
-}
-
-//-----------------------------------------------------------------------------
-//      メッセージプロシージャです.
-//-----------------------------------------------------------------------------
-void SampleApp::OnMsgProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
-{
-	// 古いWM_MOUSEWHEELの定義.
-	const UINT OLD_WM_MOUSEWHEEL = 0x020A;
-
-	if ((msg == WM_LBUTTONDOWN)
-		|| (msg == WM_LBUTTONUP)
-		|| (msg == WM_LBUTTONDBLCLK)
-		|| (msg == WM_MBUTTONDOWN)
-		|| (msg == WM_MBUTTONUP)
-		|| (msg == WM_MBUTTONDBLCLK)
-		|| (msg == WM_RBUTTONDOWN)
-		|| (msg == WM_RBUTTONUP)
-		|| (msg == WM_RBUTTONDBLCLK)
-		|| (msg == WM_XBUTTONDOWN)
-		|| (msg == WM_XBUTTONUP)
-		|| (msg == WM_XBUTTONDBLCLK)
-		|| (msg == WM_MOUSEHWHEEL)             // このWM_MOUSEWHEELは0x020Eを想定.
-		|| (msg == WM_MOUSEMOVE)
-		|| (msg == OLD_WM_MOUSEWHEEL))
-	{
-		auto x = int(LOWORD(lp));
-		auto y = int(HIWORD(lp));
-
-		auto delta = 0;
-		if (msg == WM_MOUSEHWHEEL || msg == OLD_WM_MOUSEWHEEL)
-		{
-			POINT pt;
-			pt.x = x;
-			pt.y = y;
-
-			// クライアント座標系に変換.
-			ScreenToClient(hWnd, &pt);
-			x = pt.x;
-			y = pt.y;
-
-			delta += int(HIWORD(wp));
-		}
-
-		auto state = int(LOWORD(wp));
-		auto left = ((state & MK_LBUTTON) != 0);
-		auto right = ((state & MK_RBUTTON) != 0);
-		auto middle = ((state & MK_MBUTTON) != 0);
-
-		Camera::Event args = {};
-
-		if (left)
-		{
-			args.Type = Camera::EventRotate;
-			args.RotateH = DirectX::XMConvertToRadians(-0.5f * (x - m_PrevCursorX));
-			args.RotateV = DirectX::XMConvertToRadians(0.5f * (y - m_PrevCursorY));
-			m_Camera.UpdateByEvent(args);
-		}
-		else if (right)
-		{
-			args.Type = Camera::EventDolly;
-			args.Dolly = DirectX::XMConvertToRadians(0.5f * (y - m_PrevCursorY));
-			m_Camera.UpdateByEvent(args);
-		}
-		else if (middle)
-		{
-			args.Type = Camera::EventMove;
-			if (GetAsyncKeyState(VK_MENU) != 0)
-			{
-				args.MoveX = DirectX::XMConvertToRadians(0.5f * (x - m_PrevCursorX));
-				args.MoveZ = DirectX::XMConvertToRadians(0.5f * (y - m_PrevCursorY));
-			}
-			else
-			{
-				args.MoveX = DirectX::XMConvertToRadians(0.5f * (x - m_PrevCursorX));
-				args.MoveY = DirectX::XMConvertToRadians(0.5f * (y - m_PrevCursorY));
-			}
-			m_Camera.UpdateByEvent(args);
-		}
-
-		m_PrevCursorX = x;
-		m_PrevCursorY = y;
 	}
 }
