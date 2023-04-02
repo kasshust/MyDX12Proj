@@ -24,6 +24,10 @@
 #include <ToneMap.h>
 #include <ShadowMap.h>
 
+#include <BloomComposition.h>
+#include <ExtractHighIntensity.h>
+#include <GaussianFilter.h>
+
 ///////////////////////////////////////////////////////////////////////////////
 // SampleApp class
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,14 +67,19 @@ private:
 	//=========================================================================
 	
 	std::vector<GameObject*>		m_GameObjects;
+	Camera                          m_Camera;
 	CommonRTManager                 m_CommonRTManager;
 	CommonBufferManager             m_CommonBufferManager;
 	SkyManager						m_SkyManager;
 
 	ShadowMap						m_ShadowMap;
 	ToneMap                         m_ToneMap;
-	Camera                          m_Camera;
 
+	// Bloom
+	BloomComposition				m_BloomComp;
+	ExtractHightIntensity			m_ExtractHight;
+	GaussianFilter					m_GaussianFilter;
+	
 	float                           m_Exposure;                     //!< 露光値.
 
 	DirectX::SimpleMath::Matrix     m_View;                         //!< ビュー行列.

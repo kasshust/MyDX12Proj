@@ -10,6 +10,7 @@
 #include "App.h"
 #include <algorithm>
 #include <ResourceManager.h>
+#include <iostream>
 
 namespace /* anonymous */ {
 	//-----------------------------------------------------------------------------
@@ -65,6 +66,11 @@ void App::Run()
 	if (InitApp())
 	{
 		MainLoop();
+	}
+	else {
+		int num;
+		std::cout << "初期化に失敗しました";
+		std::cin >> num;
 	}
 
 	TermApp();

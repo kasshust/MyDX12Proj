@@ -16,12 +16,18 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\BloomComposition.cpp" />
+    <ClCompile Include="..\src\ExtractHighIntensity.cpp" />
+    <ClCompile Include="..\src\GaussianFilter.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\SampleApp.cpp" />
     <ClCompile Include="..\src\Shaders.cpp" />
     <ClCompile Include="..\src\ToneMap.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\BloomComposition.h" />
+    <ClInclude Include="..\include\ExtractHighIntensity.h" />
+    <ClInclude Include="..\include\GaussianFilter.h" />
     <ClInclude Include="..\include\Materials.h" />
     <ClInclude Include="..\include\SampleApp.h" />
     <ClInclude Include="..\include\Shaders.h" />
@@ -44,9 +50,21 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
+    <FxCompile Include="..\res\BloomCompositionPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
     <FxCompile Include="..\res\DepthShadow.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="..\res\ExtractHightIntensityPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="..\res\GaussianFilterPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="..\res\IntegrateDFG_PS.hlsl">
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>

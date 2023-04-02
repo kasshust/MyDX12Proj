@@ -56,7 +56,10 @@ bool SampleApp::OnInit()
 	if (!m_ToneMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format))    return false;
 	if (!m_SkyManager.IBLBake(m_pDevice, m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_CommandList, m_pQueue, m_Fence))				return false;
 
-	
+	if (!m_BloomComp.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format)) return false;
+	if (!m_ExtractHight.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format)) return false;
+	if (!m_GaussianFilter.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format)) return false;
+
 
 	// GameObject/Model
 	AppResourceManager& manager = AppResourceManager::GetInstance();
@@ -200,6 +203,11 @@ void SampleApp::OnRenderIMGUI() {
 			ImGui::RadioButton("GT", &m_ToneMap.m_TonemapType, ToneMap::TONEMAP_GT);
 			ImGui::TreePop();
 		}
+
+		if (ImGui::TreeNode("Bloom")) {
+			ImGui::TreePop();
+		}
+
 		ImGui::TreePop();
 	}
 
@@ -526,6 +534,56 @@ void SampleApp::RenderShadowMap(ID3D12GraphicsCommandList* pCmd, DepthTarget& De
 
 void SampleApp::RenderPostProcess(ID3D12GraphicsCommandList* pCmd)
 {
+
+	
+	// 高輝度抽出
+	ExtractHightIntensity::DrawSource es{
+		m_CommonRTManager.m_TempColorTarget,
+		m_CommonRTManager.m_SceneColorTarget,
+		m_CommonBufferManager.m_QuadVB
+	};
+	m_ExtractHight.Draw(pCmd, m_FrameIndex, es);
+
+	// ガウシアンフィルター
+	GaussianFilter::DrawSource gs1{
+		m_CommonRTManager.m_BloomColorTarget[0],
+		m_CommonRTManager.m_TempColorTarget,
+		m_CommonBufferManager.m_QuadVB
+	};
+	m_GaussianFilter.Draw(pCmd, m_FrameIndex, gs1);
+
+	GaussianFilter::DrawSource gs2{
+		m_CommonRTManager.m_BloomColorTarget[1],
+		m_CommonRTManager.m_BloomColorTarget[0],
+		m_CommonBufferManager.m_QuadVB
+	};
+	m_GaussianFilter.Draw(pCmd, m_FrameIndex, gs2);
+
+	GaussianFilter::DrawSource gs3{
+		m_CommonRTManager.m_BloomColorTarget[2],
+		m_CommonRTManager.m_BloomColorTarget[1],
+		m_CommonBufferManager.m_QuadVB
+	};
+	m_GaussianFilter.Draw(pCmd, m_FrameIndex, gs3);
+
+	GaussianFilter::DrawSource gs4{
+		m_CommonRTManager.m_BloomColorTarget[3],
+		m_CommonRTManager.m_BloomColorTarget[2],
+		m_CommonBufferManager.m_QuadVB
+	};
+	m_GaussianFilter.Draw(pCmd, m_FrameIndex, gs4);
+
+	// ブルーム合成
+	BloomComposition::DrawSource bs{
+		m_CommonRTManager.m_TempColorTarget,
+		m_CommonRTManager.m_SceneColorTarget,
+		m_CommonRTManager.m_BloomColorTarget,
+		m_CommonBufferManager.m_QuadVB
+	};
+	m_BloomComp.Draw(pCmd, m_FrameIndex, bs);
+
+
+	// トーンマップ
 	ToneMap::DrawSource s{
 		m_ColorTarget[m_FrameIndex],
 		m_DepthTarget,
