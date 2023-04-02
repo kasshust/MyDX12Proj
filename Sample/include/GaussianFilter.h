@@ -11,12 +11,16 @@ class GaussianFilter : public PostEffect {
 public:
 	struct alignas(256) CbGaussianFilter
 	{
+		float ReductionRatio;
 	};
 
 	struct DrawSource {
-		ColorTarget& ColorDest;
-		ColorTarget& ColorSource;
-		VertexBuffer& VertexBuffer;
+		ColorTarget&	ColorDest;
+		ColorTarget&	ColorSource;
+		VertexBuffer&	VertexBuffer;
+		int				index = 0;
+		float			ReductionRatio = 1.0f;
+		
 	};
 
 public:
@@ -24,6 +28,8 @@ public:
 	void Term() override;
 	void Draw(ID3D12GraphicsCommandList* pCmd, int frameindex, DrawSource& s);
 private:
+
+	ConstantBuffer                  m_SCB[4][App::FrameCount];
 
 	const wchar_t* m_VSPath = L"QuadVS.cso";
 	const wchar_t* m_PSPath = L"GaussianFilterPS.cso";

@@ -319,6 +319,11 @@ void SampleApp::OnRenderIMGUI() {
 
 	if (ImGui::TreeNode("Target")) {
 
+		if (ImGui::TreeNode("TempTarget")) {
+			ImGui::Image((ImTextureID)m_CommonRTManager.m_TempColorTarget.GetHandleSRV()->HandleGPU.ptr, ImVec2(160, 90));
+			ImGui::TreePop();
+		}
+
 		if (ImGui::TreeNode("ColorTarget")) {
 			ImGui::Image((ImTextureID)m_CommonRTManager.m_SceneColorTarget.GetHandleSRV()->HandleGPU.ptr, ImVec2(160, 90));
 			ImGui::TreePop();
@@ -548,31 +553,40 @@ void SampleApp::RenderPostProcess(ID3D12GraphicsCommandList* pCmd)
 	GaussianFilter::DrawSource gs1{
 		m_CommonRTManager.m_BloomColorTarget[0],
 		m_CommonRTManager.m_TempColorTarget,
-		m_CommonBufferManager.m_QuadVB
+		m_CommonBufferManager.m_QuadVB,
+		0,
+		2
 	};
 	m_GaussianFilter.Draw(pCmd, m_FrameIndex, gs1);
 
 	GaussianFilter::DrawSource gs2{
 		m_CommonRTManager.m_BloomColorTarget[1],
 		m_CommonRTManager.m_BloomColorTarget[0],
-		m_CommonBufferManager.m_QuadVB
+		m_CommonBufferManager.m_QuadVB,
+		1,
+		4
 	};
 	m_GaussianFilter.Draw(pCmd, m_FrameIndex, gs2);
 
 	GaussianFilter::DrawSource gs3{
 		m_CommonRTManager.m_BloomColorTarget[2],
 		m_CommonRTManager.m_BloomColorTarget[1],
-		m_CommonBufferManager.m_QuadVB
+		m_CommonBufferManager.m_QuadVB,
+		2,
+		8
 	};
 	m_GaussianFilter.Draw(pCmd, m_FrameIndex, gs3);
 
 	GaussianFilter::DrawSource gs4{
 		m_CommonRTManager.m_BloomColorTarget[3],
 		m_CommonRTManager.m_BloomColorTarget[2],
-		m_CommonBufferManager.m_QuadVB
+		m_CommonBufferManager.m_QuadVB,
+		3,
+		16
 	};
 	m_GaussianFilter.Draw(pCmd, m_FrameIndex, gs4);
 
+	
 	// ブルーム合成
 	BloomComposition::DrawSource bs{
 		m_CommonRTManager.m_TempColorTarget,
@@ -581,13 +595,13 @@ void SampleApp::RenderPostProcess(ID3D12GraphicsCommandList* pCmd)
 		m_CommonBufferManager.m_QuadVB
 	};
 	m_BloomComp.Draw(pCmd, m_FrameIndex, bs);
-
+	
 
 	// トーンマップ
 	ToneMap::DrawSource s{
 		m_ColorTarget[m_FrameIndex],
 		m_DepthTarget,
-		m_CommonRTManager.m_SceneColorTarget,
+		m_CommonRTManager.m_TempColorTarget,
 		m_CommonBufferManager.m_QuadVB
 	};
 	m_ToneMap.DrawTonemap(pCmd, m_FrameIndex, s);

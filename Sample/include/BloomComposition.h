@@ -9,7 +9,7 @@
 // カラーターゲットとブルームターゲットを合成
 class BloomComposition: public PostEffect {
 public:
-	struct alignas(256) CbBloomConposition
+	struct alignas(256) CbBloomComposition
 	{
 	};
 
