@@ -27,6 +27,7 @@
 #include <BloomComposition.h>
 #include <ExtractHighIntensity.h>
 #include <GaussianFilter.h>
+#include <PreNormalRenderer.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // SampleApp class
@@ -79,7 +80,8 @@ private:
 	BloomComposition				m_BloomComp;
 	ExtractHightIntensity			m_ExtractHight;
 	GaussianFilter					m_GaussianFilter;
-	
+	PreNormalRenderer				m_PreNormalRenderer;
+
 	float                           m_Exposure;                     //!< 露光値.
 
 	DirectX::SimpleMath::Matrix     m_View;                         //!< ビュー行列.
@@ -88,12 +90,12 @@ private:
 	int                             m_PrevCursorX;                  //!< 前回のカーソル位置X.
 	int                             m_PrevCursorY;                  //!< 前回のカーソル位置Y.
 
-	Vector3							m_LightDirection	= Vector3(1.0f,1.0f,0.0f);
+	Vector3							m_LightDirection	= Vector3(1.0f,1.0f,1.0f);
 	float							m_LightIntensity	= 1.0f;
 	float							m_ShadowBias		= 0.0005f;
-	float							m_ShadowStrength	= 0.5f;
+	float							m_ShadowStrength	= 0.2f;
 	float							m_ShadowLightPosDistance = 50.0f;
-	Vector4							m_OrthoGraphParam	= Vector4(6.0f, 6.0f, 0.1f, 100.0f);
+	Vector4							m_OrthoGraphParam	= Vector4(5.0f, 5.0f, 0.1f, 100.0f);
 
 	Vector2							m_FogArea			= Vector2(0.0f, 5.0f);
 	Vector3							m_FogColor			= Vector3(1.0f, 1.0f, 1.0f);
@@ -138,8 +140,10 @@ private:
 	//-------------------------------------------------------------------------
 	void DrawScene(ID3D12GraphicsCommandList* pCmdList);
 	void RenderShadowMap(ID3D12GraphicsCommandList* pCmd, DepthTarget& DepthDest);
+	void RenderPreProcess(ID3D12GraphicsCommandList* pCmd);
 	void RenderOpaque(ID3D12GraphicsCommandList* pCmd, ColorTarget& ColorSource, DepthTarget& depthSource, SkyManager& manager);
 	void RenderPostProcess(ID3D12GraphicsCommandList* pCmd);
+	void RenderBloom(ID3D12GraphicsCommandList* pCmd);
 	void RenderImGui(ID3D12GraphicsCommandList* pCmd);
 	void UpdateCamera();
 	void UpdateBuffer();

@@ -24,7 +24,7 @@ bool CommonRTManager::CreateColorTarget(ComPtr<ID3D12Device> pDevice, Descriptor
 }
 
 bool CommonRTManager::CreateTempTarget(ColorTarget& temp, ComPtr<ID3D12Device> pDevice, DescriptorPool* rtvpool, DescriptorPool* respool, uint32_t width, uint32_t height) {
-	float clearColor[4] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 	if (!temp.Init(
 		pDevice.Get(),
@@ -58,6 +58,21 @@ bool CommonRTManager::CreateDepthTarget(ComPtr<ID3D12Device> pDevice, Descriptor
 		ELOG("Error : DepthTarget::Init() Failed.");
 		return false;
 	}
+
+	if (!m_PreDepthTarget.Init(
+		pDevice.Get(),
+		dsvpool,
+		respool,
+		width,
+		height,
+		DXGI_FORMAT_D32_FLOAT,
+		1.0f,
+		0))
+	{
+		ELOG("Error : DepthTarget::Init() Failed.");
+		return false;
+	}
+
 	return true;
 }
 
@@ -82,11 +97,13 @@ bool CommonRTManager::CreateShadowTarget(ComPtr<ID3D12Device> pDevice, Descripto
 
 bool CommonRTManager::Init(ComPtr<ID3D12Device> pDevice, DescriptorPool* rtvpool, DescriptorPool* respool, DescriptorPool* dsvpool, uint32_t width, uint32_t height)
 {
-	if (!CreateColorTarget(pDevice, rtvpool, respool, width, height))   return false;
-	if (!CreateDepthTarget(pDevice, dsvpool, respool, width, height))            return false;
-	if (!CreateShadowTarget(pDevice, dsvpool, respool, width, height))			return false;
+	if (!CreateColorTarget(pDevice, rtvpool, respool, width, height))				return false;
+	if (!CreateDepthTarget(pDevice, dsvpool, respool, width, height))				return false;
+	if (!CreateShadowTarget(pDevice, dsvpool, respool, width, height))				return false;
 
 	if (!CreateTempTarget(m_TempColorTarget, pDevice, rtvpool, respool, width, height)) return false;
+	if (!CreateTempTarget(m_NormalTarget, pDevice, rtvpool, respool, width, height)) return false;
+
 
 	int size = sizeof(m_BloomColorTarget) / sizeof(m_BloomColorTarget[0]);
 	for (size_t i = 0; i < size; i++)

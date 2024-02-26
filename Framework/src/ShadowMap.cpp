@@ -49,7 +49,7 @@ bool ShadowMap::CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rt
 	desc.InputLayout                        = { elements, _countof(elements) };
 	desc.pRootSignature                     = m_RootSig.GetPtr();
 	desc.VS                                 = { pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize() };
-	desc.RasterizerState                    = DirectX::CommonStates::CullNone;						//•\‚Ì‚Ý
+	desc.RasterizerState                    = DirectX::CommonStates::CullNone;						
 	desc.BlendState                         = DirectX::CommonStates::Opaque;
 	desc.DepthStencilState                  = DirectX::CommonStates::DepthDefault;
 	desc.SampleMask                         = UINT_MAX;

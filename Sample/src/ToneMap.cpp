@@ -86,6 +86,7 @@ void ToneMap::Term()
 void ToneMap::DrawTonemap(ID3D12GraphicsCommandList* pCmd, int frameindex, DrawSource& s)
 {
 	// 書き込み用リソースバリア設定.
+
 	DirectX::TransitionResource(pCmd,
 		s.ColorDest.GetResource(),
 		D3D12_RESOURCE_STATE_PRESENT,

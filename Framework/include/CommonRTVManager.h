@@ -6,9 +6,14 @@ class CommonRTManager {
 public:
 
 	ColorTarget                     m_SceneColorTarget;             //!< シーン用レンダーターゲット
-	ColorTarget                     m_TempColorTarget;             //!<  一時的に使用する場合のターゲット
+	ColorTarget                     m_TempColorTarget;				//!<  一時的に使用する場合のターゲット
+	ColorTarget                     m_NormalTarget;					//!<  NormalMap
+	
+
 
 	DepthTarget                     m_SceneDepthTarget;				//!< シーン用深度ターゲット
+	DepthTarget                     m_PreDepthTarget;				//!< PreDepth
+
 	DepthTarget                     m_SceneShadowTarget;			//!< シャドウ用深度ターゲット
 
 	ColorTarget                     m_BloomColorTarget[4];             //!<  Bloom用

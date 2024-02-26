@@ -20,6 +20,7 @@
     <ClCompile Include="..\src\ExtractHighIntensity.cpp" />
     <ClCompile Include="..\src\GaussianFilter.cpp" />
     <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\PreNormalRenderer.cpp" />
     <ClCompile Include="..\src\SampleApp.cpp" />
     <ClCompile Include="..\src\Shaders.cpp" />
     <ClCompile Include="..\src\ToneMap.cpp" />
@@ -29,6 +30,7 @@
     <ClInclude Include="..\include\ExtractHighIntensity.h" />
     <ClInclude Include="..\include\GaussianFilter.h" />
     <ClInclude Include="..\include\Materials.h" />
+    <ClInclude Include="..\include\PreNormalRenderer.h" />
     <ClInclude Include="..\include\SampleApp.h" />
     <ClInclude Include="..\include\Shaders.h" />
     <ClInclude Include="..\include\ToneMap.h" />
@@ -91,6 +93,14 @@
       <HeaderFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)..\res\Compiled\IntegrateSpecularLD_PS.inc</HeaderFileOutput>
       <VariableName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">IntegrateSpecularLD_PS</VariableName>
       <HeaderFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)..\res\Compiled\IntegrateSpecularLD_PS.inc</HeaderFileOutput>
+    </FxCompile>
+    <FxCompile Include="..\res\PreNormalPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="..\res\PreNormalVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="..\res\SkyBoxPS.hlsl">
       <VariableName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">SkyBoxPS</VariableName>

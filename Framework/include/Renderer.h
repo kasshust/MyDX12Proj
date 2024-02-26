@@ -11,6 +11,7 @@ protected:
 
 	virtual bool CreateRootSig(ComPtr<ID3D12Device> pDevice) = 0;
 	virtual bool CreatePipeLineState(ComPtr<ID3D12Device> pDevice, DXGI_FORMAT rtv_format, DXGI_FORMAT dsv_format) = 0;
+	virtual void Term() = 0;
 
 };
 

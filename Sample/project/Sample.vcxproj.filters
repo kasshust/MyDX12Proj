@@ -61,6 +61,15 @@
     <Filter Include="ソース ファイル\PostProcess\Bloom">
       <UniqueIdentifier>{f6d4c871-b032-4a01-88a3-ee9c2244a464}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\PreProcess">
+      <UniqueIdentifier>{4ec06054-4592-46c9-8b24-d317d39371eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\PreProcess">
+      <UniqueIdentifier>{743c10d1-af7d-4b01-bb7a-68bd7959293a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="リソース ファイル\PreProcess\PreNormal">
+      <UniqueIdentifier>{9611d2ea-8d2b-40cc-a78c-4cdee26ffea1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp">
@@ -84,6 +93,9 @@
     <ClCompile Include="..\src\GaussianFilter.cpp">
       <Filter>ソース ファイル\PostProcess\Bloom</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\PreNormalRenderer.cpp">
+      <Filter>ソース ファイル\PreProcess</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\SampleApp.h">
@@ -106,6 +118,9 @@
     </ClInclude>
     <ClInclude Include="..\include\GaussianFilter.h">
       <Filter>ヘッダー ファイル\PostProcess\Bloom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\PreNormalRenderer.h">
+      <Filter>ヘッダー ファイル\PreProcess</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -171,6 +186,12 @@
     </FxCompile>
     <FxCompile Include="..\res\GaussianFilterPS.hlsl">
       <Filter>リソース ファイル\PostProcess\Bloom</Filter>
+    </FxCompile>
+    <FxCompile Include="..\res\PreNormalVS.hlsl">
+      <Filter>リソース ファイル\PreProcess\PreNormal</Filter>
+    </FxCompile>
+    <FxCompile Include="..\res\PreNormalPS.hlsl">
+      <Filter>リソース ファイル\PreProcess\PreNormal</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

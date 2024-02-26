@@ -31,7 +31,7 @@ float4 main(const VSOutput input) : SV_TARGET
     float4 src = ColorMap.Sample(ColorSmp, input.TexCoord.xy );
     float luminance = GetLuminance(src.rgb);
     
-    float HIGH_LUM_THRESHOLD = 0.5f;
+    float HIGH_LUM_THRESHOLD = 0.1f;
     float EXPOSURE = 2.0f;
     
     return float4(src.rgb * max(0.0f, (luminance - HIGH_LUM_THRESHOLD)) * EXPOSURE, 1.0f);

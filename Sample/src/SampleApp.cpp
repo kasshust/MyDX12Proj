@@ -52,6 +52,9 @@ bool SampleApp::OnInit()
 
 	if (!CommonInit()) return false;
 
+	if (!m_PreNormalRenderer.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format)) return false;
+
+
 	if (!m_ShadowMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format))	return false;
 	if (!m_ToneMap.Init(m_pDevice, m_pPool[POOL_TYPE_RES], m_ColorTarget[0].GetRTVDesc().Format, m_DepthTarget.GetDSVDesc().Format))    return false;
 	if (!m_SkyManager.IBLBake(m_pDevice, m_pPool[POOL_TYPE_RTV], m_pPool[POOL_TYPE_RES], m_CommandList, m_pQueue, m_Fence))				return false;
@@ -338,6 +341,7 @@ void SampleApp::OnRenderIMGUI() {
 			ImGui::Image((ImTextureID)m_CommonRTManager.m_SceneShadowTarget.GetHandleSRV()->HandleGPU.ptr, ImVec2(160, 90));
 			ImGui::TreePop();
 		}
+
 		if (ImGui::TreeNode("BloomTarget")) {
 
 			int size = sizeof(m_CommonRTManager.m_BloomColorTarget) / sizeof(m_CommonRTManager.m_BloomColorTarget[0]);
@@ -350,6 +354,15 @@ void SampleApp::OnRenderIMGUI() {
 			ImGui::TreePop();
 		}
 
+		if (ImGui::TreeNode("NormalTarget")) {
+			ImGui::Image((ImTextureID)m_CommonRTManager.m_NormalTarget.GetHandleSRV()->HandleGPU.ptr, ImVec2(160, 90));
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("PreDepthTarget")) {
+			ImGui::Image((ImTextureID)m_CommonRTManager.m_PreDepthTarget.GetHandleSRV()->HandleGPU.ptr, ImVec2(160, 90));
+			ImGui::TreePop();
+		}
 
 		ImGui::TreePop();
 	}
@@ -409,19 +422,16 @@ void SampleApp::OnRender()
 		pCmd->RSSetViewports(1,    &m_Viewport);
 		pCmd->RSSetScissorRects(1, &m_Scissor);
 
-		RenderShadowMap(pCmd, m_CommonRTManager.m_SceneShadowTarget);
+		RenderPreProcess(pCmd);
 		RenderOpaque(pCmd, m_CommonRTManager.m_SceneColorTarget, m_CommonRTManager.m_SceneDepthTarget, m_SkyManager);
 		RenderPostProcess(pCmd);
 	}
 	pCmd->Close();
 
-
-
 	// ImGui描画
 	OnRenderIMGUICommonProcess();
 	ID3D12DescriptorHeap* const pImGuiHeaps[] = {
 		m_pPool[POOL_TYPE_RES]->GetHeap(),
-		// m_pImGuiDescriptorHeap.Get(),
 	};
 	auto pImGuiCmd = m_ImGuiCommandList.Reset();
 	pImGuiCmd->SetDescriptorHeaps(1, pImGuiHeaps);
@@ -537,10 +547,35 @@ void SampleApp::RenderShadowMap(ID3D12GraphicsCommandList* pCmd, DepthTarget& De
 	m_ShadowMap.DrawShadowMap(pCmd, m_FrameIndex, s);
 }
 
+void SampleApp::RenderPreProcess(ID3D12GraphicsCommandList* pCmd) {
+	
+	PreNormalRenderer::DrawSource s{
+		m_CommonRTManager.m_NormalTarget,
+		m_CommonRTManager.m_PreDepthTarget,
+		m_CommonBufferManager,
+		m_GameObjects
+	};
+	m_PreNormalRenderer.Draw(pCmd, m_FrameIndex, s);
+
+
+	RenderShadowMap(pCmd, m_CommonRTManager.m_SceneShadowTarget);
+}
+
 void SampleApp::RenderPostProcess(ID3D12GraphicsCommandList* pCmd)
 {
+	RenderBloom(pCmd);
 
-	
+	// トーンマップ
+	ToneMap::DrawSource s{
+		m_ColorTarget[m_FrameIndex],
+		m_DepthTarget,
+		m_CommonRTManager.m_TempColorTarget,
+		m_CommonBufferManager.m_QuadVB
+	};
+	m_ToneMap.DrawTonemap(pCmd, m_FrameIndex, s);
+}
+
+void SampleApp::RenderBloom(ID3D12GraphicsCommandList* pCmd) {
 	// 高輝度抽出
 	ExtractHightIntensity::DrawSource es{
 		m_CommonRTManager.m_TempColorTarget,
@@ -548,6 +583,7 @@ void SampleApp::RenderPostProcess(ID3D12GraphicsCommandList* pCmd)
 		m_CommonBufferManager.m_QuadVB
 	};
 	m_ExtractHight.Draw(pCmd, m_FrameIndex, es);
+
 
 	// ガウシアンフィルター
 	GaussianFilter::DrawSource gs1{
@@ -586,7 +622,7 @@ void SampleApp::RenderPostProcess(ID3D12GraphicsCommandList* pCmd)
 	};
 	m_GaussianFilter.Draw(pCmd, m_FrameIndex, gs4);
 
-	
+
 	// ブルーム合成
 	BloomComposition::DrawSource bs{
 		m_CommonRTManager.m_TempColorTarget,
@@ -595,16 +631,7 @@ void SampleApp::RenderPostProcess(ID3D12GraphicsCommandList* pCmd)
 		m_CommonBufferManager.m_QuadVB
 	};
 	m_BloomComp.Draw(pCmd, m_FrameIndex, bs);
-	
 
-	// トーンマップ
-	ToneMap::DrawSource s{
-		m_ColorTarget[m_FrameIndex],
-		m_DepthTarget,
-		m_CommonRTManager.m_TempColorTarget,
-		m_CommonBufferManager.m_QuadVB
-	};
-	m_ToneMap.DrawTonemap(pCmd, m_FrameIndex, s);
 }
 
 void SampleApp::RenderImGui(ID3D12GraphicsCommandList* pImGuiCmd)
